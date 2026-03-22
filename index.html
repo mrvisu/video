@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة فيديو القاعة الاحترافي v13.0</title>
+    <title>نظام فيديو القاعات - Online Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -20,7 +20,6 @@
         .day.selected { background: #ecfdf5; border: 2px solid var(--secondary); }
         .worker-pill { cursor: pointer; padding: 8px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; text-align: center; font-size: 0.75rem; font-weight: bold; height: 100%; display: flex; align-items: center; justify-content: center; }
         .worker-pill.active { border-color: var(--secondary); background: #ecfdf5; }
-        .request-card { background: #fff; border-right: 5px solid var(--accent); border-radius: 12px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; justify-content: center; align-items: center; z-index: 9999; font-weight: bold; flex-direction: column; }
         .hidden { display: none; }
         .alert-today { background: #dcfce7; border-right: 5px solid #10b981; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-weight: bold; font-size: 0.85rem; }
@@ -30,133 +29,87 @@
 <body>
 
 <div id="loadingOverlay">
-    <div class="spinner-border text-primary mb-2" role="status"></div>
-    جاري الاتصال بقاعدة البيانات...
+    <div class="spinner-border text-primary mb-3" role="status"></div>
+    <div id="loadingText">جاري الاتصال بقاعدة البيانات...</div>
+    <button id="bypassBtn" class="btn btn-sm btn-outline-secondary mt-3 hidden" onclick="startOffline()">التشغيل بدون إنترنت (Offline)</button>
 </div>
 
 <div id="mainUI">
-    <div id="adminView">
-        <nav class="navbar shadow-lg mb-3 text-center">
-            <div class="container"><h5 class="mb-0 w-100 fw-bold">🎥 نظام فيديو القاعات المطور - م/ 01097576073</h5></div>
-        </nav>
+    <nav class="navbar shadow-lg mb-3 text-center">
+        <div class="container"><h5 class="mb-0 w-100 fw-bold text-white">🎥 نظام فيديو القاعات المطور - 01097576073</h5></div>
+    </nav>
 
-        <div class="container">
-            <div class="row g-2 mb-3 text-center text-dark">
-                <div class="col-3"><div class="stat-card"> <small>دخل الشهر</small> <h6 id="dashIncome">0</h6> </div></div>
-                <div class="col-3"><div class="stat-card"> <small>عدد الشغل</small> <h6 id="dashJobs" class="text-primary">0</h6> </div></div>
-                <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--danger);"> <small>مصاريف</small> <h6 id="dashExp" class="text-danger">0</h6> </div></div>
-                <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--secondary);"> <small>الصافي</small> <h6 id="dashNet" class="text-success">0</h6> </div></div>
-            </div>
+    <div class="container">
+        <!-- Dashboard Stats -->
+        <div class="row g-2 mb-3 text-center">
+            <div class="col-3"><div class="stat-card"> <small>دخل الشهر</small> <h6 id="dashIncome">0</h6> </div></div>
+            <div class="col-3"><div class="stat-card"> <small>عدد الشغل</small> <h6 id="dashJobs" class="text-primary">0</h6> </div></div>
+            <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--danger);"> <small>مصاريف</small> <h6 id="dashExp" class="text-danger">0</h6> </div></div>
+            <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--secondary);"> <small>الصافي</small> <h6 id="dashNet" class="text-success">0</h6> </div></div>
+        </div>
 
-            <ul class="nav nav-pills nav-justified mb-3 p-1 bg-white rounded-4 shadow-sm">
-                <li class="nav-item"><a class="nav-link active" id="t-home" onclick="window.openTab('home')">📅 اليومية</a></li>
-                <li class="nav-item"><a class="nav-link" id="t-logs" onclick="window.openTab('logs')">📊 السجل</a></li>
-                <li class="nav-item"><a class="nav-link" id="t-workers" onclick="window.openTab('workers')">👤 الفريق <span id="inboxBadge" class="badge bg-danger rounded-pill hidden">0</span></a></li>
-                <li class="nav-item"><a class="nav-link" id="t-config" onclick="window.openTab('config')">⚙️ الإعدادات</a></li>
-            </ul>
+        <ul class="nav nav-pills nav-justified mb-3 p-1 bg-white rounded-4 shadow-sm">
+            <li class="nav-item"><a class="nav-link active" id="t-home" onclick="window.openTab('home')">📅 اليومية</a></li>
+            <li class="nav-item"><a class="nav-link" id="t-logs" onclick="window.openTab('logs')">📊 السجل</a></li>
+            <li class="nav-item"><a class="nav-link" id="t-workers" onclick="window.openTab('workers')">👤 الفريق <span id="inboxBadge" class="badge bg-danger rounded-pill hidden">0</span></a></li>
+            <li class="nav-item"><a class="nav-link" id="t-config" onclick="window.openTab('config')">⚙️ الإعدادات</a></li>
+        </ul>
 
-            <div id="home-section" class="section-content">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-7">
-                        <div class="calendar-box">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <button class="btn btn-sm" onclick="window.changeMonth(-1)">◀</button>
-                                <h6 id="calMonth" class="fw-bold mb-0 text-primary">--</h6>
-                                <button class="btn btn-sm" onclick="window.changeMonth(1)">▶</button>
-                            </div>
-                            <div class="calendar-grid" id="calGrid"></div>
-                            <button class="btn btn-danger w-100 mt-3 btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#bookModal">➕ تسجيل حجز جديد</button>
+        <!-- SECTIONS -->
+        <div id="home-section" class="section-content">
+            <div class="row g-3 mb-4">
+                <div class="col-md-7">
+                    <div class="calendar-box">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <button class="btn btn-sm" onclick="window.changeMonth(-1)">◀</button>
+                            <h6 id="calMonth" class="fw-bold mb-0 text-primary">--</h6>
+                            <button class="btn btn-sm" onclick="window.changeMonth(1)">▶</button>
                         </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="card p-3 border-0 shadow-sm" style="background: #fff; border-radius: 20px;">
-                            <h6 class="fw-bold text-primary mb-3 small">📅 الأجندة القادمة:</h6>
-                            <div id="agendaList" style="max-height: 300px; overflow-y: auto;"></div>
-                        </div>
+                        <div class="calendar-grid" id="calGrid"></div>
+                        <button class="btn btn-danger w-100 mt-3 btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#bookModal">➕ تسجيل حجز جديد</button>
                     </div>
                 </div>
-
-                <div class="card p-3 shadow-sm mb-4">
-                    <h6 class="fw-bold text-primary mb-3 border-bottom pb-2 small">تسجيل حسابات اليومية</h6>
-                    <form id="dailyForm">
-                        <div class="row g-2 mb-3">
-                            <div class="col-6 col-md-3"><label class="small fw-bold">التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">القاعة</label><select id="inHall" class="form-select form-select-sm"></select></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">قبض القاعة</label><input type="number" id="inIncome" class="form-control form-control-sm" value="0"></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">مصاريف أخرى</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
-                        </div>
-                        <h6 class="small fw-bold text-secondary mb-2">الفنيين المشاركين:</h6>
-                        <div id="workerGridDaily" class="row g-2 mb-3"></div>
-                        <textarea id="inDetails" class="form-control form-control-sm mb-3" rows="2" placeholder="ملاحظات إضافية عن اليوم..."></textarea>
-                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow rounded-3">حفظ الحسابات ✅</button>
-                    </form>
-                </div>
-            </div>
-
-            <div id="workers-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0 mb-3">
-                    <h6 class="fw-bold text-primary mb-3">📥 طلبات واعتذارات الفريق:</h6>
-                    <div id="adminInbox" class="bg-light p-2 rounded"></div>
-                </div>
-                <div class="card p-3 shadow-sm border-0">
-                    <h6 class="fw-bold mb-3 text-primary text-center">كشوف الفنيين وروابط التتبع:</h6>
-                    <div id="workerPickGrid" class="row g-2 mb-4"></div>
-                    <div id="workerStatsView" class="hidden text-start">
-                        <div class="mt-2 p-2 border rounded bg-light text-center mb-3">
-                            <small class="fw-bold">رابط التتبع (أرسله للفني):</small><br>
-                            <code id="workerLink" style="font-size:0.7rem; color:var(--accent); word-break:break-all;"></code>
-                        </div>
-                        <table class="table table-sm table-striped border small text-center">
-                            <thead><tr><th>التاريخ</th><th>القاعة</th><th>المبلغ</th></tr></thead>
-                            <tbody id="workerHistoryBody"></tbody>
-                        </table>
+                <div class="col-md-5">
+                    <div class="card p-3 border-0 shadow-sm" style="background: #fff; border-radius: 20px;">
+                        <h6 class="fw-bold text-primary mb-3 small">📅 الأجندة القادمة:</h6>
+                        <div id="agendaList" style="max-height: 300px; overflow-y: auto;"></div>
                     </div>
                 </div>
             </div>
-
-            <div id="logs-section" class="section-content hidden">
-                <div class="card p-2 shadow-sm border-0 small">
-                    <table class="table table-hover align-middle text-center">
-                        <thead class="table-dark"><tr><th>تاريخ</th><th>قاعة</th><th>إيراد</th><th>صافي</th><th>حذف</th></tr></thead>
-                        <tbody id="logsTableBody"></tbody>
-                    </table>
-                </div>
+            <div class="card p-3 shadow-sm mb-4">
+                <h6 class="fw-bold text-primary mb-3 border-bottom pb-2 small">تسجيل حسابات اليومية</h6>
+                <form id="dailyForm">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-md-3"><label class="small fw-bold">التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
+                        <div class="col-6 col-md-3"><label class="small fw-bold">القاعة</label><select id="inHall" class="form-select form-select-sm"></select></div>
+                        <div class="col-6 col-md-3"><label class="small fw-bold">قبض القاعة</label><input type="number" id="inIncome" class="form-control form-control-sm" value="0"></div>
+                        <div class="col-6 col-md-3"><label class="small fw-bold">مصاريف أخرى</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
+                    </div>
+                    <div id="workerGridDaily" class="row g-2 mb-3"></div>
+                    <textarea id="inDetails" class="form-control form-control-sm mb-3" rows="2" placeholder="ملاحظات إضافية..."></textarea>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow rounded-3">حفظ الحسابات ✅</button>
+                </form>
             </div>
+        </div>
 
-            <div id="config-section" class="section-content hidden">
-                <div class="card p-3 mb-3 shadow-sm border-0">
-                    <h6>إدارة القاعات</h6>
-                    <div class="input-group mb-2"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">إضافة</button></div>
-                    <div id="hList" class="d-flex flex-wrap gap-1"></div>
-                </div>
-                <div class="card p-3 shadow-sm border-0">
-                    <h6>إدارة الفنيين والأجور الثابتة</h6>
-                    <div id="wEditList"></div>
-                    <hr>
-                    <div class="row g-1"><div class="col-5"><input type="text" id="wn" class="form-control" placeholder="الاسم"></div><div class="col-4"><input type="number" id="ws" class="form-control" placeholder="الأجر"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div>
-                </div>
-            </div>
+        <div id="workers-section" class="section-content hidden">
+            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="fw-bold text-primary">📥 طلبات الفريق:</h6><div id="adminInbox"></div></div>
+            <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-center">كشوف الفنيين:</h6><div id="workerPickGrid" class="row g-2 mb-4"></div><div id="workerStatsView" class="hidden"><div class="mt-2 p-2 border rounded bg-light text-center mb-3 small">رابط التتبع للفني:<br><code id="workerLink" style="word-break:break-all;"></code></div><table class="table table-sm table-striped border text-center"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table></div></div>
+        </div>
+
+        <div id="logs-section" class="section-content hidden">
+            <div class="card p-2 small border-0 shadow-sm"><table class="table text-center"><thead><tr><th>تاريخ</th><th>قاعة</th><th>دخل</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
+        </div>
+
+        <div id="config-section" class="section-content hidden">
+            <div class="card p-3 mb-3 shadow-sm border-0"><h6>إدارة القاعات</h6><div class="input-group mb-2"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">+</button></div><div id="hList" class="d-flex flex-wrap gap-1"></div></div>
+            <div class="card p-3 shadow-sm border-0"><h6>إدارة الفنيين والأجور</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control"></div><div class="col-4"><input type="number" id="ws" class="form-control"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div>
         </div>
     </div>
 </div>
 
-<!-- Modal: Booking -->
-<div class="modal fade" id="bookModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0">
-            <div class="modal-header fw-bold small bg-light">تسجيل حجز جديد</div>
-            <div class="modal-body small">
-                <input type="text" id="bt" class="form-control mb-2" placeholder="اسم العميل">
-                <input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان بالتفصيل">
-                <div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div>
-                <div class="row g-1 mb-2 bg-light p-2 rounded text-center"><div class="col-4"><label>الاتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>العربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>المتبقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div>
-                <hr><label class="small fw-bold text-primary">تعيين الفنيين لهذا الموعد:</label>
-                <div id="bwGrid" class="row g-2 text-center"></div>
-            </div>
-            <div class="modal-footer border-0 p-2"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="window.saveB()">حفظ الحجز ✅</button></div>
-        </div>
-    </div>
-</div>
+<!-- Modal -->
+<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4"><div class="modal-header fw-bold small">حجز جديد</div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="الزبون"><input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-light p-2 rounded text-center"><div class="col-4"><label>اتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><label class="small fw-bold">الفنيين:</label><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0"><button class="btn btn-primary w-100 fw-bold" onclick="window.saveB()">حفظ ✅</button></div></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -174,9 +127,16 @@
       appId: "1:998882066977:web:2af7c7648c7074636d5960"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const dbRef = getDatabase(app);
-    const rootRef = ref(dbRef, 'videoSystem');
+    // Initialize Firebase
+    let app, dbRef, rootRef;
+    try {
+        app = initializeApp(firebaseConfig);
+        dbRef = getDatabase(app);
+        rootRef = ref(dbRef, 'videoSystem');
+    } catch(e) {
+        console.error("Firebase Init Error", e);
+        startOffline();
+    }
 
     let db = {
         halls: ["قاعة الفيروز", "قاعة الشافعى", "شغل الشارع"],
@@ -189,9 +149,17 @@
         logs: [], bookings: [], requests: []
     };
 
-    let curM = new Date().getMonth(), curY = new Date().getFullYear(), currentTab = 'home';
+    let curM = new Date().getMonth(), curY = new Date().getFullYear(), currentTab = 'home', isOnline = false;
 
-    // --- Firebase Sync ---
+    // مراقبة الاتصال: إذا تأخر عن 7 ثوانٍ، أظهر زر الـ Bypass
+    setTimeout(() => {
+        if(!isOnline) {
+            document.getElementById('loadingText').innerText = "يبدو أن هناك مشكلة في الاتصال بالإنترنت أو إعدادات Firebase";
+            document.getElementById('bypassBtn').classList.remove('hidden');
+        }
+    }, 7000);
+
+    // التحميل من فايربيز
     onValue(rootRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -200,22 +168,34 @@
             if (!db.logs) db.logs = [];
             if (!db.bookings) db.bookings = [];
         }
+        isOnline = true;
         document.getElementById('loadingOverlay').style.display = 'none';
         refreshView();
+    }, (error) => {
+        console.error("Firebase Sync Error", error);
+        startOffline();
     });
 
-    window.save = () => set(rootRef, db);
+    window.save = () => {
+        if(isOnline) set(rootRef, db);
+        else localStorage.setItem('offline_db', JSON.stringify(db));
+    };
+
+    window.startOffline = () => {
+        const local = localStorage.getItem('offline_db');
+        if(local) db = JSON.parse(local);
+        document.getElementById('loadingOverlay').style.display = 'none';
+        refreshView();
+        alert("تعذر الاتصال بـ فايربيز. تعمل الآن في وضع Offline.");
+    };
 
     function refreshView() {
         const hash = window.location.hash;
         if(hash) renderWorkerPortal(decodeURIComponent(hash.substring(1)));
-        else {
-            updateDash();
-            window.openTab(currentTab);
-        }
+        else { updateDash(); window.openTab(currentTab); }
     }
 
-    // --- UI Logic ---
+    // --- LOGIC ---
     window.openTab = (id) => {
         currentTab = id;
         document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
@@ -232,9 +212,7 @@
         let i = 0, e = 0, jobs = 0; const now = new Date();
         db.logs.forEach(l => { 
             const d = new Date(l.date); 
-            if(d.getMonth() === now.getMonth()) { 
-                jobs++; i += l.income; e += l.exp + Object.values(l.pays).reduce((a,b)=>a+b, 0); 
-            } 
+            if(d.getMonth() === now.getMonth()) { jobs++; i += l.income; e += l.exp + Object.values(l.pays).reduce((a,b)=>a+b, 0); } 
         });
         document.getElementById('dashIncome').innerText = i + " ج";
         document.getElementById('dashJobs').innerText = jobs;
@@ -246,17 +224,17 @@
 
     function renderCal() {
         const grid = document.getElementById('calGrid'); grid.innerHTML = '';
-        const ms = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-        document.getElementById('calMonth').innerText = ms[curM] + " " + curY;
+        ["ح", "ن", "ث", "ر", "خ", "ج", "س"].forEach(d => grid.innerHTML += `<div class="fw-bold small text-muted">${d}</div>`);
         const days = new Date(curY, curM + 1, 0).getDate();
         const start = new Date(curY, curM, 1).getDay();
-        ["ح", "ن", "ث", "ر", "خ", "ج", "س"].forEach(d => grid.innerHTML += `<div class="fw-bold small text-muted">${d}</div>`);
         for(let i=0; i<start; i++) grid.innerHTML += `<div></div>`;
         for(let d=1; d<=days; d++) {
             const dt = `${curY}-${String(curM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const hb = db.bookings.some(b => b.date === dt) ? 'has-booking' : '';
             grid.innerHTML += `<div class="day ${hb}" onclick="window.selectDt('${dt}', this)">${d}</div>`;
         }
+        const ms = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        document.getElementById('calMonth').innerText = ms[curM] + " " + curY;
     }
 
     window.selectDt = (dt, el) => {
@@ -267,11 +245,11 @@
     };
 
     window.saveB = () => {
-        const title = document.getElementById('bt').value, addr = document.getElementById('bAddress').value, hall = document.getElementById('bh').value, date = document.getElementById('bd').value;
-        const bTotal=parseFloat(document.getElementById('bTotal').value)||0, bArboun=parseFloat(document.getElementById('bArboun').value)||0;
+        const t = document.getElementById('bt').value, a = document.getElementById('bAddress').value, h = document.getElementById('bh').value, d = document.getElementById('bd').value;
+        const total = parseFloat(document.getElementById('bTotal').value)||0, arb = parseFloat(document.getElementById('bArboun').value)||0;
         const ass = []; document.querySelectorAll('.b-chk:checked').forEach(c => ass.push(c.value));
-        if(!title || ass.length === 0) return alert("اكمل البيانات");
-        db.bookings.push({title, bAddress: addr, hall, date, workers: ass, bTotal, bArboun});
+        if(!t || ass.length === 0) return alert("اكمل البيانات");
+        db.bookings.push({title: t, bAddress: a, hall: h, date: d, workers: ass, bTotal: total, bArboun: arb});
         window.save(); 
         bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
     };
@@ -280,7 +258,7 @@
         e.preventDefault();
         let pays = {}; db.workers.forEach(w => { let v = parseFloat(document.querySelector('.v-'+w.name.replace(/ /g,'')).value); if(v > 0) pays[w.name] = v; });
         db.logs.push({ id: Date.now(), date: document.getElementById('inDate').value, hall: document.getElementById('inHall').value, income: parseFloat(document.getElementById('inIncome').value) || 0, exp: parseFloat(document.getElementById('inExp').value) || 0, details: document.getElementById('inDetails').value, pays: pays });
-        window.save(); alert("تم حفظ اليومية!");
+        window.save(); alert("تم الحفظ!");
     };
 
     function renderDailyForm() {
@@ -293,7 +271,7 @@
     function renderAgenda() {
         const today = new Date().toISOString().split('T')[0];
         const upcoming = db.bookings.filter(b => b.date >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
-        document.getElementById('agendaList').innerHTML = upcoming.map(b => `<div class="p-2 mb-2 bg-light border-start border-primary border-4 rounded shadow-sm small"><strong>📅 ${b.date.slice(5)}</strong> | ${b.hall}<br><span>${b.title}</span></div>`).join('') || '<p class="small text-muted text-center mt-4">لا توجد مواعيد</p>';
+        document.getElementById('agendaList').innerHTML = upcoming.map(b => `<div class="p-2 mb-2 bg-light border-start border-primary border-4 rounded small"><strong>📅 ${b.date.slice(5)}</strong> | ${b.hall}<br><span>${b.title}</span></div>`).join('') || '<p class="text-muted small text-center mt-4">لا توجد مواعيد</p>';
     }
 
     function renderLogs() {
@@ -340,37 +318,27 @@
         <div class="container mt-4">
             <div class="card p-3 shadow-lg border-0 text-center mb-3 bg-primary text-white"><h5 class="fw-bold mb-0">مرحباً ${n} 👋</h5></div>
             <div id="workerAlerts"></div>
-            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="text-warning fw-bold small">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div>
+            <div class="card p-3 shadow-sm border-0 mb-3 text-start"><h6 class="text-warning fw-bold small">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div>
             <div class="card p-3 shadow-sm border-0 mb-3 text-start">
                 <h6 class="text-primary fw-bold small">📝 إرسال ملاحظة للمدير:</h6>
                 <select id="reqDate" class="form-select form-select-sm mt-2"><option value="">اختر الموعد</option>${dates.map(d => `<option value="${d}">${d}</option>`).join('')}</select>
-                <select id="reqType" class="form-select form-select-sm mt-2"><option>ملاحظة عامة</option><option>اعتذار</option></select>
                 <textarea id="reqNote" class="form-control form-control-sm mt-2" placeholder="اكتب ملاحظتك..."></textarea>
-                <button class="btn btn-primary w-100 btn-sm mt-2" onclick="window.sendInternalReq('${n}')">إرسال للمدير ✅</button>
+                <button class="btn btn-primary w-100 btn-sm mt-2" onclick="window.sendInternalReq('${n}')">إرسال ✅</button>
             </div>
-             <table class="table table-sm table-striped border small mt-2 text-center"><thead><tr><th>التاريخ</th><th>القاعة</th><th>المبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table>
+            <table class="table table-sm table-striped border small text-center"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table>
             <button class="btn btn-dark w-100 mt-4 btn-sm" onclick="location.hash=''; location.reload()">الرجوع للرئيسية</button>
         </div>`;
-        
-        const now = new Date(); const today = now.toISOString().split('T')[0];
-        const tom = new Date(now); tom.setDate(now.getDate() + 1); const tomStr = tom.toISOString().split('T')[0];
-        const tj = db.bookings.find(b => b.workers.includes(n) && b.date === today);
-        const tmj = db.bookings.find(b => b.workers.includes(n) && b.date === tomStr);
-        let aHtml = ''; 
-        if(tj) aHtml += `<div class="alert-today text-start">📍 النهاردة: ${tj.hall} (${tj.title})</div>`; 
-        if(tmj) aHtml += `<div class="alert-tomorrow text-start">⚠️ تذكير: عندك شغل بكره في ${tmj.hall}</div>`;
-        document.getElementById('workerAlerts').innerHTML = aHtml;
-        const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= today);
+        const now = new Date().toISOString().split('T')[0];
+        const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= now);
         document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="alert-today text-dark text-start">📅 ${u.date} | ${u.hall}</div>`).join('') || 'لا توجد مواعيد';
-        
         let ds = 0, mn = 0; const tbody = document.getElementById('workerHistoryBody'); tbody.innerHTML = '';
         db.logs.forEach(l => { if(l.pays[n]) { ds++; mn += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
     }
 
     window.sendInternalReq = (n) => {
-        const d = document.getElementById('reqDate').value, t = document.getElementById('reqType').value, note = document.getElementById('reqNote').value;
+        const d = document.getElementById('reqDate').value, note = document.getElementById('reqNote').value;
         if(!note) return alert("اكتب ملاحظة");
-        db.requests.unshift({ from: n, date: d || 'عام', type: t, note: note });
+        db.requests.unshift({ from: n, date: d || 'عام', type: 'رسالة من الفني', note: note });
         window.save(); alert("تم الإرسال!");
     };
 
