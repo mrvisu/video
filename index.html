@@ -3,149 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mrakby Visuals | v26.0</title>
+    <title>Mrakby Visuals | Black Edition</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #0f172a; --secondary: #10b981; --accent: #3b82f6; --danger: #ef4444; --warning: #f59e0b; --light: #f8fafc; }
-        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; min-height: 100vh; color: #1e293b; padding-bottom: 30px; }
-        .navbar { background: var(--primary); color: white; border-bottom: 4px solid var(--secondary); padding: 1rem; }
-        .stat-card { background: white; border-radius: 15px; padding: 12px; border-bottom: 4px solid var(--primary); text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .nav-pills .nav-link { color: var(--primary); font-weight: bold; background: white; margin: 2px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 0.75rem; cursor: pointer; }
-        .nav-pills .nav-link.active { background-color: var(--primary) !important; color: white !important; }
-        .calendar-box { background: white; border-radius: 20px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .day { padding: 10px 0; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.8rem; position: relative; }
-        .day.has-booking::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
-        .day.selected { background: #ecfdf5; border: 2px solid var(--secondary); }
-        .agenda-item { background: #fff; border-right: 4px solid var(--accent); padding: 10px; border-radius: 12px; margin-bottom: 8px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
-        .agenda-item:hover { transform: scale(1.02); background: #f8fafc; }
-        .worker-pill, .equip-pill { cursor: pointer; padding: 8px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; text-align: center; font-size: 0.75rem; font-weight: bold; transition: 0.3s; height: 100%; display: flex; align-items: center; justify-content: center; }
-        .worker-pill.active, .equip-pill.active { border-color: var(--secondary); background: #ecfdf5; }
+        :root { --bg-dark: #0f172a; --card-dark: #1e293b; --primary: #3b82f6; --accent: #10b981; --gold: #fbbf24; --text-light: #f8fafc; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--bg-dark); color: var(--text-light); padding-bottom: 50px; }
+        
+        /* التصميم الأسود الاحترافي */
+        .navbar { background: #000; border-bottom: 2px solid var(--accent); padding: 1.2rem; }
+        .card { background: var(--card-dark); border: none; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: var(--text-light); }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #0f172a); border-radius: 15px; padding: 15px; border-bottom: 4px solid var(--accent); text-align: center; }
+        
+        .nav-pills .nav-link { color: #94a3b8; font-weight: bold; background: #111827; margin: 3px; border-radius: 12px; border: 1px solid #334155; font-size: 0.75rem; transition: 0.3s; }
+        .nav-pills .nav-link.active { background-color: var(--accent) !important; color: white !important; box-shadow: 0 0 15px var(--accent); }
+        
+        .calendar-box { background: var(--card-dark); border-radius: 20px; padding: 15px; }
+        .day { padding: 12px 0; border-radius: 10px; cursor: pointer; font-weight: 600; color: #94a3b8; font-size: 0.8rem; }
+        .day:hover { background: #334155; color: white; }
+        .day.today { background: var(--primary); color: white; }
+        .day.has-booking::after { content: ''; position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--gold); border-radius: 50%; }
+        .day.selected { background: #064e3b; border: 2px solid var(--accent); color: white; }
+
+        .worker-pill, .equip-pill { cursor: pointer; padding: 10px; border: 1px solid #334155; border-radius: 12px; background: #111827; text-align: center; font-size: 0.75rem; font-weight: bold; transition: 0.3s; color: #94a3b8; }
+        .worker-pill.active, .equip-pill.active { border-color: var(--accent); background: #065f46; color: white; }
+
+        .form-control, .form-select { background: #0f172a; border: 1px solid #334155; color: white; border-radius: 10px; }
+        .form-control:focus, .form-select:focus { background: #1e293b; color: white; border-color: var(--accent); box-shadow: none; }
+        
+        .table { color: var(--text-light); border-color: #334155; }
+        .table-light { background: #1e293b !important; color: white !important; border: none; }
         .hidden { display: none !important; }
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
+        .tracking-link-box { background: #0f172a; padding: 10px; border-radius: 10px; font-size: 0.65rem; border: 1px dashed var(--accent); color: var(--accent); }
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
     </style>
 </head>
 <body>
 
 <div id="loadingOverlay">
-    <div class="spinner-border text-primary mb-2"></div>
-    <b>Mrakby Visuals | جاري المزامنة...</b>
+    <div class="spinner-border text-success mb-2" style="width: 3rem; height: 3rem;"></div>
+    <h5 class="mt-3 text-white fw-bold">Mrakby Visuals</h5>
 </div>
 
-<!-- واجهة المدير -->
 <div id="adminView" class="hidden">
-    <!-- تسجيل الدخول -->
+    <!-- Login -->
     <div id="loginPage" class="hidden">
         <div class="container mt-5" style="max-width: 400px;">
-            <div class="card p-4 shadow-lg border-0 rounded-4 text-center">
-                <h4 class="fw-bold mb-4 text-primary">Mrakby Visuals</h4>
+            <div class="card p-4 shadow-lg text-center">
+                <h3 class="fw-bold mb-4 text-accent">Mrakby Visuals</h3>
                 <input type="email" id="loginEmail" class="form-control mb-3" placeholder="الإيميل">
                 <input type="password" id="loginPass" class="form-control mb-3" placeholder="الباسورد">
-                <button class="btn btn-primary w-100 fw-bold" onclick="window.handleLogin()">دخول</button>
+                <button class="btn btn-success w-100 fw-bold py-2" onclick="window.handleLogin()">دخول للنظام</button>
                 <div id="loginError" class="text-danger small mt-2"></div>
             </div>
         </div>
     </div>
 
-    <!-- لوحة التحكم -->
+    <!-- Admin Panel -->
     <div id="adminContent" class="hidden">
         <nav class="navbar shadow-lg mb-3">
             <div class="container d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold">🎥 Mrakby Visuals | م/ 01097576073</h6>
-                <button class="btn btn-sm btn-outline-light" onclick="window.handleLogout()">خروج</button>
+                <h5 class="mb-0 fw-bold text-accent">🎥 Mrakby Visuals</h5>
+                <button class="btn btn-sm btn-outline-danger" onclick="window.handleLogout()">خروج</button>
             </div>
         </nav>
+
         <div class="container">
             <!-- Stats -->
-            <div class="row g-2 mb-3 text-center small">
-                <div class="col-3"><div class="stat-card"><small>دخل</small><h6 id="dashIncome">0</h6></div></div>
-                <div class="col-3"><div class="stat-card"><small>عربون</small><h6 id="dashArboun" class="text-primary">0</h6></div></div>
-                <div class="col-3"><div class="stat-card" style="border-bottom-color:red;"><small>مصاريف</small><h6 id="dashExp">0</h6></div></div>
-                <div class="col-3"><div class="stat-card" style="border-bottom-color:green;"><small>صافي</small><h6 id="dashNet">0</h6></div></div>
+            <div class="row g-2 mb-3 text-center">
+                <div class="col-3"><div class="stat-card"> <small>الدخل</small> <h6 id="dashIncome">0</h6> </div></div>
+                <div class="col-3"><div class="stat-card"> <small>العربون</small> <h6 id="dashArboun">0</h6> </div></div>
+                <div class="col-3"><div class="stat-card" style="border-color: var(--danger);"> <small>المصاريف</small> <h6 id="dashExp">0</h6> </div></div>
+                <div class="col-3"><div class="stat-card" style="border-color: var(--gold);"> <small>الصافي</small> <h6 id="dashNet">0</h6> </div></div>
             </div>
-            <!-- Tabs -->
-            <ul class="nav nav-pills nav-justified mb-3 p-1 bg-white rounded-4 shadow-sm">
+
+            <ul class="nav nav-pills nav-justified mb-3 p-1 bg-black rounded-4 shadow">
                 <li class="nav-item"><a class="nav-link active" id="btn-home" onclick="window.openTab('home')">📅 اليومية</a></li>
                 <li class="nav-item"><a class="nav-link" id="btn-bookings" onclick="window.openTab('bookings')">🎥 الحجوزات</a></li>
                 <li class="nav-item"><a class="nav-link" id="btn-halls" onclick="window.openTab('halls')">🎥 القاعات</a></li>
                 <li class="nav-item"><a class="nav-link" id="btn-logs" onclick="window.openTab('logs')">🎥 السجل</a></li>
                 <li class="nav-item"><a class="nav-link" id="btn-workers" onclick="window.openTab('workers')">🎥 الفريق <span id="inboxBadge" class="badge bg-danger rounded-pill hidden">0</span></a></li>
-                <li class="nav-item"><a class="nav-link" id="btn-config" onclick="window.openTab('config')">⚙️ الإعدادات</a></li>
+                <li class="nav-item"><a class="nav-link" id="btn-config" onclick="window.openTab('config')">⚙️</a></li>
             </ul>
 
-            <!-- SECTION: HOME -->
+            <!-- Home Section -->
             <div id="home-section" class="section-content">
                 <div class="row g-3">
-                    <div class="col-md-7"><div class="calendar-box"><div class="d-flex justify-content-between mb-2"><button class="btn btn-sm" onclick="window.changeMonth(-1)">◀</button><h6 id="calMonth" class="fw-bold"></h6><button class="btn btn-sm" onclick="window.changeMonth(1)">▶</button></div><div id="calGrid" class="calendar-grid"></div><button class="btn btn-danger w-100 mt-3 btn-sm fw-bold shadow" data-bs-toggle="modal" data-bs-target="#bookModal">➕ حجز موعد جديد</button></div></div>
-                    <div class="col-md-5"><div class="card p-3 shadow-sm border-0" style="height:100%; border-radius:20px;"><h6 class="fw-bold text-primary mb-3 small">🔔 الأجندة القادمة (اضغط للتفاصيل):</h6><div id="agendaList" style="max-height:300px; overflow-y:auto;"></div></div></div>
+                    <div class="col-md-7"><div class="calendar-box"><div class="d-flex justify-content-between mb-2"><button class="btn btn-sm text-white" onclick="window.changeMonth(-1)">◀</button><h6 id="calMonth" class="fw-bold text-accent"></h6><button class="btn btn-sm text-white" onclick="window.changeMonth(1)">▶</button></div><div id="calGrid" class="calendar-grid"></div><button class="btn btn-danger w-100 mt-3 btn-sm fw-bold shadow" data-bs-toggle="modal" data-bs-target="#bookModal">➕ حجز موعد جديد</button></div></div>
+                    <div class="col-md-5"><div class="card p-3 border-0 shadow-sm" style="height:100%; border-radius:20px;"><h6 class="fw-bold text-accent mb-3 small">🔔 الأجندة الذكية:</h6><div id="agendaList" style="max-height:280px; overflow-y:auto;"></div></div></div>
                 </div>
                 <div class="card p-3 shadow-sm mt-3 border-0">
                     <form id="dailyForm">
                         <div class="row g-2 mb-2">
-                            <div class="col-6 col-md-3"><label class="small fw-bold">📅 التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">🏛️ القاعة</label><select id="inHall" class="form-select form-select-sm"></select></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">💰 قبض</label><input type="number" id="inIncome" class="form-control form-control-sm" value="0"></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">📦 مصاريف</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
+                            <div class="col-6 col-md-3"><label class="small fw-bold">التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
+                            <div class="col-6 col-md-3"><label class="small fw-bold">القاعة</label><select id="inHall" class="form-select form-select-sm"></select></div>
+                            <div class="col-6 col-md-3"><label class="small fw-bold">القبض</label><input type="number" id="inIncome" class="form-control form-control-sm" value="0"></div>
+                            <div class="col-6 col-md-3"><label class="small fw-bold">مصاريف</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
                         </div>
-                        <label class="small fw-bold text-primary mb-1">الفنيين المشاركين اليوم:</label>
+                        <label class="small fw-bold text-accent mb-2">من عمل اليوم؟ (الأسماء الكاملة):</label>
                         <div id="workerGridDaily" class="row g-2 mb-2"></div>
-                        <textarea id="inDetails" class="form-control form-control-sm mb-2" rows="2" placeholder="ملاحظات اليومية..."></textarea>
-                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow">حفظ العملية ✅</button>
+                        <textarea id="inDetails" class="form-control form-control-sm mb-2" rows="1" placeholder="تفاصيل العمل اليومية..."></textarea>
+                        <button type="submit" class="btn btn-success w-100 fw-bold py-2 rounded-3 shadow">حفظ العملية اليومية ✅</button>
                     </form>
                 </div>
             </div>
 
-            <!-- SECTION: BOOKINGS -->
+            <!-- Bookings Section -->
             <div id="bookings-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-primary">📑 إدارة الحجوزات والميزانية</h6><div class="table-responsive"><table class="table table-sm text-center small border"><thead class="table-light"><tr><th>التاريخ</th><th>العميل</th><th>المكان</th><th>متبقي</th><th>إجراء</th></tr></thead><tbody id="bookingsTableBody"></tbody></table></div></div>
+                <div class="card p-3 border-0"><h6 class="fw-bold mb-3 text-accent">📑 الحجوزات والميزانية</h6><div class="table-responsive"><table class="table table-sm text-center align-middle small"><thead class="table-dark"><tr><th>تاريخ</th><th>العميل</th><th>المكان</th><th>اتفاق</th><th>باقي</th><th>إجراء</th></tr></thead><tbody id="bookingsTableBody"></tbody></table></div></div>
             </div>
 
-            <!-- SECTION: HALLS -->
-            <div id="halls-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-primary">🏛️ سجل القاعات:</h6><div id="hallsReportList"></div></div>
-            </div>
-
-            <!-- SECTION: LOGS -->
-            <div id="logs-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0 mb-3"><div class="row g-2"><div class="col-5"><select id="filterMonth" class="form-select form-select-sm" onchange="refreshUI()"></select></div><div class="col-5"><select id="filterYear" class="form-select form-select-sm" onchange="refreshUI()"></select></div><div class="col-2"><button class="btn btn-sm btn-dark w-100" onclick="resetFilters()">🔄</button></div></div></div>
-                <div class="card p-2 border-0 shadow-sm"><table class="table text-center align-middle small"><thead><tr><th>تاريخ</th><th>مكان</th><th>إيراد</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
-            </div>
-
-            <!-- SECTION: TEAM -->
+            <!-- Team Section -->
             <div id="workers-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0 mb-2"><h6>📥 طلبات الفريق:</h6><div id="adminInbox"></div></div>
-                <div class="card p-3 shadow-sm border-0 mb-2"><h6>💸 صرف مبالغ:</h6><div class="row g-2"><div class="col-5"><select id="payWorkerName" class="form-select form-select-sm"></select></div><div class="col-4"><input type="number" id="payAmount" class="form-control form-control-sm" placeholder="المبلغ"></div><div class="col-3"><button class="btn btn-danger btn-sm w-100" onclick="window.addWithdrawal()">سحب</button></div></div></div>
-                <div class="card p-3 shadow-sm border-0 text-center"><h6>كشوف الفنيين:</h6><div id="workerPickGrid" class="row g-2 mb-3"></div><div id="workerStatsView" class="hidden text-start"><div id="balanceSummary" class="alert alert-info text-center fw-bold py-2"></div><button class="btn btn-sm btn-warning w-100 mb-3" onclick="window.resetDevice()">🔄 إعادة تعيين قفل الموبايل</button><table class="table table-sm text-center small border"><thead><tr><th>التاريخ</th><th>البيان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table></div></div>
+                <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="fw-bold text-accent">📥 طلبات واعتذارات الفنيين:</h6><div id="adminInbox"></div></div>
+                <div class="card p-3 shadow-sm border-0 mb-3"><h6>💸 صرف مبالغ:</h6><div class="row g-2"><div class="col-5"><select id="payWorkerName" class="form-select form-select-sm"></select></div><div class="col-4"><input type="number" id="payAmount" class="form-control form-control-sm"></div><div class="col-3"><button class="btn btn-danger btn-sm w-100 fw-bold" onclick="window.addWithdrawal()">سحب</button></div></div></div>
+                <div class="card p-3 shadow-sm border-0 text-center"><h6>تتبع الفنيين وروابطهم:</h6><div id="workerPickGrid" class="row g-2 mb-4"></div><div id="workerStatsView" class="hidden text-start"><div id="workerLinkBox" class="tracking-link-box mb-3"></div><div id="balanceSummary" class="alert alert-success text-center fw-bold py-2 small"></div><table class="table table-sm table-striped border text-center small"><thead><tr><th>تاريخ</th><th>البيان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table><button class="btn btn-sm btn-warning w-100 mt-2" onclick="window.resetDevice()">🔄 إعادة قفل الموبايل</button></div></div>
             </div>
 
-            <!-- SECTION: CONFIG -->
-            <div id="config-section" class="section-content hidden">
-                <div class="card p-3 mb-2 border-0 shadow-sm"><h6>🏠 إدارة القاعات</h6><div class="input-group"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">+</button></div><div id="hList" class="d-flex flex-wrap gap-1 mt-2"></div></div>
-                <div class="card p-3 mb-2 border-0 shadow-sm"><h6>📦 إدارة المعدات والأسعار</h6><div class="input-group"><input type="text" id="eqNewName" class="form-control" placeholder="اسم المعدة"><input type="number" id="eqNewPrice" class="form-control" placeholder="سعر الإيجار"><button class="btn btn-success" onclick="window.addEquip()">+</button></div><div id="eqList" class="d-flex flex-wrap gap-1 mt-2"></div></div>
-                <div class="card p-3 border-0 shadow-sm"><h6>👤 إدارة الفريق</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control" placeholder="الاسم الكامل"></div><div class="col-4"><input type="number" id="ws" class="form-control" placeholder="اليومية"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div>
-            </div>
+            <!-- Halls Report -->
+            <div id="halls-section" class="section-content hidden"><div id="hallsReportList"></div></div>
+            <div id="logs-section" class="section-content hidden"><div class="card p-3 mb-2"><div class="row g-2"><div class="col-5"><select id="filterMonth" class="form-select form-select-sm" onchange="refreshUI()"></select></div><div class="col-5"><select id="filterYear" class="form-select form-select-sm" onchange="refreshUI()"></select></div><div class="col-2"><button class="btn btn-sm btn-dark w-100" onclick="resetFilters()">🔄</button></div></div></div><div class="card p-2 small"><table class="table text-center"><thead><tr><th>تاريخ</th><th>مكان</th><th>إيراد</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div></div>
+
+            <!-- Config Section -->
+            <div id="config-section" class="section-content hidden"><div class="card p-3 mb-2"><h6>🏛️ القاعات</h6><div class="input-group"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">+</button></div><div id="hList" class="d-flex flex-wrap mt-2"></div></div><div class="card p-3 mb-2"><h6>📦 المعدات</h6><div class="input-group"><input type="text" id="eqName" class="form-control" placeholder="المعدة"><input type="number" id="eqPrice" class="form-control" placeholder="السعر"><button class="btn btn-success" onclick="window.addEquip()">+</button></div><div id="eqList" class="d-flex flex-wrap mt-2"></div></div><div class="card p-3"><h6>👤 الفريق</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control"></div><div class="col-4"><input type="number" id="ws" class="form-control"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div></div>
         </div>
     </div>
 </div>
 
 <!-- واجهة الفني -->
-<div id="workerPortalView" class="hidden">
-    <div class="container mt-4">
-        <div id="portalHeader" class="card p-3 shadow-lg border-0 text-center mb-3 bg-primary text-white"></div>
-        <div id="workerAlerts"></div>
-        <div id="pBalance" class="alert alert-warning text-center fw-bold py-2 mb-3"></div>
-        <div class="card p-3 shadow-sm border-0 mb-3 small text-start"><h6 class="text-warning fw-bold small">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div>
-        <div id="workerRequestForm"></div>
-        <div class="card p-3 shadow-sm border-0 mt-3 small"><table class="table table-sm table-striped border text-center"><thead><tr><th>تاريخ</th><th>البيان</th><th>مبلغ</th></tr></thead><tbody id="pHistoryBody"></tbody></table></div>
-    </div>
-</div>
+<div id="workerPortalView" class="hidden"><div class="container mt-4"><div id="portalHeader" class="card p-3 shadow-lg text-center mb-3 bg-primary text-white"></div><div id="workerAlerts"></div><div id="pBalance" class="alert alert-warning text-center fw-bold py-2 mb-3"></div><div class="card p-3 shadow-sm border-0 mb-3 small"><h6 class="text-accent fw-bold small">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div><div id="workerRequestForm"></div><div class="card p-3 shadow-sm border-0 mt-3 small"><table class="table table-sm text-center"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="pHistoryBody"></tbody></table></div></div></div>
 
 <!-- Modal: Booking -->
-<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-header fw-bold small bg-light">تسجيل حجز جديد</div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="اسم العميل الكامل"><input type="text" id="bAddress" class="form-control mb-2" placeholder="عنوان العميل / مكان اللقاء"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-light p-2 rounded text-center small"><div class="col-4"><label>الاتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><h6 class="small fw-bold text-warning mb-2">📦 المعدات المطلوبة (اضغط للاختيار):</h6><div id="rentalEquipGrid" class="row g-1 mb-2 text-center"></div><input type="text" id="rFrom" class="form-control form-control-sm mb-2" placeholder="المؤجر من"><hr><label class="small fw-bold text-primary">👥 تعيين فنيين لهذا الموعد:</label><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0 p-2"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="window.saveB()">حفظ وتأكيد ✅</button></div></div></div></div>
+<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 bg-dark text-white"><div class="modal-header border-0"><h6 class="fw-bold">تسجيل حجز جديد</h6></div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="العميل"><input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-black p-2 rounded text-center small"><div class="col-4"><label>اتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><h6 class="small fw-bold text-accent">المعدات المطلوبة:</h6><div id="rentalEquipGrid" class="row g-1 mb-2"></div><input type="text" id="rFrom" class="form-control form-control-sm mb-2" placeholder="المؤجر من"><hr><label class="small fw-bold">الفنيين المعنيين:</label><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0"><button class="btn btn-success w-100 fw-bold" onclick="window.saveB()">حفظ الحجز ✅</button></div></div></div></div>
 
-<!-- Modal: Agenda Details -->
-<div class="modal fade" id="detailsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header bg-primary text-white"><h6 class="modal-title">تفاصيل الموعد</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detailsModalBody"></div></div></div></div>
+<!-- Agenda Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content bg-dark border-0 rounded-4 text-white"><div class="modal-header border-0"><h6 id="dTitle"></h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detailsModalBody"></div></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
@@ -168,19 +160,8 @@
     const auth = getAuth(app);
     const rootRef = ref(dbRef, 'videoSystem');
 
-    let db = {
-        halls: ["قاعة الفيروز", "قاعة الشافعى", "شغل الشارع"],
-        workers: [
-            {name: "محمد ايهاب", salary: 140}, {name: "محمد عادل", salary: 180},
-            {name: "محمد نادر", salary: 130}, {name: "عبده العجوز", salary: 170},
-            {name: "محمود كوكو", salary: 180}, {name: "محمد المراكبى", salary: 180},
-            {name: "السيد الشرجى", salary: 130}
-        ],
-        equipment: [{name: "كاميرا", price: 0}, {name: "درون", price: 0}],
-        logs: [], bookings: [], requests: [], withdrawals: []
-    };
-
-    let curM = new Date().getMonth(), curY = new Date().getFullYear(), currentTab = 'home', activeW = null, dataLoaded = false;
+    let db = { halls: [], workers: [], equipment: [], logs: [], bookings: [], requests: [], withdrawals: [] };
+    let curM = new Date().getMonth(), curY = new Date().getFullYear(), currentTab = 'home', dataLoaded = false, activeW = null;
     let myDeviceId = localStorage.getItem('v_device_id') || Math.random().toString(36).substring(2, 15);
     localStorage.setItem('v_device_id', myDeviceId);
 
@@ -188,9 +169,9 @@
         onValue(rootRef, (snap) => {
             const data = snap.val();
             if(data) {
-                db.halls = data.halls || db.halls;
-                db.workers = data.workers || db.workers;
-                db.equipment = data.equipment || db.equipment;
+                db.halls = data.halls || ["الفيروز", "الشافعى", "الشارع"];
+                db.workers = data.workers || [];
+                db.equipment = data.equipment || [];
                 db.logs = data.logs || [];
                 db.bookings = data.bookings || [];
                 db.requests = data.requests || [];
@@ -215,7 +196,7 @@
     window.save = () => { if(dataLoaded) set(rootRef, db); };
     window.handleLogin = () => {
         const e = document.getElementById('loginEmail').value, p = document.getElementById('loginPass').value;
-        signInWithEmailAndPassword(auth, e, p).catch(err => document.getElementById('loginError').innerText = "خطأ في الدخول");
+        signInWithEmailAndPassword(auth, e, p).catch(err => document.getElementById('loginError').innerText = "بيانات الدخول خطأ");
     };
     window.handleLogout = () => signOut(auth);
 
@@ -224,7 +205,7 @@
         if(!worker) return;
         if(!worker.lockedId) { worker.lockedId = myDeviceId; window.save(); renderWorkerPortal(name); }
         else if (worker.lockedId === myDeviceId) { renderWorkerPortal(name); }
-        else { document.body.innerHTML = `<div class='container mt-5 text-center text-danger fw-bold'>🔒 مقفل على جهاز آخر.</div>`; }
+        else { document.body.innerHTML = `<div class='container mt-5 text-center text-danger'>🔒 هذا الرابط مقفل على جهاز آخر للخصوصية.</div>`; }
     }
 
     window.openTab = (id) => {
@@ -250,14 +231,41 @@
         let i=0, e=0, arb=0; const now = new Date();
         db.logs.forEach(l => { if(new Date(l.date).getMonth() === now.getMonth()) { i += l.income; e += l.exp + Object.values(l.pays).reduce((a,b)=>a+b, 0); } });
         db.bookings.forEach(b => { if(new Date(b.date).getMonth() === now.getMonth()) arb += b.bArboun; });
-        document.getElementById('dashIncome').innerText = i; document.getElementById('dashArboun').innerText = arb;
-        document.getElementById('dashExp').innerText = e; document.getElementById('dashNet').innerText = i - e;
+        document.getElementById('dashIncome').innerText = i + " ج"; document.getElementById('dashExp').innerText = e + " ج";
+        document.getElementById('dashNet').innerText = i - e + " ج"; document.getElementById('dashArboun').innerText = arb + " ج";
     }
 
-    // --- RENDERERS ---
+    // Invoice & Calendar Functions
+    window.sendInvoice = (i) => {
+        const b = db.bookings[i];
+        let equipStr = b.equips && b.equips.length > 0 ? `%0A📦 *المعدات:* ${b.equips.join(', ')}` : "";
+        let addrStr = b.bAddress ? `%0A📍 *العنوان:* ${b.bAddress}` : "";
+        
+        const msg = `*Mrakby Visuals | المراكبى* 🎥%0A*إيصال حجز موعد*%0A👤 *العميل:* ${b.title}%0A📅 *التاريخ:* ${b.date}%0A🏛️ *المكان:* ${b.hall}${addrStr}${equipStr}%0A------------------------%0A💰 *إجمالي الاتفاق:* ${b.bTotal} ج%0A💵 *العربون المدفوع:* ${b.bArboun} ج%0A📉 *المتبقي:* ${b.bTotal - b.bArboun} ج%0A------------------------%0Aشكراً لاختياركم المراكبى! ✅`;
+        window.open(`https://wa.me/?text=${msg}`);
+    };
+
+    window.addToGoogleCalendar = (i) => {
+        const b = db.bookings[i]; const date = b.date.replace(/-/g, '');
+        window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("شغل: " + b.title)}&dates=${date}/${date}&location=${encodeURIComponent(b.bAddress||b.hall)}&details=${encodeURIComponent("متبقي: "+(b.bTotal-b.bArboun))}`);
+    };
+
+    // Table Renderers
+    function renderBookingsTable() {
+        const tbody = document.getElementById('bookingsTableBody'); tbody.innerHTML = '';
+        db.bookings.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach((b, i) => {
+            tbody.innerHTML += `<tr><td>${b.date.slice(5)}</td><td>${b.title}</td><td>${b.hall}</td><td class="text-accent fw-bold">${b.bTotal}</td><td class="text-danger">${b.bTotal - b.bArboun}</td><td>
+                <button class="btn btn-sm btn-success py-0" onclick="window.sendInvoice(${i})">📩</button>
+                <button class="btn btn-sm btn-primary py-0" onclick="window.addToGoogleCalendar(${i})">📅</button>
+                <button class="btn btn-sm btn-danger py-0" onclick="window.delI('bookings', ${i})">🗑️</button>
+            </td></tr>`;
+        });
+    }
+
+    // Logic Functions
     function renderCal() {
         const grid = document.getElementById('calGrid'); grid.innerHTML = '';
-        ["ح", "ن", "ث", "ر", "خ", "ج", "س"].forEach(d => grid.innerHTML += `<div class="fw-bold small text-muted">${d}</div>`);
+        ["ح", "ن", "ث", "ر", "خ", "ج", "س"].forEach(d => grid.innerHTML += `<div class="fw-bold small text-accent">${d}</div>`);
         const days = new Date(curY, curM + 1, 0).getDate(), start = new Date(curY, curM, 1).getDay();
         for(let i=0; i<start; i++) grid.innerHTML += `<div></div>`;
         for(let d=1; d<=days; d++) {
@@ -273,19 +281,17 @@
     function renderDailyForm() {
         document.getElementById('inHall').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
         document.getElementById('bh').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
-        document.getElementById('workerGridDaily').innerHTML = db.workers.map(w => `<div class="col-12 col-md-6 p-1"><div class="worker-pill" onclick="this.classList.toggle('active'); document.querySelector('.v-${w.name.replace(/ /g,'')}').value = this.classList.contains('active') ? ${w.salary} : 0">${w.name}</div><input type="number" class="d-none v-${w.name.replace(/ /g,'')}" value="0"></div>`).join('');
+        document.getElementById('workerGridDaily').innerHTML = db.workers.map(w => `<div class="col-6 col-md-4 p-1"><div class="worker-pill" onclick="this.classList.toggle('active'); document.querySelector('.v-${w.name.replace(/ /g,'')}').value = this.classList.contains('active') ? ${w.salary} : 0">${w.name}</div><input type="number" class="d-none v-${w.name.replace(/ /g,'')}" value="0"></div>`).join('');
         document.getElementById('bwGrid').innerHTML = db.workers.map(w => `<div class="col-6 col-md-4 p-1"><div class="worker-pill small" onclick="this.classList.toggle('active')"><input type="checkbox" class="b-chk d-none" value="${w.name}"> ${w.name}</div></div>`).join('');
-        document.getElementById('rentalEquipGrid').innerHTML = db.equipment.map(e => `<div class="col-4 p-1"><div class="equip-pill small" onclick="this.classList.toggle('active')"><input type="checkbox" class="e-chk d-none" value="${e.name}" data-price="${e.price}"> ${e.name} (${e.price})</div></div>`).join('');
+        document.getElementById('rentalEquipGrid').innerHTML = db.equipment.map(e => `<div class="col-4 p-1"><div class="equip-pill small" onclick="this.classList.toggle('active')"><input type="checkbox" class="e-chk d-none" value="${e.name}"> ${e.name} (${e.price})</div></div>`).join('');
     }
 
     window.saveB = () => {
         const t = document.getElementById('bt').value, a = document.getElementById('bAddress').value, h = document.getElementById('bh').value, d = document.getElementById('bd').value;
         const total = parseFloat(document.getElementById('bTotal').value)||0, arb = parseFloat(document.getElementById('bArboun').value)||0;
-        const rFrom = document.getElementById('rFrom').value;
         const workers = []; document.querySelectorAll('#bwGrid .worker-pill.active').forEach(p => workers.push(p.innerText.trim()));
         const equips = []; document.querySelectorAll('.equip-pill.active').forEach(p => equips.push(p.innerText.trim()));
-        if(!t || workers.length === 0) return alert("اكمل البيانات");
-        db.bookings.push({title: t, bAddress: a, hall: h, date: d, workers, bTotal: total, bArboun: arb, equips, rFrom});
+        db.bookings.push({title: t, bAddress: a, hall: h, date: d, workers, bTotal: total, bArboun: arb, equips});
         window.save(); bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
     };
 
@@ -306,42 +312,25 @@
         const b = db.bookings[i];
         document.getElementById('detailsModalBody').innerHTML = `
             <div class="text-end small">
-                <p><b>👤 العميل:</b> ${b.title}</p>
-                <p><b>🏛️ القاعة:</b> ${b.hall}</p>
-                <p><b>📍 العنوان:</b> ${b.bAddress || '-'}</p>
-                <p><b>💰 الميزانية:</b> الاتفاق ${b.bTotal}ج | العربون ${b.bArboun}ج | <span class="text-danger">المتبقي ${b.bTotal - b.bArboun}ج</span></p>
-                <p><b>📦 المعدات:</b> ${b.equips ? b.equips.join(', ') : 'لا يوجد'} | المؤجر: ${b.rFrom || '-'}</p>
-                <p><b>👥 الفنيين:</b> ${b.workers.join(' - ')}</p>
+                <p>👤 <b>العميل:</b> ${b.title}</p>
+                <p>📍 <b>العنوان:</b> ${b.bAddress || '-'}</p>
+                <p>💰 <b>الميزانية:</b> الاتفاق ${b.bTotal}ج | <span class="text-danger">متبقي ${b.bTotal-b.bArboun}ج</span></p>
+                <p>📦 <b>المعدات:</b> ${b.equips ? b.equips.join(',') : 'لا يوجد'}</p>
+                <p>👥 <b>الفنيين:</b> ${b.workers.join(', ')}</p>
             </div>
             <div class="mt-3 d-flex gap-2">
-                <button class="btn btn-sm btn-success w-50" onclick="window.sendInvoice(${i})">إرسال فاتورة 📩</button>
-                <button class="btn btn-sm btn-primary w-50" onclick="window.addToGoogleCalendar(${i})">تقويم جوجل 📅</button>
+                <button class="btn btn-sm btn-success w-50" onclick="window.sendInvoice(${i})">📩 فاتورة</button>
+                <button class="btn btn-sm btn-primary w-50" onclick="window.addToGoogleCalendar(${i})">📅 تقويم</button>
             </div>`;
         new bootstrap.Modal(document.getElementById('detailsModal')).show();
     };
-
-    // --- Same Finance & Logs Logic ---
-    window.sendInvoice = (i) => {
-        const b = db.bookings[i];
-        const msg = `*Mrakby Visuals | المراكبى* 🎥%0A👤 *العميل:* ${b.title}%0A📅 *التاريخ:* ${b.date}%0A🏛️ *المكان:* ${b.hall}%0A📍 *العنوان:* ${b.bAddress}%0A💰 *إجمالي الاتفاق:* ${b.bTotal} ج%0A💵 *العربون:* ${b.bArboun} ج%0A📉 *المتبقي:* ${b.bTotal - b.bArboun} ج%0A✅ تم الحجز بنجاح!`;
-        window.open(`https://wa.me/?text=${msg}`);
-    };
-    window.addToGoogleCalendar = (i) => {
-        const b = db.bookings[i]; const d = b.date.replace(/-/g, '');
-        window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(b.title)}&dates=${d}/${d}&location=${encodeURIComponent(b.bAddress)}`);
-    };
-
-    function renderBookingsTable() {
-        const tbody = document.getElementById('bookingsTableBody'); tbody.innerHTML = '';
-        db.bookings.forEach((b, i) => { tbody.innerHTML += `<tr><td>${b.date.slice(5)}</td><td>${b.title}</td><td>${b.hall}</td><td>${b.bTotal - b.bArboun}</td><td><button class="btn btn-sm btn-danger py-0" onclick="window.delI('bookings', ${i})">🗑️</button></td></tr>`; });
-    }
 
     function renderHallsReport() {
         const list = document.getElementById('hallsReportList'); list.innerHTML = '';
         db.halls.forEach(h => {
             let days=0, wSal=0, oExp=0, inc=0;
             db.logs.forEach(l => { if(l.hall === h) { days++; inc += l.income; oExp += l.exp; wSal += Object.values(l.pays).reduce((a,b)=>a+b, 0); } });
-            list.innerHTML += `<div class="hall-report-card shadow-sm"><h6 class="fw-bold text-primary">${h}</h6><div class="row small text-center"><div class="col-3">أيام<br>${days}</div><div class="col-3">فنيين<br>${wSal}</div><div class="col-3">مصاريف<br>${oExp}</div><div class="col-3 text-success">صافي<br>${inc - (wSal + oExp)}</div></div></div>`;
+            list.innerHTML += `<div class="card p-3 mb-2 shadow-sm border-0"><h6 class="fw-bold text-accent">${h}</h6><div class="row small text-center"><div class="col-3">أيام<br>${days}</div><div class="col-3">فنيين<br>${wSal}</div><div class="col-3">مصاريف<br>${oExp}</div><div class="col-3 text-success">صافي<br>${inc - (wSal + oExp)}</div></div></div>`;
         });
     }
 
@@ -350,7 +339,7 @@
         const fM = parseInt(document.getElementById('filterMonth').value), fY = parseInt(document.getElementById('filterYear').value);
         db.logs.filter(l => { const d = new Date(l.date); return d.getMonth() === fM && d.getFullYear() === fY; }).sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach((l, i) => {
             let tw = Object.values(l.pays).reduce((a,b) => a+b, 0);
-            tbody.innerHTML += `<tr><td>${l.date.slice(5)}</td><td>${l.hall}</td><td>${l.income}</td><td>${l.income - (l.exp + tw)}</td><td><button class="btn btn-sm btn-danger py-0" onclick="window.delI('logs', ${db.logs.indexOf(l)})">🗑️</button></td></tr>`;
+            tbody.innerHTML += `<tr><td>${l.date.slice(5)}</td><td>${l.hall}</td><td>${l.income}</td><td class="text-accent">${l.income - (l.exp + tw)}</td><td><span class="text-danger" onclick="window.delI('logs', ${db.logs.indexOf(l)})">🗑️</span></td></tr>`;
         });
     }
 
@@ -363,8 +352,10 @@
         activeW = n; document.querySelectorAll('.worker-pill').forEach(p => p.classList.remove('active')); el.classList.add('active'); document.getElementById('workerStatsView').classList.remove('hidden');
         let earned = 0, withdrawn = 0; const tbody = document.getElementById('workerHistoryBody'); tbody.innerHTML = '';
         db.logs.forEach(l => { if(l.pays[n]) { earned += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>حضور: ${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
-        db.withdrawals.forEach(w => { if(w.name === n) { withdrawn += w.amount; tbody.innerHTML += `<tr class="text-danger"><td>${w.date}</td><td>سحب</td><td>-${w.amount} ج</td></tr>`; }});
-        document.getElementById('balanceSummary').innerText = `الباقي: ${earned - withdrawn} ج`;
+        db.withdrawals.forEach(w => { if(w.name === n) { withdrawn += w.amount; tbody.innerHTML += `<tr class="text-danger"><td>${w.date}</td><td>سحب نقدية</td><td>-${w.amount} ج</td></tr>`; }});
+        document.getElementById('balanceSummary').innerText = `المتبقي له: ${earned - withdrawn} ج`;
+        const link = window.location.href.split('#')[0] + "#" + encodeURIComponent(n);
+        document.getElementById('workerLinkBox').innerHTML = `رابط التتبع: <a href="${link}" target="_blank" class="text-accent">${link}</a>`;
     };
 
     window.addWithdrawal = () => {
@@ -372,42 +363,48 @@
         if(a > 0) { db.withdrawals.push({ name: n, amount: a, date: new Date().toISOString().split('T')[0] }); window.save(); alert("تم تسجيل السحب"); }
     };
 
+    function renderAdminInbox() {
+        document.getElementById('inboxBadge').innerText = db.requests.length;
+        document.getElementById('inboxBadge').classList.toggle('hidden', db.requests.length === 0);
+        document.getElementById('adminInbox').innerHTML = db.requests.length ? db.requests.map((r, i) => `<div class="p-2 bg-black border rounded mb-2 small shadow-sm"><strong>${r.from}</strong>: ${r.note}<button class="btn btn-sm text-danger" onclick="window.delI('requests', ${i})">حذف</button></div>`).join('') : 'لا توجد طلبات';
+    }
+
     function renderSettings() {
         document.getElementById('hList').innerHTML = db.halls.map((h, i) => `<span class="badge bg-secondary p-2 m-1">${h} <span onclick="window.delI('halls', ${i})" style="cursor:pointer">×</span></span>`).join('');
         document.getElementById('eqList').innerHTML = db.equipment.map((e, i) => `<span class="badge bg-warning text-dark p-2 m-1">${e.name} (${e.price}) <span onclick="window.delI('equipment', ${i})" style="cursor:pointer">×</span></span>`).join('');
-        document.getElementById('wEditList').innerHTML = db.workers.map((w, i) => `<div class="row g-1 mb-1 align-items-center bg-white p-1 rounded border small"><div class="col-7"><input type="text" class="form-control form-control-sm" value="${w.name}" onchange="window.upW(${i}, 'name', this.value)"></div><div class="col-3"><input type="number" class="form-control form-control-sm" value="${w.salary}" onchange="window.upW(${i}, 'salary', this.value)"></div><div class="col-2 text-center"><span class="text-danger" onclick="window.delI('workers', ${i})">🗑️</span></div></div>`).join('');
+        document.getElementById('wEditList').innerHTML = db.workers.map((w, i) => `<div class="row g-1 mb-1 align-items-center bg-black p-1 rounded border small"><div class="col-7"><input type="text" class="form-control form-control-sm" value="${w.name}" onchange="window.upW(${i}, 'name', this.value)"></div><div class="col-3"><input type="number" class="form-control form-control-sm" value="${w.salary}" onchange="window.upW(${i}, 'salary', this.value)"></div><div class="col-2 text-center"><span class="text-danger" onclick="window.delI('workers', ${i})">🗑️</span></div></div>`).join('');
     }
 
     function populateFilters() {
-        const m = document.getElementById('filterMonth'), y = document.getElementById('filterYear');
-        if(m.options.length > 0) return;
-        ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"].forEach((name,i) => m.innerHTML += `<option value="${i}" ${i === curM ? 'selected' : ''}>${name}</option>`);
+        const m = document.getElementById('filterMonth'), y = document.getElementById('filterYear'); if(m.options.length > 0) return;
+        ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"].forEach((n,i) => m.innerHTML += `<option value="${i}" ${i === curM ? 'selected' : ''}>${n}</option>`);
         for(let yr=2024; yr<=2026; yr++) y.innerHTML += `<option value="${yr}" ${yr === curY ? 'selected' : ''}>${yr}</option>`;
     }
 
-    // --- Portal Worker ---
+    // Worker Portal Logic
     function renderWorkerPortal(n) {
         document.getElementById('workerPortalView').classList.remove('hidden');
-        document.getElementById('portalHeader').innerHTML = `<h5 class="fw-bold mb-0">${n}</h5><small>Mrakby Visuals</small>`;
+        document.getElementById('portalHeader').innerHTML = `<h5 class="fw-bold mb-0">${n}</h5><small>بوابة Mrakby Visuals</small>`;
         const now = new Date().toISOString().split('T')[0];
         const tj = db.bookings.find(b => b.workers.includes(n) && b.date === now);
-        if(tj) document.getElementById('workerAlerts').innerHTML = `<div class="alert-today">📍 النهاردة: ${tj.hall} (${tj.title})</div>`;
-        const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= now);
-        document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="p-2 mb-2 bg-white border rounded shadow-sm">📅 ${u.date} | ${u.hall}<br><b>${u.title}</b></div>`).join('') || 'لا توجد مواعيد';
+        if(tj) document.getElementById('workerAlerts').innerHTML = `<div class="alert-today">📍 النهاردة: ${tj.hall} (${tj.title})<br><small>العنوان: ${tj.bAddress}</small></div>`;
+        const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= now).sort((a,b)=>new Date(a.date)-new Date(b.date));
+        document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="p-2 mb-2 bg-black border rounded shadow-sm text-start small">📅 ${u.date} | ${u.hall}<br><b>${u.title}</b></div>`).join('') || 'لا توجد مواعيد';
         let earned = 0, withdrawn = 0; const tbody = document.getElementById('pHistoryBody'); tbody.innerHTML = '';
         db.logs.forEach(l => { if(l.pays[n]) { earned += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>حضور: ${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
         db.withdrawals.forEach(w => { if(w.name === n) { withdrawn += w.amount; tbody.innerHTML += `<tr class="text-danger"><td>${w.date}</td><td>سحب</td><td>-${w.amount} ج</td></tr>`; }});
-        document.getElementById('pBalance').innerText = (earned - withdrawn === 0) ? "حسابك خالص ✅" : `الباقي لك: ${earned - withdrawn} ج`;
+        document.getElementById('pBalance').innerText = (earned - withdrawn === 0) ? "الحساب خالص ✅" : `المتبقي لك: ${earned - withdrawn} ج`;
     }
 
     window.addH = () => { let v = document.getElementById('hNew').value; if(v){ db.halls.push(v); window.save(); document.getElementById('hNew').value=''; } };
-    window.addW = () => { let n = document.getElementById('wn').value, s = parseFloat(document.getElementById('ws').value); if(n){ db.workers.push({name:n, salary:s}); window.save(); document.getElementById('wn').value=''; document.getElementById('ws').value=''; } };
-    window.addEquip = () => { let n = document.getElementById('eqNewName').value, p = parseFloat(document.getElementById('eqNewPrice').value)||0; if(n){ db.equipment.push({name:n, price:p}); window.save(); document.getElementById('eqNewName').value=''; document.getElementById('eqNewPrice').value=''; } };
+    window.addW = () => { let n = document.getElementById('wn').value, s = parseFloat(document.getElementById('ws').value); if(n){ db.workers.push({name:n, salary:s}); window.save(); } };
+    window.addEquip = () => { let n = document.getElementById('eqName').value, p = parseFloat(document.getElementById('eqPrice').value); if(n){ db.equipment.push({name:n, price:p}); window.save(); } };
     window.delI = (t, i) => { if(confirm("حذف؟")) { db[t].splice(i, 1); window.save(); } };
     window.upW = (i, k, v) => { db.workers[i][k] = k==='salary'?parseFloat(v):v; window.save(); };
     window.changeMonth = (d) => { curM += d; if(curM>11){curM=0;curYear++;} if(curM<0){curM=11;curY--;} renderCal(); };
-    window.resetDevice = () => { let w = db.workers.find(x => x.name === activeW); if(w && confirm("فك قفل الجهاز؟")) { w.lockedId = null; window.save(); alert("تم"); } };
+    window.resetDevice = () => { let w = db.workers.find(x => x.name === activeW); if(w && confirm("فك قفل الموبايل؟")) { w.lockedId = null; window.save(); alert("تم التعيين"); } };
     window.resetFilters = () => { document.getElementById('filterMonth').value = new Date().getMonth(); document.getElementById('filterYear').value = new Date().getFullYear(); refreshUI(); };
+
     document.getElementById('inDate').valueAsDate = new Date();
 </script>
 </body>
