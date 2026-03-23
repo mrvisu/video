@@ -33,10 +33,12 @@
      <h1 id="main-title" class="text-3xl font-bold text-slate-800">يومية الاستوديو المتقدمة</h1>
      <p class="text-sm text-slate-500">لوحة إدارة احترافية</p>
     </div>
-    <div class="flex items-center gap-2"><button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
+    <div class="flex items-center gap-2">
+     <button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
     </div>
    </header>
-   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;"><button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
+   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;">
+    <button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
    </nav>
    <main id="main-content" class="flex-1 p-6 overflow-y-auto">
    </main>
@@ -76,49 +78,46 @@
 
     // SDK Initialization
     async function initApp() {
-      if (window.dataSdk) {
-        const dataHandler = {
-          onDataChanged: (data) => {
-            allData = data;
-            staffMembers = data.filter(d => d.type === 'staff');
-            
-            if (staffMembers.length === 0) {
-              defaultPhotographers.forEach(ph => {
-                const staffData = {
-                  type: 'staff',
-                  staff_name: ph.name,
-                  staff_role: ph.role,
-                  staff_pay: 300,
-                  staff_slug: ph.name.toLowerCase().replace(/\s+/g, '-'),
-                  staff_portal_link: `photographer-${ph.name.toLowerCase().replace(/\s+/g, '-')}`
-                };
-              });
+      try {
+        // Initialize Data SDK first
+        if (window.dataSdk) {
+          const dataHandler = {
+            onDataChanged: (data) => {
+              allData = data || [];
+              staffMembers = allData.filter(d => d.type === 'staff');
+              renderUI();
             }
-            renderUI();
+          };
+          const result = await window.dataSdk.init(dataHandler);
+          if (!result.isOk) {
+            console.error('Data SDK init failed:', result.error);
           }
-        };
-        const result = await window.dataSdk.init(dataHandler);
-        if (!result.isOk) console.warn('Data SDK init issue');
-      }
+        } else {
+          console.error('Data SDK not available');
+        }
 
-      if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig,
-          onConfigChange: async (newConfig) => {
-            config = { ...config, ...newConfig };
-            renderUI();
-          },
-          mapToCapabilities: () => ({
-            recolorables: [],
-            borderables: [],
-            fontEditable: undefined,
-            fontSizeable: undefined
-          }),
-          mapToEditPanelValues: (cfg) => new Map([
-            ["main_title", cfg.main_title],
-            ["footer_note", cfg.footer_note]
-          ])
-        });
+        // Initialize Element SDK
+        if (window.elementSdk) {
+          window.elementSdk.init({
+            defaultConfig,
+            onConfigChange: async (newConfig) => {
+              config = { ...config, ...newConfig };
+              renderUI();
+            },
+            mapToCapabilities: () => ({
+              recolorables: [],
+              borderables: [],
+              fontEditable: undefined,
+              fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (cfg) => new Map([
+              ["main_title", cfg.main_title],
+              ["footer_note", cfg.footer_note]
+            ])
+          });
+        }
+      } catch (err) {
+        console.error('Initialization error:', err);
       }
 
       lucide.createIcons();
@@ -1429,6 +1428,12 @@
     // HANDLERS
     async function handleBooking(e) {
       e.preventDefault();
+      
+      if (!window.dataSdk) {
+        showError('⚠️ البرنامج لم يتم تحميله بشكل صحيح. حاول تحديث الصفحة.');
+        return;
+      }
+
       const form = e.target;
       const formData = new FormData(form);
       const photographers = Array.from(form.querySelectorAll('input[name="photographers"]:checked')).map(cb => cb.value).join(', ');
@@ -1448,15 +1453,21 @@
         status: 'مؤكد'
       };
 
-      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
-      if (allData.length >= 999) return showError('تم الوصول للحد الأقصى من السجلات');
+      if (allData.length >= 999) {
+        showError('❌ تم الوصول للحد الأقصى من السجلات (999)');
+        return;
+      }
 
-      const result = await window.dataSdk.create(data);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم حفظ الحجز بنجاح!');
-      } else {
-        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      try {
+        const result = await window.dataSdk.create(data);
+        if (result.isOk) {
+          closeModal();
+          showSuccess('✅ تم حفظ الحجز بنجاح!');
+        } else {
+          showError('❌ خطأ: ' + (result.error?.message || 'فشل حفظ البيانات'));
+        }
+      } catch (err) {
+        showError('❌ خطأ: ' + err.message);
       }
     }
 
@@ -1779,5 +1790,5 @@
 
     window.addEventListener('DOMContentLoaded', initApp);
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0e9ac753f3e1d1',t:'MTc3NDI4MTE2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0eaa27123ec570',t:'MTc3NDI4MTc5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
