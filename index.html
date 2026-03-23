@@ -33,10 +33,12 @@
      <h1 id="main-title" class="text-3xl font-bold text-slate-800">يومية الاستوديو المتقدمة</h1>
      <p class="text-sm text-slate-500">لوحة إدارة احترافية</p>
     </div>
-    <div class="flex items-center gap-2"><button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
+    <div class="flex items-center gap-2">
+     <button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
     </div>
    </header>
-   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;"><button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
+   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;">
+    <button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
    </nav>
    <main id="main-content" class="flex-1 p-6 overflow-y-auto">
    </main>
@@ -260,6 +262,10 @@
       `;
     }
 
+    // Calendar navigation state
+    let calendarMonth = new Date().getMonth();
+    let calendarYear = new Date().getFullYear();
+
     // CALENDAR
     function renderCalendar(container) {
       const bookings = allData.filter(d => d.type === 'booking');
@@ -270,9 +276,8 @@
         .filter(b => new Date(b.date) >= today)
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      const currentMonth = new Date();
-      const year = currentMonth.getFullYear();
-      const month = currentMonth.getMonth();
+      const year = calendarYear;
+      const month = calendarMonth;
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
       const daysInMonth = lastDay.getDate();
@@ -285,7 +290,30 @@
         <div class="flex flex-col lg:flex-row gap-8">
           <div class="flex-1">
             <div class="glass-card p-6 rounded-2xl shadow-lg">
-              <h2 class="text-2xl font-bold text-slate-800 mb-6">${monthNames[month]} ${year}</h2>
+              <!-- Month/Year Navigation -->
+              <div class="flex items-center justify-between mb-6">
+                <button onclick="previousMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                  <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </button>
+                
+                <div class="flex items-center gap-4">
+                  <select id="month-select" onchange="changeMonth(this.value)" class="px-4 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-800">
+                    ${monthNames.map((m, idx) => `<option value="${idx}" ${idx === month ? 'selected' : ''}>${m}</option>`).join('')}
+                  </select>
+                  
+                  <select id="year-select" onchange="changeYear(this.value)" class="px-4 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-800">
+                    ${Array.from({length: 5}, (_, i) => year - 2 + i).map(y => `<option value="${y}" ${y === year ? 'selected' : ''}>${y}</option>`).join('')}
+                  </select>
+                </div>
+
+                <button onclick="nextMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-600 hover:text-slate-900">
+                  <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+              </div>
+
+              <button onclick="goToToday()" class="w-full mb-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-bold transition-all">
+                🎯 اليوم
+              </button>
               
               <div class="grid grid-cols-7 gap-2 mb-4">
                 ${['ح', 'ن', 'ث', 'ع', 'خ', 'ج', 'س'].map(d => 
@@ -311,6 +339,25 @@
                   </button>`;
                 }).join('')}
               </div>
+
+              <!-- Month Statistics -->
+              <div class="mt-6 p-4 bg-gradient-to-r from-slate-100 to-slate-200 rounded-xl">
+                <h4 class="font-bold text-slate-800 mb-3 text-sm">📊 إحصائيات الشهر</h4>
+                <div class="grid grid-cols-3 gap-3 text-xs">
+                  <div class="bg-white p-3 rounded-lg text-center">
+                    <div class="text-slate-600 font-semibold mb-1">الحجوزات</div>
+                    <div class="text-2xl font-bold text-blue-600">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length}</div>
+                  </div>
+                  <div class="bg-white p-3 rounded-lg text-center">
+                    <div class="text-slate-600 font-semibold mb-1">الأيام النشطة</div>
+                    <div class="text-2xl font-bold text-green-600">${new Set(bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).map(b => b.date)).size}</div>
+                  </div>
+                  <div class="bg-white p-3 rounded-lg text-center">
+                    <div class="text-slate-600 font-semibold mb-1">الإيرادات</div>
+                    <div class="text-lg font-bold text-amber-600">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).reduce((acc, b) => acc + Number(b.paid_amount || 0), 0)} ج.م</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -332,19 +379,23 @@
             </div>
 
             <div class="glass-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-              <h3 class="font-bold mb-4">إحصائيات الشهر</h3>
+              <h3 class="font-bold mb-4">📈 تفاصيل الشهر</h3>
               <div class="space-y-2">
                 <div class="flex justify-between pb-2 border-b border-blue-400">
                   <span>إجمالي الحجوزات</span>
-                  <span class="font-bold">${bookings.length}</span>
+                  <span class="font-bold">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length}</span>
                 </div>
                 <div class="flex justify-between pb-2 border-b border-blue-400">
                   <span>أيام بها حجوزات</span>
-                  <span class="font-bold">${new Set(bookings.map(b => b.date)).size}</span>
+                  <span class="font-bold">${new Set(bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).map(b => b.date)).size}</span>
+                </div>
+                <div class="flex justify-between pb-2 border-b border-blue-400">
+                  <span>الإيرادات المحصلة</span>
+                  <span class="font-bold">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).reduce((acc, b) => acc + Number(b.paid_amount || 0), 0)} ج.م</span>
                 </div>
                 <div class="flex justify-between">
-                  <span>متوسط يومي</span>
-                  <span class="font-bold">${Math.round(bookings.length / Math.max(new Set(bookings.map(b => b.date)).size, 1))}</span>
+                  <span>المتبقي من الحجوزات</span>
+                  <span class="font-bold">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).reduce((acc, b) => acc + Number(b.remaining_amount || 0), 0)} ج.م</span>
                 </div>
               </div>
             </div>
@@ -1331,6 +1382,45 @@
       document.getElementById('modal-container').classList.add('hidden');
     }
 
+    function previousMonth() {
+      calendarMonth--;
+      if (calendarMonth < 0) {
+        calendarMonth = 11;
+        calendarYear--;
+      }
+      renderUI();
+      lucide.createIcons();
+    }
+
+    function nextMonth() {
+      calendarMonth++;
+      if (calendarMonth > 11) {
+        calendarMonth = 0;
+        calendarYear++;
+      }
+      renderUI();
+      lucide.createIcons();
+    }
+
+    function changeMonth(monthValue) {
+      calendarMonth = Number(monthValue);
+      renderUI();
+      lucide.createIcons();
+    }
+
+    function changeYear(yearValue) {
+      calendarYear = Number(yearValue);
+      renderUI();
+      lucide.createIcons();
+    }
+
+    function goToToday() {
+      calendarMonth = new Date().getMonth();
+      calendarYear = new Date().getFullYear();
+      renderUI();
+      lucide.createIcons();
+    }
+
     function openClientDetails(bookingId) {
       const booking = allData.find(b => b.type === 'booking' && b.__backendId === bookingId);
       if (!booking) return;
@@ -1820,5 +1910,5 @@
 
     window.addEventListener('DOMContentLoaded', initApp);
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0eff0c536dc570',t:'MTc3NDI4NTI2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0f0574b397c570',t:'MTc3NDI4NTUzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
