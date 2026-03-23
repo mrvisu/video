@@ -3,33 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام فيديو القاعة - بوابة الإدارة والفنيين</title>
+    <title>نظام إدارة فيديو القاعات v18.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #0f172a; --secondary: #10b981; --accent: #3b82f6; --danger: #ef4444; --warning: #f59e0b; --light: #f8fafc; }
         body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; min-height: 100vh; color: #1e293b; padding-bottom: 30px; }
         
-        .login-box { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        /* تصميم المدير */
         .navbar { background: var(--primary); color: white; border-bottom: 4px solid var(--secondary); padding: 1rem; }
         .stat-card { background: white; border-radius: 15px; padding: 12px; border-bottom: 4px solid var(--primary); text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .nav-pills .nav-link { color: var(--primary); font-weight: bold; background: white; margin: 2px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 0.8rem; }
         .nav-pills .nav-link.active { background-color: var(--primary) !important; color: white !important; }
         
+        /* قوالب الأماكن الملونة */
+        .badge-place { padding: 4px 10px; border-radius: 8px; color: white; font-weight: bold; font-size: 0.75rem; }
+        .place-فيروز { background-color: #0288d1; }
+        .place-شافعى { background-color: #7b1fa2; }
+        .place-الشارع { background-color: #f57c00; }
+        .place-default { background-color: #64748b; }
+
         /* التنبيهات */
-        .alert-today { background: #dcfce7; border-right: 6px solid #10b981; padding: 15px; border-radius: 15px; margin-bottom: 12px; font-weight: bold; }
-        .alert-tomorrow { background: #fff7ed; border-right: 6px solid #f59e0b; padding: 15px; border-radius: 15px; margin-bottom: 12px; font-weight: bold; }
+        .alert-today { background: #dcfce7; border-right: 5px solid #10b981; padding: 12px; border-radius: 15px; margin-bottom: 12px; font-weight: bold; }
+        .alert-tomorrow { background: #fff7ed; border-right: 5px solid #f59e0b; padding: 12px; border-radius: 15px; margin-bottom: 12px; font-weight: bold; }
         
         .calendar-box { background: white; border-radius: 20px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
         .day { padding: 10px 0; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.85rem; position: relative; }
-        .day.has-booking::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
+        .day.has-booking::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--danger); border-radius: 50%; }
         .day.selected { background: #ecfdf5; border: 2px solid var(--secondary); }
         
         .worker-pill { cursor: pointer; padding: 10px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; text-align: center; font-size: 0.75rem; font-weight: bold; transition: 0.3s; }
         .worker-pill.active { border-color: var(--secondary); background: #ecfdf5; }
-        .hidden { display: none; }
-        .request-card { background: #fff; border-right: 5px solid var(--accent); border-radius: 12px; padding: 10px; margin-bottom: 10px; font-size: 0.8rem; }
+        .hidden { display: none !important; }
+        .login-box { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -37,107 +44,126 @@
 <div id="loadingOverlay">
     <div class="d-flex flex-column align-items-center justify-content-center" style="height: 100vh;">
         <div class="spinner-border text-primary mb-2"></div>
-        <b>جاري تحميل البيانات...</b>
+        <b>جاري تحميل النظام...</b>
     </div>
 </div>
 
-<!-- صفحة الدخول -->
-<div id="loginPage" class="hidden">
-    <div class="login-box shadow-lg">
-        <h4 class="text-center fw-bold mb-4 text-primary">🔐 دخول المدير</h4>
-        <input type="email" id="loginEmail" class="form-control mb-3" placeholder="البريد الإلكتروني">
-        <input type="password" id="loginPass" class="form-control mb-3" placeholder="كلمة المرور">
-        <button class="btn btn-primary w-100 fw-bold py-2" onclick="window.handleLogin()">دخول للنظام</button>
-        <div id="loginError" class="text-danger small mt-2 text-center"></div>
+<!-- صفحة المدير المحمية -->
+<div id="adminContainer" class="hidden">
+    <!-- صفحة الدخول -->
+    <div id="loginPage" class="hidden">
+        <div class="login-box shadow-lg text-center">
+            <h4 class="fw-bold mb-4 text-primary">🔐 دخول المدير</h4>
+            <input type="email" id="loginEmail" class="form-control mb-3" placeholder="البريد الإلكتروني">
+            <input type="password" id="loginPass" class="form-control mb-3" placeholder="كلمة المرور">
+            <button class="btn btn-primary w-100 fw-bold" onclick="window.handleLogin()">دخول</button>
+            <div id="loginError" class="text-danger small mt-2"></div>
+        </div>
     </div>
-</div>
 
-<!-- واجهة المدير -->
-<div id="appContent" class="hidden">
-    <nav class="navbar shadow-lg mb-3">
-        <div class="container d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold">🎥 نظام الإدارة | 01097576073</h6>
-            <button class="btn btn-sm btn-outline-light" onclick="window.handleLogout()">خروج</button>
-        </div>
-    </nav>
+    <!-- واجهة الإدارة -->
+    <div id="adminContent" class="hidden">
+        <nav class="navbar shadow-lg mb-3">
+            <div class="container d-flex justify-content-between">
+                <h6 class="mb-0 fw-bold">🎥 لوحة التحكم | 01097576073</h6>
+                <button class="btn btn-sm btn-outline-light" onclick="window.handleLogout()">خروج</button>
+            </div>
+        </nav>
 
-    <div class="container">
-        <div class="row g-2 mb-3 text-center text-dark small">
-            <div class="col-3"><div class="stat-card"> <small>دخل الشهر</small> <h6 id="dashIncome">0</h6> </div></div>
-            <div class="col-3"><div class="stat-card"> <small>شغل الشهر</small> <h6 id="dashJobs">0</h6> </div></div>
-            <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--danger);"> <small>مصاريف</small> <h6 id="dashExp">0</h6> </div></div>
-            <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--secondary);"> <small>الصافي</small> <h6 id="dashNet">0</h6> </div></div>
-        </div>
+        <div class="container">
+            <!-- Stats -->
+            <div class="row g-2 mb-3 text-center text-dark small">
+                <div class="col-3"><div class="stat-card"> <small>دخل</small> <h6 id="dashIncome">0</h6> </div></div>
+                <div class="col-3"><div class="stat-card"> <small>شغل</small> <h6 id="dashJobs">0</h6> </div></div>
+                <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--danger);"> <small>مصاريف</small> <h6 id="dashExp">0</h6> </div></div>
+                <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--secondary);"> <small>صافي</small> <h6 id="dashNet">0</h6> </div></div>
+            </div>
 
-        <ul class="nav nav-pills nav-justified mb-3 p-1 bg-white rounded-4 shadow-sm">
-            <li class="nav-item"><a class="nav-link active" id="t-home" onclick="window.openTab('home')">📅 اليومية</a></li>
-            <li class="nav-item"><a class="nav-link" id="t-logs" onclick="window.openTab('logs')">📊 السجل</a></li>
-            <li class="nav-item"><a class="nav-link" id="t-workers" onclick="window.openTab('workers')">👤 الفريق <span id="inboxBadge" class="badge bg-danger rounded-pill hidden">0</span></a></li>
-            <li class="nav-item"><a class="nav-link" id="t-config" onclick="window.openTab('config')">⚙️ الإعدادات</a></li>
-        </ul>
+            <ul class="nav nav-pills nav-justified mb-3 p-1 bg-white rounded-4 shadow-sm">
+                <li class="nav-item"><a class="nav-link active" id="t-home" onclick="window.openTab('home')">📅 اليومية</a></li>
+                <li class="nav-item"><a class="nav-link" id="t-logs" onclick="window.openTab('logs')">📊 السجل</a></li>
+                <li class="nav-item"><a class="nav-link" id="t-workers" onclick="window.openTab('workers')">👤 الفريق <span id="inboxBadge" class="badge bg-danger rounded-pill hidden">0</span></a></li>
+                <li class="nav-item"><a class="nav-link" id="t-config" onclick="window.openTab('config')">⚙️ الإعدادات</a></li>
+            </ul>
 
-        <div id="home-section" class="section-content">
-            <div class="row g-3">
-                <div class="col-md-7">
-                    <div class="calendar-box">
-                        <div class="d-flex justify-content-between mb-2">
-                            <button class="btn btn-sm" onclick="window.changeMonth(-1)">◀</button>
-                            <h6 id="calMonth" class="fw-bold"></h6>
-                            <button class="btn btn-sm" onclick="window.changeMonth(1)">▶</button>
+            <div id="home-section" class="section-content">
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <div class="calendar-box">
+                            <div class="d-flex justify-content-between mb-2">
+                                <button class="btn btn-sm" onclick="window.changeMonth(-1)">◀</button>
+                                <h6 id="calMonth" class="fw-bold"></h6>
+                                <button class="btn btn-sm" onclick="window.changeMonth(1)">▶</button>
+                            </div>
+                            <div id="calGrid" class="calendar-grid"></div>
+                            <button class="btn btn-danger w-100 mt-2 btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#bookModal">➕ حجز موعد ومعدات</button>
                         </div>
-                        <div id="calGrid" class="calendar-grid"></div>
-                        <button class="btn btn-danger w-100 mt-2 btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#bookModal">➕ حجز موعد جديد</button>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card p-3 shadow-sm border-0" style="border-radius: 20px; height: 100%;">
+                            <h6 class="fw-bold text-primary mb-2 small">📅 المواعيد القادمة:</h6>
+                            <div id="agendaList"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-5">
-                    <div class="card p-3 shadow-sm border-0" style="border-radius: 20px;">
-                        <h6 class="fw-bold text-primary mb-2 small">📅 الأجندة القادمة:</h6>
-                        <div id="agendaList" style="max-height: 250px; overflow-y: auto;"></div>
-                    </div>
+                <div class="card p-3 shadow-sm mt-3 border-0">
+                    <form id="dailyForm">
+                        <div class="row g-2 mb-2">
+                            <div class="col-6"><label class="small fw-bold">التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
+                            <div class="col-6"><label class="small fw-bold">القاعة</label><select id="inHall" class="form-select form-select-sm"></select></div>
+                            <div class="col-6"><label class="small fw-bold">القبض</label><input type="number" id="inIncome" class="form-control form-control-sm" value="0"></div>
+                            <div class="col-6"><label class="small fw-bold">مصاريف</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
+                        </div>
+                        <div id="workerGridDaily" class="row g-2 mb-2"></div>
+                        <textarea id="inDetails" class="form-control form-control-sm mb-2" rows="2" placeholder="تفاصيل إضافية عن اليومية..."></textarea>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">حفظ العملية ✅</button>
+                    </form>
                 </div>
             </div>
-            <div class="card p-3 shadow-sm mt-3 border-0">
-                <form id="dailyForm">
-                    <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="small fw-bold">التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
-                        <div class="col-6"><label class="small fw-bold">القاعة</label><select id="inHall" class="form-select form-select-sm"></select></div>
-                        <div class="col-6"><label class="small fw-bold">القبض</label><input type="number" id="inIncome" class="form-control form-control-sm" value="0"></div>
-                        <div class="col-6"><label class="small fw-bold">مصاريف</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
-                    </div>
-                    <div id="workerGridDaily" class="row g-2 mb-2"></div>
-                    <textarea id="inDetails" class="form-control form-control-sm mb-2" rows="1" placeholder="ملاحظات..."></textarea>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">حفظ اليومية ✅</button>
-                </form>
+
+            <div id="workers-section" class="section-content hidden">
+                <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="fw-bold text-primary">📥 طلبات الفريق:</h6><div id="adminInbox"></div></div>
+                <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-center text-primary">كشوف الفنيين وروابط التتبع:</h6><div id="workerPickGrid" class="row g-2 mb-4"></div><div id="workerStatsView" class="hidden"><div class="mt-2 p-2 border rounded bg-light text-center mb-3 small">رابط التتبع (انسخه للفني):<br><code id="workerLink" style="word-break:break-all; color:var(--accent);"></code></div><table class="table table-sm text-center small border"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table></div></div>
+            </div>
+
+            <div id="logs-section" class="section-content hidden">
+                <div class="card p-2 border-0 shadow-sm"><table class="table text-center small"><thead><tr><th>تاريخ</th><th>قاعة</th><th>إيراد</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
+            </div>
+
+            <div id="config-section" class="section-content hidden">
+                <div class="card p-3 mb-3 border-0 shadow-sm"><h6>🏠 إدارة القاعات</h6><div class="input-group"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">+</button></div><div id="hList" class="d-flex flex-wrap gap-1 mt-2"></div></div>
+                <div class="card p-3 border-0 shadow-sm"><h6>👤 إدارة الفريق</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control"></div><div class="col-4"><input type="number" id="ws" class="form-control"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div id="workers-section" class="section-content hidden">
-            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="fw-bold text-primary">📥 طلبات واعتذارات الفنيين:</h6><div id="adminInbox"></div></div>
-            <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-center">كشوف الفريق:</h6><div id="workerPickGrid" class="row g-2 mb-4"></div><div id="workerStatsView" class="hidden"><div class="mt-2 p-2 border rounded bg-light text-center mb-3 small">رابط التتبع للفني:<br><code id="workerLink" style="word-break:break-all; color:var(--accent);"></code></div><table class="table table-sm text-center small border"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table></div></div>
+<!-- بوابة الفني المستقلة -->
+<div id="workerPortalContainer" class="hidden">
+    <div class="container mt-4">
+        <div id="portalHeader" class="card p-3 shadow-lg border-0 text-center mb-3 bg-primary text-white"></div>
+        <div id="workerAlerts"></div>
+        <div class="row g-2 mb-3">
+            <div class="col-6"><div class="stat-card">حضور<br><span id="pDays" class="fw-bold text-primary fs-3">0</span></div></div>
+            <div class="col-6"><div class="stat-card">مبلغك<br><span id="pMoney" class="fw-bold text-success fs-3">0</span></div></div>
         </div>
-
-        <div id="logs-section" class="section-content hidden">
-            <div class="card p-2 border-0 shadow-sm"><table class="table text-center small"><thead><tr><th>تاريخ</th><th>قاعة</th><th>إيراد</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
-        </div>
-
-        <div id="config-section" class="section-content hidden">
-            <div class="card p-3 mb-3 border-0 shadow-sm"><h6>🏠 إدارة القاعات</h6><div class="input-group"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">+</button></div><div id="hList" class="d-flex flex-wrap gap-1 mt-2"></div></div>
-            <div class="card p-3 border-0 shadow-sm"><h6>👤 إدارة الفريق</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control"></div><div class="col-4"><input type="number" id="ws" class="form-control"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div>
-        </div>
+        <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="text-warning fw-bold small text-start">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div>
+        <div id="workerRequestForm"></div>
+        <div class="card p-3 shadow-sm border-0 mt-3"><h6 class="text-primary fw-bold small text-start mb-2">📜 سجل حضورك:</h6><table class="table table-sm table-striped border small text-center"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="pHistoryBody"></tbody></table></div>
+        <button class="btn btn-dark w-100 mt-4 btn-sm" onclick="location.hash=''; location.reload()">الرجوع للرئيسية</button>
     </div>
 </div>
 
 <!-- Modal: Booking -->
-<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-header fw-bold small bg-light">تسجيل حجز جديد</div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="اسم العميل"><input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-light p-2 rounded text-center"><div class="col-4"><label>اتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><label class="small fw-bold">تعيين فنيين:</label><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0 p-2"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="window.saveB()">حفظ الحجز ✅</button></div></div></div></div>
+<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-header fw-bold small bg-light">حجز موعد ومعدات</div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="اسم العميل"><input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان بالتفصيل"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-light p-2 rounded text-center small"><div class="col-4"><label>اتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><h6 class="small fw-bold text-warning">إيجار معدات خارجية:</h6><div class="row g-1 mb-2"><div class="col-4"><input type="number" id="rCam" class="form-control form-control-sm" placeholder="كاميرا"></div><div class="col-4"><input type="number" id="rDrone" class="form-control form-control-sm" placeholder="درون"></div><div class="col-4"><input type="number" id="rScreen" class="form-control form-control-sm" placeholder="شاشة"></div></div><input type="text" id="rFrom" class="form-control form-control-sm mb-2" placeholder="المؤجر من (اسم الشخص)"><hr><label class="small fw-bold">تعيين فنيين:</label><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0 p-2"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="window.saveB()">حفظ وتأكيد ✅</button></div></div></div></div>
 
-<!-- Firebase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-    // 🔴 بيانات الـ Config الخاصة بك
 const firebaseConfig = {
   apiKey: "AIzaSyD1g5o98oLq-e3TM2td8w_MqD0-gmBjkeM",
   authDomain: "videosystempro.firebaseapp.com",
@@ -155,22 +181,25 @@ const firebaseConfig = {
     let db = { halls: [], workers: [], logs: [], bookings: [], requests: [] };
     let curM = new Date().getMonth(), curY = new Date().getFullYear(), currentTab = 'home';
 
-    // Auth Change
+    // التوجيه الذكي (مدير أم فني)
     onAuthStateChanged(auth, (user) => {
-        const hashStr = window.location.hash;
-        if(hashStr) {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-            sync(true);
-        } else if(user) {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-            sync(false);
+        const hash = window.location.hash;
+        if (hash) {
+            document.getElementById('adminContainer').classList.add('hidden');
+            document.getElementById('workerPortalContainer').classList.remove('hidden');
+            sync();
         } else {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            document.getElementById('loginPage').classList.remove('hidden');
-            document.getElementById('appContent').style.display = 'none';
+            document.getElementById('workerPortalContainer').classList.add('hidden');
+            document.getElementById('adminContainer').classList.remove('hidden');
+            if (user) {
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('adminContent').classList.remove('hidden');
+                sync();
+            } else {
+                document.getElementById('loginPage').classList.remove('hidden');
+                document.getElementById('adminContent').classList.add('hidden');
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
         }
     });
 
@@ -197,16 +226,6 @@ const firebaseConfig = {
 
     window.save = () => set(rootRef, db);
 
-    // --- UI LOGICS ---
-    window.openTab = (id) => {
-        currentTab = id;
-        document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById(id + '-section').classList.remove('hidden');
-        document.getElementById('t-' + id).classList.add('active');
-        refreshUI();
-    };
-
     function refreshUI() {
         if(currentTab === 'home') { renderCal(); renderDailyForm(); renderAgenda(); }
         if(currentTab === 'logs') renderLogs();
@@ -222,7 +241,16 @@ const firebaseConfig = {
         document.getElementById('dashExp').innerText = e; document.getElementById('dashNet').innerText = i - e;
     }
 
-    // --- SHARED RENDERERS ---
+    // القوالب الملونة
+    function getPlaceBadge(name) {
+        let cls = "place-default";
+        if(name.includes("فيروز")) cls = "place-فيروز";
+        if(name.includes("شافعى")) cls = "place-شافعى";
+        if(name.includes("الشارع")) cls = "place-الشارع";
+        return `<span class="badge-place ${cls}">${name}</span>`;
+    }
+
+    // المواعيد والأجندة
     function renderCal() {
         const grid = document.getElementById('calGrid'); grid.innerHTML = '';
         ["ح", "ن", "ث", "ر", "خ", "ج", "س"].forEach(d => grid.innerHTML += `<div class="fw-bold small text-muted">${d}</div>`);
@@ -238,45 +266,45 @@ const firebaseConfig = {
 
     window.selectDt = (dt, el) => {
         document.querySelectorAll('.day').forEach(d => d.classList.remove('selected'));
-        el.classList.add('selected');
-        document.getElementById('inDate').value = dt;
-        document.getElementById('bd').value = dt;
+        el.classList.add('selected'); document.getElementById('inDate').value = dt; document.getElementById('bd').value = dt;
     };
 
     window.saveB = () => {
         const t = document.getElementById('bt').value, a = document.getElementById('bAddress').value, h = document.getElementById('bh').value, d = document.getElementById('bd').value;
         const total = parseFloat(document.getElementById('bTotal').value)||0, arb = parseFloat(document.getElementById('bArboun').value)||0;
+        const rC=parseFloat(document.getElementById('rCam').value)||0, rD=parseFloat(document.getElementById('rDrone').value)||0, rS=parseFloat(document.getElementById('rScreen').value)||0, rF=document.getElementById('rFrom').value;
         const ass = []; document.querySelectorAll('.b-chk:checked').forEach(c => ass.push(c.value));
         if(!t || ass.length === 0) return alert("اكمل البيانات");
-        db.bookings.push({title: t, bAddress: a, hall: h, date: d, workers: ass, bTotal: total, bArboun: arb});
+        db.bookings.push({title: t, bAddress: a, hall: h, date: d, workers: ass, bTotal: total, bArboun: arb, rC, rD, rS, rF});
         window.save(); bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
     };
+
+    function renderAgenda() {
+        const today = new Date().toISOString().split('T')[0];
+        const upcoming = db.bookings.filter(b => b.date >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
+        document.getElementById('agendaList').innerHTML = upcoming.map(b => `<div class="p-2 mb-2 bg-light border-start border-primary border-4 rounded small shadow-sm"><strong>📅 ${b.date.slice(5)}</strong> | ${b.hall}<br><span>${b.title}</span></div>`).join('') || '<p class="text-muted small text-center mt-4">لا توجد مواعيد</p>';
+    }
+
+    // اليومية
+    function renderDailyForm() {
+        document.getElementById('inHall').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
+        document.getElementById('bh').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
+        document.getElementById('workerGridDaily').innerHTML = db.workers.map(w => `<div class="col-4"><div class="worker-pill" onclick="this.classList.toggle('active'); document.querySelector('.v-${w.name.replace(/ /g,'')}').value = this.classList.contains('active') ? ${w.salary} : 0">${w.name.split(' ')[0]}</div><input type="number" class="d-none v-${w.name.replace(/ /g,'')}" value="0"></div>`).join('');
+        document.getElementById('bwGrid').innerHTML = db.workers.map(w => `<div class="col-4"><div class="p-1 border rounded shadow-sm small"><input type="checkbox" class="b-chk" value="${w.name}"> <br> ${w.name.split(' ')[0]}</div></div>`).join('');
+    }
 
     document.getElementById('dailyForm').onsubmit = (e) => {
         e.preventDefault();
         let pays = {}; db.workers.forEach(w => { let v = parseFloat(document.querySelector('.v-'+w.name.replace(/ /g,'')).value); if(v > 0) pays[w.name] = v; });
         db.logs.push({ id: Date.now(), date: document.getElementById('inDate').value, hall: document.getElementById('inHall').value, income: parseFloat(document.getElementById('inIncome').value) || 0, exp: parseFloat(document.getElementById('inExp').value) || 0, details: document.getElementById('inDetails').value, pays: pays });
-        window.save(); alert("تم حفظ اليومية!");
+        window.save(); alert("تم الحفظ!");
     };
-
-    function renderDailyForm() {
-        document.getElementById('inHall').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
-        document.getElementById('bh').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
-        document.getElementById('workerGridDaily').innerHTML = db.workers.map(w => `<div class="col-4"><div class="worker-pill" onclick="this.classList.toggle('active'); document.querySelector('.v-${w.name.replace(/ /g,'')}').value = this.classList.contains('active') ? ${w.salary} : 0">${w.name.split(' ')[0]}</div><input type="number" class="d-none v-${w.name.replace(/ /g,'')}" value="0"></div>`).join('');
-        document.getElementById('bwGrid').innerHTML = db.workers.map(w => `<div class="col-4"><div class="p-1 border rounded shadow-sm small"><input type="checkbox" class="b-chk" value="${w.name}"> ${w.name.split(' ')[0]}</div></div>`).join('');
-    }
-
-    function renderAgenda() {
-        const today = new Date().toISOString().split('T')[0];
-        const upcoming = db.bookings.filter(b => b.date >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
-        document.getElementById('agendaList').innerHTML = upcoming.map(b => `<div class="p-2 mb-2 bg-light border-start border-primary border-4 rounded small shadow-sm"><strong>📅 ${b.date.slice(5)}</strong> | ${b.hall}<br><span>${b.title}</span></div>`).join('') || '<p class="small text-muted text-center mt-4">لا توجد مواعيد</p>';
-    }
 
     function renderLogs() {
         const tbody = document.getElementById('logsTableBody'); tbody.innerHTML = '';
         db.logs.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach((l, i) => {
             let tw = Object.values(l.pays).reduce((a,b) => a+b, 0);
-            tbody.innerHTML += `<tr><td>${l.date.slice(5)}</td><td>${l.hall}</td><td>${l.income}</td><td>${l.income - (l.exp + tw)}</td><td><span class="text-danger" onclick="window.delI('logs', ${i})">🗑️</span></td></tr>`;
+            tbody.innerHTML += `<tr><td>${l.date.slice(5)}</td><td>${getPlaceBadge(l.hall)}</td><td>${l.income}</td><td>${l.income - (l.exp + tw)}</td><td><span class="text-danger" onclick="window.delI('logs', ${i})">🗑️</span></td></tr>`;
         });
     }
 
@@ -288,7 +316,7 @@ const firebaseConfig = {
         if(el) { document.querySelectorAll('.worker-pill').forEach(p => p.classList.remove('active')); el.classList.add('active'); }
         document.getElementById('workerStatsView').classList.remove('hidden');
         let ds = 0, mn = 0; const tbody = document.getElementById('workerHistoryBody'); tbody.innerHTML = '';
-        db.logs.forEach(l => { if(l.pays[n]) { ds++; mn += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
+        db.logs.forEach(l => { if(l.pays[n]) { ds++; mn += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>${getPlaceBadge(l.hall)}</td><td>${l.pays[n]} ج</td></tr>`; }});
         document.getElementById('workerLink').innerText = window.location.href.split('#')[0] + "#" + encodeURIComponent(n);
     };
 
@@ -298,64 +326,39 @@ const firebaseConfig = {
         document.getElementById('adminInbox').innerHTML = db.requests.length ? db.requests.map((r, i) => `<div class="request-card shadow-sm"><strong>📩 من: ${r.from}</strong><br>موعد: ${r.date} (${r.type})<br><div class="bg-white p-1 rounded border mt-1 italic">"${r.note}"</div>${r.replacement ? `<div class="text-success fw-bold small mt-1">البديل: ${r.replacement}</div>`:''}<button class="btn btn-sm btn-outline-danger mt-2 py-0" onclick="window.delI('requests', ${i})">مسح</button></div>`).join('') : '<p class="text-muted small text-center mt-3">لا توجد طلبات</p>';
     }
 
-    function renderSettings() {
-        document.getElementById('hList').innerHTML = db.halls.map((h, i) => `<span class="badge bg-secondary p-2 m-1">${h} <span onclick="window.delI('halls', ${i})" style="cursor:pointer">×</span></span>`).join('');
-        document.getElementById('wEditList').innerHTML = db.workers.map((w, i) => `<div class="row g-1 mb-1 align-items-center bg-white p-1 rounded-3 border small"><div class="col-6"><input type="text" class="form-control form-control-sm" value="${w.name}" onchange="window.upW(${i}, 'name', this.value)"></div><div class="col-4"><input type="number" class="form-control form-control-sm" value="${w.salary}" onchange="window.upW(${i}, 'salary', this.value)"></div><div class="col-2 text-center"><span class="text-danger" onclick="window.delI('workers', ${i})">🗑️</span></div></div>`).join('');
-    }
-
-    window.delI = (t, i) => { if(confirm("حذف؟")) { db[t].splice(i, 1); window.save(); } };
-    window.upW = (i, k, v) => { db.workers[i][k] = k==='salary'?parseFloat(v):v; window.save(); };
-    window.addH = () => { let v = document.getElementById('hNew').value; if(v){ db.halls.push(v); window.save(); document.getElementById('hNew').value=''; } };
-    window.addW = () => { let n = document.getElementById('wn').value, s = parseFloat(document.getElementById('ws').value); if(n){ db.workers.push({name:n, salary:s}); window.save(); } };
-    window.changeMonth = (d) => { curM += d; if(curM>11){curM=0;curYear++;} if(curM<0){curM=11;curY--;} renderCal(); };
-
-    // --- WORKER PORTAL VIEW ---
+    // بوابة الفني (Worker Portal)
     function renderWorkerPortal(n) {
-        const dates = db.bookings.filter(b => b.workers.includes(n)).map(b => b.date);
-        const repls = db.workers.filter(w => w.name !== n).map(w => w.name);
-        
-        document.getElementById('mainUI').innerHTML = `
-        <div class="container mt-4"><div class="card p-3 shadow-lg border-0 text-center mb-3 bg-primary text-white"><h5 class="fw-bold mb-0">مرحباً ${n} 👋</h5></div>
-            <div id="workerAlerts"></div>
-            
-            <div class="row g-2 mb-3">
-                <div class="col-6"><div class="stat-card">حضور<br><span id="wDays" class="fw-bold text-primary fs-3">0</span></div></div>
-                <div class="col-6"><div class="stat-card">مبلغك<br><span id="wMoney" class="fw-bold text-success fs-3">0</span></div></div>
-            </div>
-
-            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="text-warning fw-bold small text-start">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div>
-            
-            <div class="card p-3 shadow-sm border-0 mb-3 text-start">
-                <h6 class="text-primary fw-bold small">📝 مركز الملاحظات والاعتذار:</h6>
-                <div class="row g-2 mt-2">
-                    <div class="col-6"><label class="small fw-bold">الموعد:</label><select id="reqDate" class="form-select form-select-sm"><option value="">-- اختر --</option>${dates.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>
-                    <div class="col-6"><label class="small fw-bold">الطلب:</label><select id="reqType" class="form-select form-select-sm" onchange="document.getElementById('replBox').classList.toggle('hidden', this.value !== 'اعتذار وتبديل')"><option>ملاحظة عامة</option><option>اعتذار وتبديل</option><option>طلب تأجيل</option></select></div>
-                    <div class="col-12 hidden" id="replBox"><label class="small fw-bold text-success">البديل المرشح:</label><select id="reqRepl" class="form-select form-select-sm"><option value="">-- اختر زميل --</option>${repls.map(r => `<option value="${r}">${r}</option>`).join('')}</select></div>
-                    <div class="col-12 mt-2"><textarea id="reqNote" class="form-control form-control-sm" rows="2" placeholder="اكتب الملاحظة هنا..."></textarea></div>
-                    <button class="btn btn-primary w-100 btn-sm mt-2 fw-bold" onclick="window.sendIntReq('${n}')">إرسال للمدير ✅</button>
-                </div>
-            </div>
-
-            <table class="table table-sm table-striped border small text-center mt-3"><thead><tr><th>التاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table>
-            <button class="btn btn-dark w-100 mt-4 btn-sm" onclick="location.hash=''; location.reload()">الرجوع للرئيسية</button>
-        </div><div id="mainUI_backup" class="hidden"></div>`;
-
-        // تذكيرات الفني
+        document.getElementById('portalHeader').innerHTML = `<h5 class="fw-bold mb-0">مرحباً ${n} 👋</h5><small>بوابة الفنيين والمواعيد</small>`;
         const now = new Date(); const today = now.toISOString().split('T')[0];
         const tom = new Date(now); tom.setDate(now.getDate() + 1); const tomStr = tom.toISOString().split('T')[0];
+        
         const tj = db.bookings.find(b => b.workers.includes(n) && b.date === today);
         const tmj = db.bookings.find(b => b.workers.includes(n) && b.date === tomStr);
         let aHtml = ''; 
-        if(tj) aHtml += `<div class="alert-today text-start">📍 النهاردة: ${tj.hall} (${tj.title})</div>`; 
-        if(tmj) aHtml += `<div class="alert-tomorrow text-start">⚠️ بكره: عندك شغل في ${tmj.hall}</div>`;
+        if(tj) aHtml += `<div class="alert-today">📍 النهاردة: ${tj.hall} (${tj.title})<br><small>العنوان: ${tj.bAddress || 'غير محدد'}</small></div>`; 
+        if(tmj) aHtml += `<div class="alert-tomorrow">⚠️ بكره: ${tmj.hall} (${tmj.title})</div>`;
         document.getElementById('workerAlerts').innerHTML = aHtml;
+
+        const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= today).sort((a,b)=>new Date(a.date)-new Date(b.date));
+        document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="p-2 mb-2 bg-white border rounded shadow-sm small">📅 ${u.date} | ${u.hall}<br><b>${u.title}</b><br><small>العنوان: ${u.bAddress || '-'}</small></div>`).join('') || 'لا توجد مواعيد قادمة';
         
-        const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= today);
-        document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="p-2 mb-1 bg-white border rounded shadow-sm small text-start">📅 ${u.date} | ${u.hall}</div>`).join('') || 'لا توجد مواعيد';
-        
-        let ds = 0, mn = 0; const tbody = document.getElementById('workerHistoryBody'); tbody.innerHTML = '';
-        db.logs.forEach(l => { if(l.pays[n]) { ds++; mn += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
-        document.getElementById('wDays').innerText = ds; document.getElementById('wMoney').innerText = mn;
+        const dates = up.map(u => u.date);
+        const repls = db.workers.filter(w => w.name !== n).map(w => w.name);
+        document.getElementById('workerRequestForm').innerHTML = `
+            <div class="card p-3 shadow-sm border-0 mb-3 text-start">
+                <h6 class="text-primary fw-bold small">📝 اعتذار أو ملاحظة:</h6>
+                <div class="row g-2 mt-2">
+                    <div class="col-6"><select id="reqDate" class="form-select form-select-sm"><option value="">الموعد</option>${dates.map(d=>`<option value="${d}">${d}</option>`).join('')}</select></div>
+                    <div class="col-6"><select id="reqType" class="form-select form-select-sm" onchange="document.getElementById('replBox').classList.toggle('hidden', this.value !== 'اعتذار وتبديل')"><option>ملاحظة عامة</option><option>اعتذار وتبديل</option></select></div>
+                    <div class="col-12 hidden" id="replBox"><select id="reqRepl" class="form-select form-select-sm"><option value="">اختر البديل</option>${repls.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></div>
+                    <textarea id="reqNote" class="form-control form-control-sm mt-2" placeholder="اكتب الملاحظة..."></textarea>
+                    <button class="btn btn-primary w-100 btn-sm mt-2 fw-bold" onclick="window.sendIntReq('${n}')">إرسال ✅</button>
+                </div>
+            </div>`;
+
+        let ds = 0, mn = 0; const tbody = document.getElementById('pHistoryBody'); tbody.innerHTML = '';
+        db.logs.forEach(l => { if(l.pays[n]) { ds++; mn += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>${getPlaceBadge(l.hall)}</td><td>${l.pays[n]} ج</td></tr>`; }});
+        document.getElementById('pDays').innerText = ds; document.getElementById('pMoney').innerText = mn;
     }
 
     window.sendIntReq = (n) => {
@@ -365,8 +368,19 @@ const firebaseConfig = {
         window.save(); alert("تم الإرسال!");
     };
 
+    window.addH = () => { let v = document.getElementById('hNew').value; if(v){ db.halls.push(v); window.save(); document.getElementById('hNew').value=''; } };
+    window.addW = () => { let n = document.getElementById('wn').value, s = parseFloat(document.getElementById('ws').value); if(n){ db.workers.push({name:n, salary:s}); window.save(); } };
+    window.upW = (i, k, v) => { db.workers[i][k] = k==='salary'?parseFloat(v):v; window.save(); };
+    window.delI = (t, i) => { if(confirm("حذف؟")) { db[t].splice(i, 1); window.save(); } };
+    window.openTab = (id) => { currentTab = id; refreshUI(); };
+    window.changeMonth = (d) => { curM += d; if(curM>11){curM=0;curYear++;} if(curM<0){curM=11;curY--;} renderCal(); };
+
+    function renderSettings() {
+        document.getElementById('hList').innerHTML = db.halls.map((h, i) => `<span class="badge bg-secondary p-2 m-1">${h} <span onclick="window.delI('halls', ${i})" style="cursor:pointer">×</span></span>`).join('');
+        document.getElementById('wEditList').innerHTML = db.workers.map((w, i) => `<div class="row g-1 mb-1 align-items-center bg-white p-1 rounded-3 border small"><div class="col-6"><input type="text" class="form-control form-control-sm" value="${w.name}" onchange="window.upW(${i}, 'name', this.value)"></div><div class="col-4"><input type="number" class="form-control form-control-sm" value="${w.salary}" onchange="window.upW(${i}, 'salary', this.value)"></div><div class="col-2 text-center"><span class="text-danger" onclick="window.delI('workers', ${i})">🗑️</span></div></div>`).join('');
+    }
+
     document.getElementById('inDate').valueAsDate = new Date();
 </script>
-<div id="mainUI" class="hidden"></div>
 </body>
 </html>
