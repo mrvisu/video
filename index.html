@@ -3,63 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام فيديو القاعة - النسخة النهائية</title>
+    <title>نظام فيديو القاعة - بوابة الإدارة والفنيين</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #0f172a; --secondary: #10b981; --accent: #3b82f6; --danger: #ef4444; --warning: #f59e0b; --light: #f8fafc; }
-        body { font-family: 'Cairo', sans-serif; background-color: #e2e8f0; min-height: 100vh; color: #1e293b; padding-bottom: 30px; }
-        .login-box { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
-        #appContent { display: none; }
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; min-height: 100vh; color: #1e293b; padding-bottom: 30px; }
+        
+        .login-box { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .navbar { background: var(--primary); color: white; border-bottom: 4px solid var(--secondary); padding: 1rem; }
-        .stat-card { background: white; border-radius: 15px; padding: 12px; border-bottom: 4px solid var(--primary); box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; }
-        .nav-pills .nav-link { color: var(--primary); font-weight: bold; background: white; margin: 2px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 0.8rem; cursor: pointer; }
+        .stat-card { background: white; border-radius: 15px; padding: 12px; border-bottom: 4px solid var(--primary); text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .nav-pills .nav-link { color: var(--primary); font-weight: bold; background: white; margin: 2px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 0.8rem; }
         .nav-pills .nav-link.active { background-color: var(--primary) !important; color: white !important; }
+        
+        /* التنبيهات */
+        .alert-today { background: #dcfce7; border-right: 6px solid #10b981; padding: 15px; border-radius: 15px; margin-bottom: 12px; font-weight: bold; }
+        .alert-tomorrow { background: #fff7ed; border-right: 6px solid #f59e0b; padding: 15px; border-radius: 15px; margin-bottom: 12px; font-weight: bold; }
+        
         .calendar-box { background: white; border-radius: 20px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .day { padding: 10px 0; border-radius: 10px; cursor: pointer; font-weight: 600; position: relative; font-size: 0.85rem; }
+        .day { padding: 10px 0; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.85rem; position: relative; }
         .day.has-booking::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--danger); border-radius: 50%; }
         .day.selected { background: #ecfdf5; border: 2px solid var(--secondary); }
+        
         .worker-pill { cursor: pointer; padding: 10px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; text-align: center; font-size: 0.75rem; font-weight: bold; transition: 0.3s; }
         .worker-pill.active { border-color: var(--secondary); background: #ecfdf5; }
         .hidden { display: none; }
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; font-weight: bold; }
-        .alert-today { background: #dcfce7; border-right: 5px solid #10b981; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-weight: bold; font-size: 0.85rem; }
-        .alert-tomorrow { background: #fee2e2; border-right: 5px solid #ef4444; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-weight: bold; font-size: 0.85rem; }
+        .request-card { background: #fff; border-right: 5px solid var(--accent); border-radius: 12px; padding: 10px; margin-bottom: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
 <div id="loadingOverlay">
-    <div class="spinner-border text-primary mb-2"></div>
-    جاري تحميل البيانات...
+    <div class="d-flex flex-column align-items-center justify-content-center" style="height: 100vh;">
+        <div class="spinner-border text-primary mb-2"></div>
+        <b>جاري تحميل البيانات...</b>
+    </div>
 </div>
 
-<!-- صفحة تسجيل الدخول -->
-<div id="loginPage">
+<!-- صفحة الدخول -->
+<div id="loginPage" class="hidden">
     <div class="login-box shadow-lg">
         <h4 class="text-center fw-bold mb-4 text-primary">🔐 دخول المدير</h4>
         <input type="email" id="loginEmail" class="form-control mb-3" placeholder="البريد الإلكتروني">
         <input type="password" id="loginPass" class="form-control mb-3" placeholder="كلمة المرور">
-        <button class="btn btn-primary w-100 fw-bold py-2" onclick="window.handleLogin()">دخول</button>
+        <button class="btn btn-primary w-100 fw-bold py-2" onclick="window.handleLogin()">دخول للنظام</button>
         <div id="loginError" class="text-danger small mt-2 text-center"></div>
     </div>
 </div>
 
-<!-- واجهة البرنامج الرئيسية -->
-<div id="appContent">
+<!-- واجهة المدير -->
+<div id="appContent" class="hidden">
     <nav class="navbar shadow-lg mb-3">
         <div class="container d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold">🎥 نظام فيديو القاعات - م/ 01097576073</h6>
+            <h6 class="mb-0 fw-bold">🎥 نظام الإدارة | 01097576073</h6>
             <button class="btn btn-sm btn-outline-light" onclick="window.handleLogout()">خروج</button>
         </div>
     </nav>
 
     <div class="container">
-        <!-- الإحصائيات -->
         <div class="row g-2 mb-3 text-center text-dark small">
             <div class="col-3"><div class="stat-card"> <small>دخل الشهر</small> <h6 id="dashIncome">0</h6> </div></div>
-            <div class="col-3"><div class="stat-card"> <small>شغل الشهر</small> <h6 id="dashJobs" class="text-primary">0</h6> </div></div>
+            <div class="col-3"><div class="stat-card"> <small>شغل الشهر</small> <h6 id="dashJobs">0</h6> </div></div>
             <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--danger);"> <small>مصاريف</small> <h6 id="dashExp">0</h6> </div></div>
             <div class="col-3"><div class="stat-card" style="border-bottom-color: var(--secondary);"> <small>الصافي</small> <h6 id="dashNet">0</h6> </div></div>
         </div>
@@ -71,7 +76,6 @@
             <li class="nav-item"><a class="nav-link" id="t-config" onclick="window.openTab('config')">⚙️ الإعدادات</a></li>
         </ul>
 
-        <!-- الأقسام -->
         <div id="home-section" class="section-content">
             <div class="row g-3">
                 <div class="col-md-7">
@@ -86,14 +90,13 @@
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="card p-3 shadow-sm border-0" style="height: 100%; border-radius: 20px;">
-                        <h6 class="fw-bold text-primary mb-2 small">📅 المواعيد القادمة:</h6>
+                    <div class="card p-3 shadow-sm border-0" style="border-radius: 20px;">
+                        <h6 class="fw-bold text-primary mb-2 small">📅 الأجندة القادمة:</h6>
                         <div id="agendaList" style="max-height: 250px; overflow-y: auto;"></div>
                     </div>
                 </div>
             </div>
             <div class="card p-3 shadow-sm mt-3 border-0">
-                <h6 class="fw-bold text-primary mb-2 small border-bottom pb-1">تسجيل حسابات اليومية</h6>
                 <form id="dailyForm">
                     <div class="row g-2 mb-2">
                         <div class="col-6"><label class="small fw-bold">التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
@@ -102,39 +105,39 @@
                         <div class="col-6"><label class="small fw-bold">مصاريف</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
                     </div>
                     <div id="workerGridDaily" class="row g-2 mb-2"></div>
-                    <textarea id="inDetails" class="form-control form-control-sm mb-2" rows="1" placeholder="ملاحظات إضافية..."></textarea>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-3">حفظ ✅</button>
+                    <textarea id="inDetails" class="form-control form-control-sm mb-2" rows="1" placeholder="ملاحظات..."></textarea>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">حفظ اليومية ✅</button>
                 </form>
             </div>
         </div>
 
         <div id="workers-section" class="section-content hidden">
-            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="fw-bold text-primary">📥 طلبات واعتذارات الفريق:</h6><div id="adminInbox"></div></div>
-            <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-center">كشوف الفنيين:</h6><div id="workerPickGrid" class="row g-2 mb-4"></div><div id="workerStatsView" class="hidden"><div class="mt-2 p-2 border rounded bg-light text-center mb-3 small">رابط التتبع (أرسله للفني):<br><code id="workerLink" style="word-break:break-all; color:var(--accent);"></code></div><table class="table table-sm text-center small border"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table></div></div>
+            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="fw-bold text-primary">📥 طلبات واعتذارات الفنيين:</h6><div id="adminInbox"></div></div>
+            <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-center">كشوف الفريق:</h6><div id="workerPickGrid" class="row g-2 mb-4"></div><div id="workerStatsView" class="hidden"><div class="mt-2 p-2 border rounded bg-light text-center mb-3 small">رابط التتبع للفني:<br><code id="workerLink" style="word-break:break-all; color:var(--accent);"></code></div><table class="table table-sm text-center small border"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table></div></div>
         </div>
 
         <div id="logs-section" class="section-content hidden">
-            <div class="card p-2 small border-0 shadow-sm"><table class="table text-center align-middle"><thead><tr><th>تاريخ</th><th>قاعة</th><th>دخل</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
+            <div class="card p-2 border-0 shadow-sm"><table class="table text-center small"><thead><tr><th>تاريخ</th><th>قاعة</th><th>إيراد</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
         </div>
 
         <div id="config-section" class="section-content hidden">
             <div class="card p-3 mb-3 border-0 shadow-sm"><h6>🏠 إدارة القاعات</h6><div class="input-group"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">+</button></div><div id="hList" class="d-flex flex-wrap gap-1 mt-2"></div></div>
-            <div class="card p-3 border-0 shadow-sm"><h6>👤 إدارة الفنيين</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control"></div><div class="col-4"><input type="number" id="ws" class="form-control"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div>
+            <div class="card p-3 border-0 shadow-sm"><h6>👤 إدارة الفريق</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control"></div><div class="col-4"><input type="number" id="ws" class="form-control"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div>
         </div>
     </div>
 </div>
 
 <!-- Modal: Booking -->
-<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-header fw-bold small bg-light">تسجيل حجز جديد</div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="اسم العميل"><input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-light p-2 rounded text-center"><div class="col-4"><label>اتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><label class="small fw-bold">الفنيين:</label><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0 p-2"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="window.saveB()">حفظ الحجز ✅</button></div></div></div></div>
+<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow-lg"><div class="modal-header fw-bold small bg-light">تسجيل حجز جديد</div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="اسم العميل"><input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-light p-2 rounded text-center"><div class="col-4"><label>اتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><label class="small fw-bold">تعيين فنيين:</label><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0 p-2"><button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="window.saveB()">حفظ الحجز ✅</button></div></div></div></div>
 
+<!-- Firebase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-    // 🔴 انسخ بيانات الـ Config الجديدة الخاصة بك هنا
+    // 🔴 بيانات الـ Config الخاصة بك
 const firebaseConfig = {
   apiKey: "AIzaSyD1g5o98oLq-e3TM2td8w_MqD0-gmBjkeM",
   authDomain: "videosystempro.firebaseapp.com",
@@ -144,39 +147,30 @@ const firebaseConfig = {
   messagingSenderId: "548170451809",
   appId: "1:548170451809:web:a95e3f1c35a3e4b4ce9320"
 };
-
     const app = initializeApp(firebaseConfig);
     const dbRef = getDatabase(app);
     const auth = getAuth(app);
     const rootRef = ref(dbRef, 'videoSystem');
 
-    let db = { 
-        halls: ["قاعة الفيروز", "قاعة الشافعى", "شغل الشارع"], 
-        workers: [
-            {name: "محمد ايهاب", salary: 140}, {name: "محمد عادل", salary: 180},
-            {name: "محمد نادر", salary: 130}, {name: "عبده العجوز", salary: 170},
-            {name: "محمود كوكو", salary: 180}, {name: "محمد المراكبى", salary: 180},
-            {name: "السيد الشرجى", salary: 130}
-        ], 
-        logs: [], bookings: [], requests: [] 
-    };
-    
+    let db = { halls: [], workers: [], logs: [], bookings: [], requests: [] };
     let curM = new Date().getMonth(), curY = new Date().getFullYear(), currentTab = 'home';
 
+    // Auth Change
     onAuthStateChanged(auth, (user) => {
-        const hash = window.location.hash;
-        if(hash) { 
+        const hashStr = window.location.hash;
+        if(hashStr) {
+            document.getElementById('loadingOverlay').style.display = 'none';
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
-            sync(true); 
+            sync(true);
         } else if(user) {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             sync(false);
         } else {
-            document.getElementById('loginPage').style.display = 'block';
-            document.getElementById('appContent').style.display = 'none';
             document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('appContent').style.display = 'none';
         }
     });
 
@@ -186,7 +180,7 @@ const firebaseConfig = {
     };
     window.handleLogout = () => signOut(auth);
 
-    function sync(isWorker) {
+    function sync() {
         onValue(rootRef, (snap) => {
             const data = snap.val();
             if(data) {
@@ -196,27 +190,30 @@ const firebaseConfig = {
                 if(!db.bookings) db.bookings = [];
             }
             document.getElementById('loadingOverlay').style.display = 'none';
-            if(window.location.hash) renderWorkerPortal(decodeURIComponent(hash().substring(1)));
-            else window.openTab(currentTab);
+            if(window.location.hash) renderWorkerPortal(decodeURIComponent(window.location.hash.substring(1)));
+            else refreshUI();
         });
     }
 
     window.save = () => set(rootRef, db);
-    const hash = () => window.location.hash;
 
-    // UI Logics
+    // --- UI LOGICS ---
     window.openTab = (id) => {
         currentTab = id;
         document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id + '-section').classList.remove('hidden');
         document.getElementById('t-' + id).classList.add('active');
-        if(id === 'home') { renderCal(); renderDailyForm(); renderAgenda(); }
-        if(id === 'logs') renderLogs();
-        if(id === 'workers') { renderWorkerSelect(); renderAdminInbox(); }
-        if(id === 'config') renderSettings();
-        updateDash();
+        refreshUI();
     };
+
+    function refreshUI() {
+        if(currentTab === 'home') { renderCal(); renderDailyForm(); renderAgenda(); }
+        if(currentTab === 'logs') renderLogs();
+        if(currentTab === 'workers') { renderWorkerSelect(); renderAdminInbox(); }
+        if(currentTab === 'config') renderSettings();
+        updateDash();
+    }
 
     function updateDash() {
         let i=0, e=0, jobs=0; const now = new Date();
@@ -225,6 +222,7 @@ const firebaseConfig = {
         document.getElementById('dashExp').innerText = e; document.getElementById('dashNet').innerText = i - e;
     }
 
+    // --- SHARED RENDERERS ---
     function renderCal() {
         const grid = document.getElementById('calGrid'); grid.innerHTML = '';
         ["ح", "ن", "ث", "ر", "خ", "ج", "س"].forEach(d => grid.innerHTML += `<div class="fw-bold small text-muted">${d}</div>`);
@@ -264,14 +262,14 @@ const firebaseConfig = {
     function renderDailyForm() {
         document.getElementById('inHall').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
         document.getElementById('bh').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
-        document.getElementById('workerGridDaily').innerHTML = db.workers.map(w => `<div class="col-3"><div class="worker-pill" onclick="this.classList.toggle('active'); document.querySelector('.v-${w.name.replace(/ /g,'')}').value = this.classList.contains('active') ? ${w.salary} : 0">${w.name.split(' ')[0]}</div><input type="number" class="d-none v-${w.name.replace(/ /g,'')}" value="0"></div>`).join('');
-        document.getElementById('bwGrid').innerHTML = db.workers.map(w => `<div class="col-4"><div class="p-1 border rounded shadow-sm"><input type="checkbox" class="b-chk" value="${w.name}"> <br> ${w.name.split(' ')[0]}</div></div>`).join('');
+        document.getElementById('workerGridDaily').innerHTML = db.workers.map(w => `<div class="col-4"><div class="worker-pill" onclick="this.classList.toggle('active'); document.querySelector('.v-${w.name.replace(/ /g,'')}').value = this.classList.contains('active') ? ${w.salary} : 0">${w.name.split(' ')[0]}</div><input type="number" class="d-none v-${w.name.replace(/ /g,'')}" value="0"></div>`).join('');
+        document.getElementById('bwGrid').innerHTML = db.workers.map(w => `<div class="col-4"><div class="p-1 border rounded shadow-sm small"><input type="checkbox" class="b-chk" value="${w.name}"> ${w.name.split(' ')[0]}</div></div>`).join('');
     }
 
     function renderAgenda() {
         const today = new Date().toISOString().split('T')[0];
         const upcoming = db.bookings.filter(b => b.date >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
-        document.getElementById('agendaList').innerHTML = upcoming.map(b => `<div class="p-2 mb-2 bg-light border-start border-primary border-4 rounded small"><strong>📅 ${b.date.slice(5)}</strong> | ${b.hall}<br><span>${b.title}</span></div>`).join('') || '<p class="text-muted small text-center mt-4">لا توجد مواعيد</p>';
+        document.getElementById('agendaList').innerHTML = upcoming.map(b => `<div class="p-2 mb-2 bg-light border-start border-primary border-4 rounded small shadow-sm"><strong>📅 ${b.date.slice(5)}</strong> | ${b.hall}<br><span>${b.title}</span></div>`).join('') || '<p class="small text-muted text-center mt-4">لا توجد مواعيد</p>';
     }
 
     function renderLogs() {
@@ -297,7 +295,7 @@ const firebaseConfig = {
     function renderAdminInbox() {
         document.getElementById('inboxBadge').innerText = db.requests.length;
         document.getElementById('inboxBadge').classList.toggle('hidden', db.requests.length === 0);
-        document.getElementById('adminInbox').innerHTML = db.requests.length ? db.requests.map((r, i) => `<div class="request-card small shadow-sm"><strong>📩 من: ${r.from}</strong><br>موعد: ${r.date}<br><div class="bg-white p-1 rounded border mt-1 italic">"${r.note}"</div><button class="btn btn-sm btn-outline-danger mt-2 py-0" onclick="window.delI('requests', ${i})">مسح</button></div>`).join('') : '<p class="text-muted small text-center mt-3">لا توجد طلبات</p>';
+        document.getElementById('adminInbox').innerHTML = db.requests.length ? db.requests.map((r, i) => `<div class="request-card shadow-sm"><strong>📩 من: ${r.from}</strong><br>موعد: ${r.date} (${r.type})<br><div class="bg-white p-1 rounded border mt-1 italic">"${r.note}"</div>${r.replacement ? `<div class="text-success fw-bold small mt-1">البديل: ${r.replacement}</div>`:''}<button class="btn btn-sm btn-outline-danger mt-2 py-0" onclick="window.delI('requests', ${i})">مسح</button></div>`).join('') : '<p class="text-muted small text-center mt-3">لا توجد طلبات</p>';
     }
 
     function renderSettings() {
@@ -311,43 +309,64 @@ const firebaseConfig = {
     window.addW = () => { let n = document.getElementById('wn').value, s = parseFloat(document.getElementById('ws').value); if(n){ db.workers.push({name:n, salary:s}); window.save(); } };
     window.changeMonth = (d) => { curM += d; if(curM>11){curM=0;curYear++;} if(curM<0){curM=11;curY--;} renderCal(); };
 
-    // Worker Portal View
+    // --- WORKER PORTAL VIEW ---
     function renderWorkerPortal(n) {
-        document.getElementById('loadingOverlay').style.display = 'none';
         const dates = db.bookings.filter(b => b.workers.includes(n)).map(b => b.date);
+        const repls = db.workers.filter(w => w.name !== n).map(w => w.name);
+        
         document.getElementById('mainUI').innerHTML = `
         <div class="container mt-4"><div class="card p-3 shadow-lg border-0 text-center mb-3 bg-primary text-white"><h5 class="fw-bold mb-0">مرحباً ${n} 👋</h5></div>
             <div id="workerAlerts"></div>
-            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="text-warning fw-bold small text-start">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div>
-            <div class="card p-3 shadow-sm border-0 mb-3 text-start">
-                <h6 class="text-primary fw-bold small">📝 إرسال ملاحظة للمدير:</h6>
-                <select id="reqDate" class="form-select form-select-sm mt-2"><option value="">اختر الموعد</option>${dates.map(d => `<option value="${d}">${d}</option>`).join('')}</select>
-                <textarea id="reqNote" class="form-control form-control-sm mt-2" placeholder="اكتب ملاحظتك..."></textarea>
-                <button class="btn btn-primary w-100 btn-sm mt-2" onclick="window.sendInternalReq('${n}')">إرسال للمدير ✅</button>
+            
+            <div class="row g-2 mb-3">
+                <div class="col-6"><div class="stat-card">حضور<br><span id="wDays" class="fw-bold text-primary fs-3">0</span></div></div>
+                <div class="col-6"><div class="stat-card">مبلغك<br><span id="wMoney" class="fw-bold text-success fs-3">0</span></div></div>
             </div>
-            <table class="table table-sm table-striped border small text-center"><thead><tr><th>تاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table>
+
+            <div class="card p-3 shadow-sm border-0 mb-3"><h6 class="text-warning fw-bold small text-start">📅 مواعيدك الجاية:</h6><div id="workerUpcoming"></div></div>
+            
+            <div class="card p-3 shadow-sm border-0 mb-3 text-start">
+                <h6 class="text-primary fw-bold small">📝 مركز الملاحظات والاعتذار:</h6>
+                <div class="row g-2 mt-2">
+                    <div class="col-6"><label class="small fw-bold">الموعد:</label><select id="reqDate" class="form-select form-select-sm"><option value="">-- اختر --</option>${dates.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>
+                    <div class="col-6"><label class="small fw-bold">الطلب:</label><select id="reqType" class="form-select form-select-sm" onchange="document.getElementById('replBox').classList.toggle('hidden', this.value !== 'اعتذار وتبديل')"><option>ملاحظة عامة</option><option>اعتذار وتبديل</option><option>طلب تأجيل</option></select></div>
+                    <div class="col-12 hidden" id="replBox"><label class="small fw-bold text-success">البديل المرشح:</label><select id="reqRepl" class="form-select form-select-sm"><option value="">-- اختر زميل --</option>${repls.map(r => `<option value="${r}">${r}</option>`).join('')}</select></div>
+                    <div class="col-12 mt-2"><textarea id="reqNote" class="form-control form-control-sm" rows="2" placeholder="اكتب الملاحظة هنا..."></textarea></div>
+                    <button class="btn btn-primary w-100 btn-sm mt-2 fw-bold" onclick="window.sendIntReq('${n}')">إرسال للمدير ✅</button>
+                </div>
+            </div>
+
+            <table class="table table-sm table-striped border small text-center mt-3"><thead><tr><th>التاريخ</th><th>مكان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table>
             <button class="btn btn-dark w-100 mt-4 btn-sm" onclick="location.hash=''; location.reload()">الرجوع للرئيسية</button>
-        </div>`;
+        </div><div id="mainUI_backup" class="hidden"></div>`;
+
+        // تذكيرات الفني
         const now = new Date(); const today = now.toISOString().split('T')[0];
         const tom = new Date(now); tom.setDate(now.getDate() + 1); const tomStr = tom.toISOString().split('T')[0];
         const tj = db.bookings.find(b => b.workers.includes(n) && b.date === today);
         const tmj = db.bookings.find(b => b.workers.includes(n) && b.date === tomStr);
-        let aHtml = ''; if(tj) aHtml += `<div class="alert-today text-start">📍 النهاردة: ${tj.hall} (${tj.title})</div>`; if(tmj) aHtml += `<div class="alert-tomorrow text-start">⚠️ بكره: ${tmj.hall}</div>`;
+        let aHtml = ''; 
+        if(tj) aHtml += `<div class="alert-today text-start">📍 النهاردة: ${tj.hall} (${tj.title})</div>`; 
+        if(tmj) aHtml += `<div class="alert-tomorrow text-start">⚠️ بكره: عندك شغل في ${tmj.hall}</div>`;
         document.getElementById('workerAlerts').innerHTML = aHtml;
+        
         const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= today);
-        document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="alert-today text-dark text-start">📅 ${u.date} | ${u.hall}</div>`).join('') || 'لا توجد مواعيد';
+        document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="p-2 mb-1 bg-white border rounded shadow-sm small text-start">📅 ${u.date} | ${u.hall}</div>`).join('') || 'لا توجد مواعيد';
+        
         let ds = 0, mn = 0; const tbody = document.getElementById('workerHistoryBody'); tbody.innerHTML = '';
         db.logs.forEach(l => { if(l.pays[n]) { ds++; mn += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
+        document.getElementById('wDays').innerText = ds; document.getElementById('wMoney').innerText = mn;
     }
 
-    window.sendInternalReq = (n) => {
-        const d = document.getElementById('reqDate').value, note = document.getElementById('reqNote').value;
+    window.sendIntReq = (n) => {
+        const d = document.getElementById('reqDate').value, t = document.getElementById('reqType').value, r = document.getElementById('reqRepl') ? document.getElementById('reqRepl').value : '', note = document.getElementById('reqNote').value;
         if(!note) return alert("اكتب ملاحظة");
-        db.requests.unshift({ from: n, date: d || 'عام', type: 'رسالة', note: note });
+        db.requests.unshift({ from: n, date: d || 'عام', type: t, replacement: r, note: note });
         window.save(); alert("تم الإرسال!");
     };
 
     document.getElementById('inDate').valueAsDate = new Date();
 </script>
+<div id="mainUI" class="hidden"></div>
 </body>
 </html>
