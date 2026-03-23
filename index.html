@@ -33,10 +33,12 @@
      <h1 id="main-title" class="text-3xl font-bold text-slate-800">يومية الاستوديو المتقدمة</h1>
      <p class="text-sm text-slate-500">لوحة إدارة احترافية</p>
     </div>
-    <div class="flex items-center gap-2"><button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
+    <div class="flex items-center gap-2">
+     <button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
     </div>
    </header>
-   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;"><button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
+   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;">
+    <button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
    </nav>
    <main id="main-content" class="flex-1 p-6 overflow-y-auto">
    </main>
@@ -76,8 +78,12 @@
 
     // SDK Initialization
     let sdkReady = false;
+    let initAttempts = 0;
+    const maxInitAttempts = 5;
     
     async function initApp() {
+      initAttempts++;
+      
       try {
         // Initialize Data SDK first
         if (window.dataSdk) {
@@ -91,26 +97,36 @@
           
           try {
             const result = await window.dataSdk.init(dataHandler);
-            if (result.isOk) {
+            if (result && result.isOk) {
               sdkReady = true;
               showSuccess('✅ تم الاتصال بقاعدة البيانات بنجاح');
-            } else {
+              initAttempts = 0;
+            } else if (result && result.isError) {
               console.error('Data SDK init failed:', result.error);
-              showError('⚠️ خطأ في تهيئة قاعدة البيانات: ' + (result.error?.message || 'unknown error'));
-              // Retry after 2 seconds
-              setTimeout(initApp, 2000);
+              showError('⚠️ خطأ في قاعدة البيانات: ' + (result.error?.message || 'خطأ غير معروف'));
+              if (initAttempts < maxInitAttempts) {
+                setTimeout(initApp, 2000);
+              }
               return;
             }
           } catch (initErr) {
             console.error('Data SDK init error:', initErr);
-            showError('⚠️ خطأ في الاتصال بقاعدة البيانات: ' + initErr.message);
-            setTimeout(initApp, 2000);
+            if (initAttempts < maxInitAttempts) {
+              showError('⚠️ جاري محاولة الاتصال بقاعدة البيانات...');
+              setTimeout(initApp, 2000);
+            } else {
+              showError('❌ فشل الاتصال بقاعدة البيانات بعد عدة محاولات');
+            }
             return;
           }
         } else {
-          console.error('Data SDK not available - will retry');
-          setTimeout(initApp, 1000);
-          return;
+          console.warn('Data SDK not available yet');
+          if (initAttempts < maxInitAttempts) {
+            setTimeout(initApp, 1000);
+            return;
+          } else {
+            showError('❌ فشل تحميل Data SDK');
+          }
         }
 
         // Initialize Element SDK
@@ -1914,5 +1930,5 @@
 
     window.addEventListener('DOMContentLoaded', initApp);
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0f3855e307e1d1',t:'MTc3NDI4NzYxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0f6117f56ce1d1',t:'MTc3NDI4OTI4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
