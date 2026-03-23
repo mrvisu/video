@@ -1,468 +1,1783 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mrakby Visuals | Pro Black v29.0</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg-black: #000000; --bg-dark: #0f172a; --card-dark: #1e293b; --accent: #10b981; --primary: #3b82f6; --danger: #ef4444; --gold: #f59e0b; --text-white: #ffffff; --text-gray: #94a3b8; }
-        body { font-family: 'Cairo', sans-serif; background-color: var(--bg-black); color: var(--text-white); padding-bottom: 50px; }
-        
-        /* Navbar & Global */
-        .navbar { background: var(--bg-black); border-bottom: 2px solid var(--accent); padding: 1rem; }
-        .card { background: var(--card-dark); border: 1px solid #334155; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: var(--text-white); }
-        .stat-card { background: linear-gradient(145deg, #1e293b, #000); border-radius: 15px; padding: 10px; border-bottom: 3px solid var(--accent); text-align: center; color: var(--text-white); }
-        
-        /* Tabs */
-        .nav-pills .nav-link { color: var(--text-gray); font-weight: bold; background: #0f172a; margin: 2px; border-radius: 12px; border: 1px solid #334155; font-size: 0.75rem; transition: 0.3s; }
-        .nav-pills .nav-link.active { background-color: var(--accent) !important; color: white !important; box-shadow: 0 0 15px var(--accent); }
-        
-        /* Calendar UI */
-        .calendar-box { background: var(--card-dark); border-radius: 20px; padding: 15px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .day-head { color: var(--accent); font-weight: bold; font-size: 0.75rem; padding-bottom: 10px; }
-        .day { padding: 10px 0; border-radius: 12px; cursor: pointer; font-weight: 600; color: var(--text-gray); font-size: 0.85rem; transition: 0.2s; position: relative; }
-        .day:hover { background: #334155; color: white; }
-        .day.today { background: var(--primary); color: white; }
-        .day.has-booking::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--gold); border-radius: 50%; }
-        .day.selected { background: #065f46; border: 2px solid var(--accent); color: white; }
-
-        /* Agenda & Pills */
-        .agenda-item { background: #111827; border-right: 4px solid var(--accent); padding: 12px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; border: 1px solid #334155; color: var(--text-white); }
-        .agenda-item:hover { background: #1e293b; transform: translateX(-5px); }
-        .worker-pill, .equip-pill { cursor: pointer; padding: 10px; border: 1px solid #334155; border-radius: 12px; background: #000; text-align: center; font-size: 0.75rem; font-weight: bold; color: var(--text-white); transition: 0.3s; }
-        .worker-pill.active, .equip-pill.active { border-color: var(--accent); background: #064e3b; color: white; }
-
-        /* Inputs - تحسين لون الخط للأبيض */
-        .form-control, .form-select { background: #000 !important; border: 1px solid #334155 !important; color: var(--text-white) !important; border-radius: 10px; padding: 0.6rem; }
-        .form-control:focus, .form-select:focus { background: #0f172a !important; border-color: var(--accent) !important; color: white !important; box-shadow: none; }
-        .form-control::placeholder { color: #4b5563; }
-        
-        /* تقارير القاعات والمواعيد */
-        .hall-report-card { background: #111827; border-right: 5px solid var(--accent); border-radius: 12px; padding: 15px; margin-bottom: 10px; color: var(--text-white); }
-        .upcoming-item { background: #000; border: 1px solid #334155; border-right: 4px solid var(--gold); padding: 10px; border-radius: 12px; margin-bottom: 8px; color: var(--text-white); }
-
-        .hidden { display: none !important; }
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
-        
-        /* Modal Colors */
-        .modal-content { background: var(--card-dark); color: white; border: 1px solid #334155; }
-        .table { color: white !important; }
-        .table-light { background: #0f172a !important; color: white !important; border: none; }
-    </style>
-</head>
-<body>
-
-<div id="loadingOverlay">
-    <div class="spinner-grow text-success mb-2"></div>
-    <h5 class="text-white fw-bold">Mrakby Visuals</h5>
-</div>
-
-<div id="adminView" class="hidden">
-    <!-- Login -->
-    <div id="loginPage" class="hidden">
-        <div class="container mt-5" style="max-width: 400px;">
-            <div class="card p-4 text-center">
-                <h3 class="fw-bold mb-4 text-accent">Mrakby Visuals</h3>
-                <input type="email" id="loginEmail" class="form-control mb-3" placeholder="الإيميل">
-                <input type="password" id="loginPass" class="form-control mb-3" placeholder="الباسورد">
-                <button class="btn btn-success w-100 fw-bold py-2" onclick="window.handleLogin()">دخول</button>
-                <div id="loginError" class="text-danger small mt-2"></div>
-            </div>
-        </div>
+<!doctype html>
+<html lang="ar" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Cairo', sans-serif; }
+    .app-container { height: 100%; display: flex; flex-direction: column; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
+    .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; }
+    .modal-overlay { background: rgba(0, 0, 0, 0.6); z-index: 50; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+    .gradient-badge { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); }
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .toast { animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+    .invoice-print { background: white; padding: 40px; border-radius: 12px; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full m-0 p-0">
+  <div id="app" class="app-container w-full">
+   <header class="glass-card shadow-lg px-6 py-4 flex justify-between items-center sticky top-0 z-40 border-b">
+    <div>
+     <h1 id="main-title" class="text-3xl font-bold text-slate-800">يومية الاستوديو المتقدمة</h1>
+     <p class="text-sm text-slate-500">لوحة إدارة احترافية</p>
     </div>
-
-    <!-- Admin Content -->
-    <div id="adminContent" class="hidden">
-        <nav class="navbar shadow-lg mb-3 text-center">
-            <div class="container d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold text-accent">🎥 Mrakby Visuals | الإدارة</h5>
-                <button class="btn btn-sm btn-outline-danger" onclick="window.handleLogout()">خروج</button>
-            </div>
-        </nav>
-
-        <div class="container">
-            <div class="row g-2 mb-3 text-center small">
-                <div class="col-3"><div class="stat-card"> <small>دخل</small> <h6 id="dashIncome">0</h6> </div></div>
-                <div class="col-3"><div class="stat-card"> <small>عربون</small> <h6 id="dashArboun">0</h6> </div></div>
-                <div class="col-3"><div class="stat-card" style="border-color: var(--danger);"> <small>مصاريف</small> <h6 id="dashExp">0</h6> </div></div>
-                <div class="col-3"><div class="stat-card" style="border-color: var(--gold);"> <small>صافي</small> <h6 id="dashNet">0</h6> </div></div>
-            </div>
-
-            <ul class="nav nav-pills nav-justified mb-3 p-1 bg-black rounded-4">
-                <li class="nav-item"><a class="nav-link active" id="btn-home" onclick="window.openTab('home')">📅 اليومية</a></li>
-                <li class="nav-item"><a class="nav-link" id="btn-bookings" onclick="window.openTab('bookings')">🎥 الحجوزات</a></li>
-                <li class="nav-item"><a class="nav-link" id="btn-halls" onclick="window.openTab('halls')">🎥 القاعات</a></li>
-                <li class="nav-item"><a class="nav-link" id="btn-logs" onclick="window.openTab('logs')">🎥 السجل</a></li>
-                <li class="nav-item"><a class="nav-link" id="btn-workers" onclick="window.openTab('workers')">🎥 الفريق <span id="inboxBadge" class="badge bg-danger rounded-pill hidden">0</span></a></li>
-                <li class="nav-item"><a class="nav-link" id="btn-config" onclick="window.openTab('config')">⚙️</a></li>
-            </ul>
-
-            <!-- SECTION: HOME -->
-            <div id="home-section" class="section-content">
-                <div class="row g-3">
-                    <div class="col-md-7"><div class="calendar-box"><div class="d-flex justify-content-between mb-3"><button class="btn btn-sm text-white" onclick="window.changeMonth(-1)">◀</button><h6 id="calMonth" class="fw-bold text-accent"></h6><button class="btn btn-sm text-white" onclick="window.changeMonth(1)">▶</button></div><div id="calGrid" class="calendar-grid"></div><button class="btn btn-danger w-100 mt-3 btn-sm fw-bold shadow" data-bs-toggle="modal" data-bs-target="#bookModal">➕ حجز موعد جديد</button></div></div>
-                    <div class="col-md-5"><div class="card p-3 border-0 shadow-sm" style="height:100%; border-radius:20px;"><h6 class="fw-bold text-accent mb-3 small">🔔 الأجندة القريبة:</h6><div id="agendaList" style="max-height:300px; overflow-y:auto;"></div></div></div>
-                </div>
-                <div class="card p-3 shadow-sm mt-3 border-0">
-                    <form id="dailyForm">
-                        <div class="row g-2 mb-2">
-                            <div class="col-6 col-md-3"><label class="small fw-bold">📅 التاريخ</label><input type="date" id="inDate" class="form-control form-control-sm" required></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">🏛️ القاعة</label><select id="inHall" class="form-select form-select-sm"></select></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">💰 قبض</label><input type="number" id="inIncome" class="form-control form-control-sm" value="0"></div>
-                            <div class="col-6 col-md-3"><label class="small fw-bold">📦 مصاريف</label><input type="number" id="inExp" class="form-control form-control-sm" value="0"></div>
-                        </div>
-                        <label class="small fw-bold text-accent mt-2">من عمل اليوم؟ (الأسماء الكاملة):</label>
-                        <div id="workerGridDaily" class="row g-2 mt-1"></div>
-                        <textarea id="inDetails" class="form-control form-control-sm mt-3" rows="2" placeholder="ملاحظات اليومية..."></textarea>
-                        <button type="submit" class="btn btn-success w-100 fw-bold mt-3 py-2">حفظ العملية ✅</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- SECTION: HALLS -->
-            <div id="halls-section" class="section-content hidden">
-                <div class="card p-3 border-0 shadow-sm">
-                    <h6 class="fw-bold mb-3 text-accent text-center">🏛️ إحصائيات القاعات والأماكن</h6>
-                    <div id="hallsReportList"></div>
-                </div>
-            </div>
-
-            <!-- SECTION: BOOKINGS -->
-            <div id="bookings-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0"><h6 class="fw-bold mb-3 text-accent">📑 الحجوزات والميزانية</h6><div class="table-responsive"><table class="table table-sm text-center small border"><thead class="table-dark"><tr><th>تاريخ</th><th>العميل</th><th>المكان</th><th>اتفاق</th><th>باقي</th><th>إجراء</th></tr></thead><tbody id="bookingsTableBody"></tbody></table></div></div>
-            </div>
-
-            <!-- SECTION: LOGS -->
-            <div id="logs-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0 mb-3"><div class="row g-2"><div class="col-5"><select id="filterMonth" class="form-select form-select-sm" onchange="refreshUI()"></select></div><div class="col-5"><select id="filterYear" class="form-select form-select-sm" onchange="refreshUI()"></select></div><div class="col-2"><button class="btn btn-sm btn-dark w-100" onclick="resetFilters()">🔄</button></div></div></div>
-                <div class="card p-2 border-0 shadow-sm"><table class="table text-center align-middle small"><thead><tr><th>تاريخ</th><th>مكان</th><th>إيراد</th><th>صافي</th><th>حذف</th></tr></thead><tbody id="logsTableBody"></tbody></table></div>
-            </div>
-
-            <!-- SECTION: WORKERS & PAYMENTS -->
-            <div id="workers-section" class="section-content hidden">
-                <div class="card p-3 shadow-sm border-0 mb-3"><h6>📥 طلبات الفريق:</h6><div id="adminInbox"></div></div>
-                <div class="card p-3 shadow-sm border-0 mb-3"><h6>💸 صرف مبالغ:</h6><div class="row g-2"><div class="col-5"><select id="payWorkerName" class="form-select form-select-sm"></select></div><div class="col-4"><input type="number" id="payAmount" class="form-control form-control-sm"></div><div class="col-3"><button class="btn btn-danger btn-sm w-100" onclick="window.addWithdrawal()">سحب</button></div></div></div>
-                <div class="card p-3 shadow-sm border-0 text-center"><h6>كشوف الفنيين:</h6><div id="workerPickGrid" class="row g-2 mb-3"></div><div id="workerStatsView" class="hidden text-start"><div id="workerLinkBox" class="p-2 border rounded bg-black text-accent small mb-3" style="word-break:break-all"></div><div id="balanceSummary" class="alert alert-success text-center fw-bold py-2 mb-3"></div><table class="table table-sm table-striped border text-center small"><thead><tr><th>تاريخ</th><th>البيان</th><th>مبلغ</th></tr></thead><tbody id="workerHistoryBody"></tbody></table><button class="btn btn-sm btn-warning w-100 mt-2" onclick="window.resetDevice()">🔄 إعادة قفل الموبايل</button></div></div>
-            </div>
-
-            <!-- SECTION: CONFIG -->
-            <div id="config-section" class="section-content hidden">
-                <div class="card p-3 mb-2"><h6>🏛️ القاعات</h6><div class="input-group"><input type="text" id="hNew" class="form-control"><button class="btn btn-success" onclick="window.addH()">+</button></div><div id="hList" class="d-flex flex-wrap mt-2"></div></div>
-                <div class="card p-3 mb-2"><h6>📦 المعدات</h6><div class="input-group"><input type="text" id="eqName" class="form-control" placeholder="المعدة"><input type="number" id="eqPrice" class="form-control" placeholder="السعر"><button class="btn btn-success" onclick="window.addEquip()">+</button></div><div id="eqList" class="d-flex flex-wrap mt-2"></div></div>
-                <div class="card p-3"><h6>👤 إدارة الفريق</h6><div id="wEditList"></div><hr><div class="row g-1"><div class="col-6"><input type="text" id="wn" class="form-control"></div><div class="col-4"><input type="number" id="ws" class="form-control"></div><div class="col-2"><button class="btn btn-success w-100" onclick="window.addW()">+</button></div></div></div>
-            </div>
-        </div>
+    <div class="flex items-center gap-2"><button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
     </div>
-</div>
-
-<!-- واجهة الفني -->
-<div id="workerPortalView" class="hidden">
-    <div class="container mt-4">
-        <div id="portalHeader" class="card p-3 shadow-lg border-0 text-center mb-3 bg-primary text-white"></div>
-        <div id="workerAlerts"></div>
-        <div id="pBalance" class="alert alert-warning text-center fw-bold py-2 mb-3"></div>
-        <div class="card p-3 shadow-sm border-0 mb-3 text-start"><h6 class="text-accent fw-bold small">📅 مواعيدك القادمة:</h6><div id="workerUpcoming"></div></div>
-        <div id="workerExcuseBox" class="card p-3 shadow-sm border-0 mb-3 text-start">
-            <h6 class="text-primary fw-bold small">📝 مركز الاعتذار والتبديل:</h6>
-            <div class="row g-2 mt-1">
-                <div class="col-6"><select id="reqDate" class="form-select form-select-sm"></select></div>
-                <div class="col-6"><select id="reqType" class="form-select form-select-sm" onchange="document.getElementById('replBox').classList.toggle('hidden', this.value !== 'تبديل')"><option>ملاحظة</option><option>تبديل</option><option>اعتذار</option></select></div>
-                <div class="col-12 hidden" id="replBox"><select id="reqRepl" class="form-select form-select-sm"></select></div>
-                <textarea id="reqNote" class="form-control form-control-sm mt-2" placeholder="اكتب السبب بوضوح..."></textarea>
-                <button class="btn btn-primary w-100 btn-sm mt-2 fw-bold" onclick="window.sendIntReq()">إرسال للمدير ✅</button>
-            </div>
-        </div>
-        <div class="card p-3 shadow-sm border-0 small"><table class="table table-sm table-striped border text-center"><thead><tr><th>تاريخ</th><th>البيان</th><th>مبلغ</th></tr></thead><tbody id="pHistoryBody"></tbody></table></div>
-    </div>
-</div>
-
-<!-- Modal: Booking -->
-<div class="modal fade" id="bookModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header border-0"><h6 class="fw-bold">تسجيل حجز جديد</h6></div><div class="modal-body small"><input type="text" id="bt" class="form-control mb-2" placeholder="العميل"><input type="text" id="bAddress" class="form-control mb-2" placeholder="العنوان"><div class="row g-1 mb-2"><div class="col-6"><select id="bh" class="form-select"></select></div><div class="col-6"><input type="date" id="bd" class="form-control" readonly></div></div><div class="row g-1 mb-2 bg-black p-2 rounded text-center"><div class="col-4"><label>اتفاق</label><input type="number" id="bTotal" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>عربون</label><input type="number" id="bArboun" class="form-control form-control-sm" value="0"></div><div class="col-4"><label>باقي</label><input type="number" id="bRem" class="form-control form-control-sm" readonly></div></div><hr><h6 class="small fw-bold text-accent">المعدات:</h6><div id="rentalEquipGrid" class="row g-1 mb-2"></div><input type="text" id="rFrom" class="form-control form-control-sm mb-3" placeholder="المؤجر من"><h6 class="small fw-bold text-primary">تعيين فنيين:</h6><div id="bwGrid" class="row g-2"></div></div><div class="modal-footer border-0"><button class="btn btn-success w-100 fw-bold" onclick="window.saveB()">تأكيد الحجز ✅</button></div></div></div></div>
-
-<!-- Modal: Agenda Details -->
-<div class="modal fade" id="detailsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header border-0"><h6 id="dTitle"></h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detailsModalBody"></div></div></div></div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyD1g5o98oLq-e3TM2td8w_MqD0-gmBjkeM",
-      authDomain: "videosystempro.firebaseapp.com",
-      databaseURL: "https://videosystempro-default-rtdb.firebaseio.com",
-      projectId: "videosystempro",
-      storageBucket: "videosystempro.firebasestorage.app",
-      messagingSenderId: "548170451809",
-      appId: "1:548170451809:web:a95e3f1c35a3e4b4ce9320"
+   </header>
+   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;"><button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
+   </nav>
+   <main id="main-content" class="flex-1 p-6 overflow-y-auto">
+   </main>
+   <footer class="glass-card border-t p-4 text-center text-slate-500 text-sm">
+    <p id="footer-note">جميع الحقوق محفوظة © 2024</p>
+   </footer>
+  </div>
+  <div id="modal-container" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 overflow-y-auto">
+  </div>
+  <script>
+    // Config & Initialization
+    const defaultConfig = {
+      main_title: "يومية الاستوديو المتقدمة",
+      footer_note: "جميع الحقوق محفوظة © 2024"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const dbRef = getDatabase(app);
-    const auth = getAuth(app);
-    const rootRef = ref(dbRef, 'videoSystem');
+    let config = { ...defaultConfig };
+    let currentTab = 'dashboard';
+    let allData = [];
+    let staffMembers = [];
+    let venues = [
+      { id: 'v1', name: 'قاعة الفيروز', pay: 1000 },
+      { id: 'v2', name: 'قاعة الشافعى', pay: 800 },
+      { id: 'v3', name: 'شغل الشارع', pay: 600 }
+    ];
 
-    let db = { halls: [], workers: [], equipment: [], logs: [], bookings: [], requests: [], withdrawals: [] };
-    let curM = new Date().getMonth(), curY = new Date().getFullYear(), currentTab = 'home', dataLoaded = false, activeW = null;
-    let myDeviceId = localStorage.getItem('v_device_id') || Math.random().toString(36).substring(2, 15);
-    localStorage.setItem('v_device_id', myDeviceId);
+    // Default photographers
+    const defaultPhotographers = [
+      { name: 'محمود المراكبى', role: 'مخرج' },
+      { name: 'محمد المراكبى', role: 'مخرج' },
+      { name: 'محمد نادر', role: 'مصور' },
+      { name: 'محمد ايهاب', role: 'مصور كرين' },
+      { name: 'محمد عادل', role: 'مصور أول' },
+      { name: 'محمود كوكو', role: 'مصور' },
+      { name: 'السيد الشربجى', role: 'مصور' }
+    ];
 
-    onAuthStateChanged(auth, (user) => {
-        onValue(rootRef, (snap) => {
-            const data = snap.val();
-            if(data) {
-                db.halls = data.halls || ["الفيروز", "الشافعى", "الشارع"];
-                db.workers = data.workers || [];
-                db.equipment = data.equipment || [];
-                db.logs = data.logs || [];
-                db.bookings = data.bookings || [];
-                db.requests = data.requests || [];
-                db.withdrawals = data.withdrawals || [];
+    // SDK Initialization
+    async function initApp() {
+      if (window.dataSdk) {
+        const dataHandler = {
+          onDataChanged: (data) => {
+            allData = data;
+            staffMembers = data.filter(d => d.type === 'staff');
+            
+            if (staffMembers.length === 0) {
+              defaultPhotographers.forEach(ph => {
+                const staffData = {
+                  type: 'staff',
+                  staff_name: ph.name,
+                  staff_role: ph.role,
+                  staff_pay: 300,
+                  staff_slug: ph.name.toLowerCase().replace(/\s+/g, '-'),
+                  staff_portal_link: `photographer-${ph.name.toLowerCase().replace(/\s+/g, '-')}`
+                };
+              });
             }
-            dataLoaded = true;
-            document.getElementById('loadingOverlay').style.display = 'none';
-            if(window.location.hash) checkDeviceLock(decodeURIComponent(window.location.hash.substring(1)));
-            else if (user) {
-                document.getElementById('adminView').classList.remove('hidden');
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('adminContent').classList.remove('hidden');
-                refreshUI();
-            } else {
-                document.getElementById('adminView').classList.remove('hidden');
-                document.getElementById('loginPage').classList.remove('hidden');
-                document.getElementById('adminContent').classList.add('hidden');
-            }
+            renderUI();
+          }
+        };
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) console.warn('Data SDK init issue');
+      }
+
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (newConfig) => {
+            config = { ...config, ...newConfig };
+            renderUI();
+          },
+          mapToCapabilities: () => ({
+            recolorables: [],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (cfg) => new Map([
+            ["main_title", cfg.main_title],
+            ["footer_note", cfg.footer_note]
+          ])
         });
-    });
+      }
 
-    window.save = () => { if(dataLoaded) set(rootRef, db); };
-    window.handleLogin = () => {
-        const e = document.getElementById('loginEmail').value, p = document.getElementById('loginPass').value;
-        signInWithEmailAndPassword(auth, e, p).catch(err => document.getElementById('loginError').innerText = "خطأ في الدخول");
-    };
-    window.handleLogout = () => signOut(auth);
-
-    function checkDeviceLock(name) {
-        let worker = db.workers.find(w => w.name === name);
-        if(!worker) return;
-        activeW = name;
-        if(!worker.lockedId) { worker.lockedId = myDeviceId; window.save(); renderWorkerPortal(name); }
-        else if (worker.lockedId === myDeviceId) { renderWorkerPortal(name); }
-        else { document.body.innerHTML = `<div class='container mt-5 text-center text-danger fw-bold'>🔒 هذا الرابط مقفل على جهاز آخر للخصوصية.</div>`; }
+      lucide.createIcons();
+      renderUI();
     }
 
-    window.openTab = (id) => {
-        currentTab = id;
-        document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
-        document.getElementById(id + '-section').classList.remove('hidden');
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        const activeBtn = document.getElementById('btn-' + id);
-        if(activeBtn) activeBtn.classList.add('active');
-        refreshUI();
-    };
+    function renderUI() {
+      document.getElementById('main-title').textContent = config.main_title;
+      document.getElementById('footer-note').textContent = config.footer_note;
 
-    function refreshUI() {
-        updateDash(); populateFilters();
-        if(currentTab === 'home') { renderCal(); renderDailyForm(); renderAgenda(); }
-        if(currentTab === 'bookings') renderBookingsTable();
-        if(currentTab === 'halls') renderHallsReport();
-        if(currentTab === 'logs') renderLogs();
-        if(currentTab === 'workers') { renderWorkerSelect(); renderAdminInbox(); }
-        if(currentTab === 'config') renderSettings();
+      const content = document.getElementById('main-content');
+      content.innerHTML = '';
+
+      switch(currentTab) {
+        case 'dashboard': renderDashboard(content); break;
+        case 'calendar': renderCalendar(content); break;
+        case 'daily-log': renderDailyLog(content); break;
+        case 'staff': renderStaffManager(content); break;
+        case 'packages': renderPackagesManager(content); break;
+      }
+      lucide.createIcons();
     }
 
-    function updateDash() {
-        let i=0, e=0, arb=0; const now = new Date();
-        db.logs.forEach(l => { if(new Date(l.date).getMonth() === now.getMonth()) { i += l.income; e += l.exp + Object.values(l.pays).reduce((a,b)=>a+b, 0); } });
-        db.bookings.forEach(b => { if(new Date(b.date).getMonth() === now.getMonth()) arb += b.bArboun; });
-        document.getElementById('dashIncome').innerText = i; document.getElementById('dashArboun').innerText = arb;
-        document.getElementById('dashExp').innerText = e; document.getElementById('dashNet').innerText = i - e;
-    }
-
-    function renderCal() {
-        const grid = document.getElementById('calGrid'); grid.innerHTML = '';
-        ["ح", "ن", "ث", "ر", "خ", "ج", "س"].forEach(d => grid.innerHTML += `<div class="day-head">${d}</div>`);
-        const firstDay = new Date(curY, curM, 1).getDay();
-        const daysInM = new Date(curY, curM + 1, 0).getDate();
-        for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-        for(let d=1; d<=daysInM; d++) {
-            const dt = `${curY}-${String(curM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const hb = db.bookings.some(b => b.date === dt) ? 'has-booking' : '';
-            grid.innerHTML += `<div class="day ${hb}" onclick="window.selectDt('${dt}', this)">${d}</div>`;
+    function setTab(tab) {
+      currentTab = tab;
+      const tabs = ['dashboard', 'calendar', 'daily-log', 'staff', 'packages'];
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        if (el) {
+          el.classList.remove('tab-active');
+          el.classList.add('text-slate-600');
         }
-        document.getElementById('calMonth').innerText = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"][curM] + " " + curY;
+      });
+      const activeTab = document.getElementById(`tab-${tab}`);
+      if (activeTab) {
+        activeTab.classList.add('tab-active');
+        activeTab.classList.remove('text-slate-600');
+      }
+      renderUI();
     }
 
-    window.selectDt = (dt, el) => { document.querySelectorAll('.day').forEach(d => d.classList.remove('selected')); el.classList.add('selected'); document.getElementById('inDate').value = dt; document.getElementById('bd').value = dt; };
-
-    function renderDailyForm() {
-        document.getElementById('inHall').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
-        document.getElementById('bh').innerHTML = db.halls.map(h => `<option value="${h}">${h}</option>`).join('');
-        document.getElementById('workerGridDaily').innerHTML = db.workers.map(w => `<div class="col-6 col-md-4 p-1"><div class="worker-pill" onclick="this.classList.toggle('active'); document.querySelector('.v-${w.name.replace(/ /g,'')}').value = this.classList.contains('active') ? ${w.salary} : 0">${w.name}</div><input type="number" class="d-none v-${w.name.replace(/ /g,'')}" value="0"></div>`).join('');
-        document.getElementById('bwGrid').innerHTML = db.workers.map(w => `<div class="col-6 col-md-4 p-1"><div class="worker-pill small" onclick="this.classList.toggle('active')"><input type="checkbox" class="b-chk d-none" value="${w.name}"> ${w.name}</div></div>`).join('');
-        document.getElementById('rentalEquipGrid').innerHTML = db.equipment.map(e => `<div class="col-4 p-1"><div class="equip-pill small" onclick="this.classList.toggle('active')"><input type="checkbox" class="e-chk d-none" value="${e.name}"> ${e.name}</div></div>`).join('');
-    }
-
-    window.saveB = () => {
-        const t = document.getElementById('bt').value, a = document.getElementById('bAddress').value, h = document.getElementById('bh').value, d = document.getElementById('bd').value;
-        const total = parseFloat(document.getElementById('bTotal').value)||0, arb = parseFloat(document.getElementById('bArboun').value)||0;
-        const workers = []; document.querySelectorAll('#bwGrid .worker-pill.active').forEach(p => workers.push(p.innerText.trim()));
-        const equips = []; document.querySelectorAll('.equip-pill.active').forEach(p => equips.push(p.innerText.trim()));
-        if(!t || workers.length === 0) return alert("اكمل البيانات");
-        db.bookings.push({title: t, bAddress: a, hall: h, date: d, workers, bTotal: total, bArboun: arb, equips, rFrom: document.getElementById('rFrom').value});
-        window.save(); bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
-    };
-
-    document.getElementById('dailyForm').onsubmit = (e) => {
-        e.preventDefault();
-        let pays = {}; db.workers.forEach(w => { let v = parseFloat(document.querySelector('.v-'+w.name.replace(/ /g,'')).value); if(v > 0) pays[w.name] = v; });
-        db.logs.push({ id: Date.now(), date: document.getElementById('inDate').value, hall: document.getElementById('inHall').value, income: parseFloat(document.getElementById('inIncome').value)||0, exp: parseFloat(document.getElementById('inExp').value)||0, details: document.getElementById('inDetails').value, pays: pays });
-        window.save(); alert("تم حفظ العملية ✅");
-    };
-
-    function renderAgenda() {
-        const today = new Date().toISOString().split('T')[0];
-        const upcoming = db.bookings.filter(b => b.date >= today).sort((a,b) => new Date(a.date) - new Date(b.date));
-        document.getElementById('agendaList').innerHTML = upcoming.map((b, i) => `<div class="agenda-item" onclick="window.showAgendaDetail(${db.bookings.indexOf(b)})"><strong>📅 ${b.date.slice(5)}</strong> | ${b.hall}<br><span>${b.title}</span></div>`).join('') || 'لا توجد مواعيد';
-    }
-
-    window.showAgendaDetail = (i) => {
-        const b = db.bookings[i];
-        document.getElementById('detailsModalBody').innerHTML = `
-            <div class="text-end small">
-                <p>👤 <b>العميل:</b> ${b.title}</p>
-                <p>📍 <b>العنوان:</b> ${b.bAddress || '-'}</p>
-                <p>💰 <b>الميزانية:</b> الاتفاق ${b.bTotal}ج | <span class="text-danger">متبقي ${b.bTotal-b.bArboun}ج</span></p>
-                <p>📦 <b>المعدات:</b> ${b.equips ? b.equips.join(',') : 'لا يوجد'}</p>
-                <p>👥 <b>الفنيين:</b> ${b.workers.join(', ')}</p>
+    // DASHBOARD
+    function renderDashboard(container) {
+      const bookings = allData.filter(d => d.type === 'booking');
+      const dailyLogs = allData.filter(d => d.type === 'daily-log');
+      
+      const totalRevenue = bookings.reduce((acc, curr) => acc + (Number(curr.paid_amount) || 0), 0);
+      const totalRemaining = bookings.reduce((acc, curr) => acc + (Number(curr.remaining_amount) || 0), 0);
+      
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+              <div class="flex items-center justify-between mb-3">
+                <p class="text-slate-600 text-sm font-semibold">إجمالي الحجوزات</p>
+                <i data-lucide="calendar" class="w-6 h-6 text-blue-600"></i>
+              </div>
+              <h3 class="text-3xl font-bold text-slate-800">${bookings.length}</h3>
+              <p class="text-xs text-slate-500 mt-2">من بداية النشاط</p>
             </div>
-            <div class="mt-3 d-flex gap-2">
-                <button class="btn btn-sm btn-success w-50" onclick="window.sendInvoice(${i})">📩 واتساب</button>
-                <button class="btn btn-sm btn-primary w-50" onclick="window.addToGoogleCalendar(${i})">📅 تقويم</button>
-            </div>`;
-        document.getElementById('dTitle').innerText = b.title;
-        new bootstrap.Modal(document.getElementById('detailsModal')).show();
-    };
 
-    window.sendInvoice = (i) => {
-        const b = db.bookings[i];
-        let eq = b.equips && b.equips.length > 0 ? `%0A📦 *المعدات:* ${b.equips.join(', ')}` : "";
-        const msg = `*Mrakby Visuals | المراكبى* 🎥%0A*إيصال حجز موعد*%0A👤 *العميل:* ${b.title}%0A📅 *التاريخ:* ${b.date}%0A🏛️ *المكان:* ${b.hall}${eq}%0A💰 *الإجمالي:* ${b.bTotal} ج%0A💵 *العربون:* ${b.bArboun} ج%0A📉 *المتبقي:* ${b.bTotal - b.bArboun} ج%0Aشكراً لاختياركم المراكبى! ✅`;
-        window.open(`https://wa.me/?text=${msg}`);
-    };
+            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+              <div class="flex items-center justify-between mb-3">
+                <p class="text-slate-600 text-sm font-semibold">المحصل</p>
+                <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+              </div>
+              <h3 class="text-3xl font-bold text-green-600">${totalRevenue.toLocaleString()} ج.م</h3>
+              <p class="text-xs text-slate-500 mt-2">دفع بالفعل</p>
+            </div>
 
-    window.addToGoogleCalendar = (i) => {
-        const b = db.bookings[i]; const d = b.date.replace(/-/g, '');
-        window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(b.title)}&dates=${d}/${d}&location=${encodeURIComponent(b.bAddress||b.hall)}`);
-    };
+            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+              <div class="flex items-center justify-between mb-3">
+                <p class="text-slate-600 text-sm font-semibold">المتبقي</p>
+                <i data-lucide="alert-circle" class="w-6 h-6 text-amber-600"></i>
+              </div>
+              <h3 class="text-3xl font-bold text-amber-600">${totalRemaining.toLocaleString()} ج.م</h3>
+              <p class="text-xs text-slate-500 mt-2">تحت التحصيل</p>
+            </div>
 
-    function renderBookingsTable() {
-        const tbody = document.getElementById('bookingsTableBody'); tbody.innerHTML = '';
-        db.bookings.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach((b, i) => {
-            tbody.innerHTML += `<tr><td>${b.date.slice(5)}</td><td>${b.title}</td><td>${b.hall}</td><td class="text-accent">${b.bTotal}</td><td class="text-danger">${b.bTotal-b.bArboun}</td><td><button class="btn btn-sm btn-danger py-0" onclick="window.delI('bookings', ${i})">🗑️</button></td></tr>`;
-        });
+            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+              <div class="flex items-center justify-between mb-3">
+                <p class="text-slate-600 text-sm font-semibold">اليوميات</p>
+                <i data-lucide="clipboard-list" class="w-6 h-6 text-purple-600"></i>
+              </div>
+              <h3 class="text-3xl font-bold text-purple-600">${dailyLogs.length}</h3>
+              <p class="text-xs text-slate-500 mt-2">تسجيل يومي</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass-card p-6 rounded-2xl shadow-lg">
+              <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                <i data-lucide="trending-up" class="w-5 h-5 text-blue-600"></i>
+                آخر الحجوزات
+              </h3>
+              <div class="space-y-3 max-h-80 overflow-y-auto">
+                ${bookings.slice(-5).reverse().map(b => `
+                  <div class="p-4 border-l-4 border-blue-400 bg-blue-50 rounded-r-lg hover:bg-blue-100 transition-all">
+                    <div class="font-bold text-slate-800">${b.client_name}</div>
+                    <div class="text-xs text-slate-500 mt-1">${b.date}</div>
+                    <div class="text-xs text-blue-600 font-semibold mt-2">المبلغ: ${b.total_amount} ج.م | المدفوع: ${b.paid_amount} ج.م</div>
+                  </div>
+                `).join('') || '<p class="text-center py-6 text-slate-400">لا توجد حجوزات</p>'}
+              </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl shadow-lg">
+              <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
+                المصورين النشطين
+              </h3>
+              <div class="space-y-3 max-h-80 overflow-y-auto">
+                ${staffMembers.slice(0, 8).map(staff => {
+                  const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staff.staff_name));
+                  return `
+                    <div class="p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
+                      <div class="flex justify-between items-center">
+                        <span class="font-semibold text-slate-800">${staff.staff_name}</span>
+                        <span class="px-3 py-1 bg-purple-200 text-purple-800 rounded-full font-bold text-xs">${staffBookings.length} حجز</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('') || '<p class="text-center py-6 text-slate-400">لم يتم إضافة مصورين بعد</p>'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
-    function renderHallsReport() {
-        const list = document.getElementById('hallsReportList'); list.innerHTML = '';
-        db.halls.forEach(h => {
-            let d=0, wS=0, oE=0, inc=0;
-            db.logs.forEach(l => { if(l.hall === h) { d++; inc += l.income; oE += l.exp; wS += Object.values(l.pays).reduce((a,b)=>a+b, 0); } });
-            list.innerHTML += `<div class="hall-report-card shadow-sm"><h6 class="fw-bold text-accent">${h}</h6><div class="row small text-center"><div class="col-3">أيام<br>${d}</div><div class="col-3">فنيين<br>${wS}</div><div class="col-3">مصاريف<br>${oE}</div><div class="col-3 text-success">صافي<br>${inc - (wS + oE)}</div></div></div>`;
-        });
+    // CALENDAR
+    function renderCalendar(container) {
+      const bookings = allData.filter(d => d.type === 'booking');
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcomingBookings = bookings
+        .filter(b => new Date(b.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const currentMonth = new Date();
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startingDayOfWeek = firstDay.getDay();
+      
+      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+                         'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+      container.innerHTML = `
+        <div class="flex flex-col lg:flex-row gap-8">
+          <div class="flex-1">
+            <div class="glass-card p-6 rounded-2xl shadow-lg">
+              <h2 class="text-2xl font-bold text-slate-800 mb-6">${monthNames[month]} ${year}</h2>
+              
+              <div class="grid grid-cols-7 gap-2 mb-4">
+                ${['ح', 'ن', 'ث', 'ع', 'خ', 'ج', 'س'].map(d => 
+                  `<div class="text-center text-xs font-bold text-slate-500 p-3 bg-slate-100 rounded">${d}</div>`
+                ).join('')}
+              </div>
+              
+              <div class="grid grid-cols-7 gap-2">
+                ${Array.from({length: startingDayOfWeek}).map(() => 
+                  `<div class="aspect-square"></div>`
+                ).join('')}
+                
+                ${Array.from({length: daysInMonth}).map((_, i) => {
+                  const day = i + 1;
+                  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const dayBookings = bookings.filter(b => b.date === dateStr);
+                  const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                  
+                  return `<button onclick="openBookingModalWithDate('${dateStr}')" 
+                    class="aspect-square border-2 rounded-lg p-2 flex flex-col items-center justify-between hover:border-blue-300 hover:bg-blue-50 transition-all ${dayBookings.length > 0 ? 'bg-blue-50 border-blue-300' : 'border-slate-300'} ${isToday ? 'ring-2 ring-blue-500' : ''}">
+                    <span class="text-xs font-bold ${dayBookings.length > 0 ? 'text-blue-600' : 'text-slate-500'}">${day}</span>
+                    ${dayBookings.length > 0 ? `<span class="text-xs text-blue-600 font-semibold">${dayBookings.length}</span>` : ''}
+                  </button>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full lg:w-96 space-y-6">
+            <div class="glass-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-600 to-red-700 text-white">
+              <h3 class="font-bold mb-4 flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                المواعيد القادمة
+              </h3>
+              <div class="space-y-2 max-h-80 overflow-y-auto">
+                ${upcomingBookings.slice(0, 8).map(b => `
+                  <button onclick="openClientDetails('${b.__backendId}')" class="w-full text-right p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-all border-r-4 border-red-400 hover:border-red-500">
+                    <div class="font-bold text-slate-900 text-sm">${b.client_name}</div>
+                    <div class="text-xs text-red-700 mt-1">📅 ${b.date}</div>
+                    <div class="text-xs font-semibold text-red-600 mt-1">المبلغ: ${b.total_amount} ج.م</div>
+                  </button>
+                `).join('') || '<p class="text-center py-6 text-red-200">لا توجد مواعيد قادمة</p>'}
+              </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+              <h3 class="font-bold mb-4">إحصائيات الشهر</h3>
+              <div class="space-y-2">
+                <div class="flex justify-between pb-2 border-b border-blue-400">
+                  <span>إجمالي الحجوزات</span>
+                  <span class="font-bold">${bookings.length}</span>
+                </div>
+                <div class="flex justify-between pb-2 border-b border-blue-400">
+                  <span>أيام بها حجوزات</span>
+                  <span class="font-bold">${new Set(bookings.map(b => b.date)).size}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>متوسط يومي</span>
+                  <span class="font-bold">${Math.round(bookings.length / Math.max(new Set(bookings.map(b => b.date)).size, 1))}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
-    function renderLogs() {
-        const tbody = document.getElementById('logsTableBody'); tbody.innerHTML = '';
-        const fM = parseInt(document.getElementById('filterMonth').value), fY = parseInt(document.getElementById('filterYear').value);
-        db.logs.filter(l => { const d = new Date(l.date); return d.getMonth() === fM && d.getFullYear() === fY; }).sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach((l, i) => {
-            let tw = Object.values(l.pays).reduce((a,b) => a+b, 0);
-            tbody.innerHTML += `<tr><td>${l.date.slice(5)}</td><td>${l.hall}</td><td>${l.income}</td><td class="text-accent">${l.income - (l.exp + tw)}</td><td><span class="text-danger" onclick="window.delI('logs', ${db.logs.indexOf(l)})">🗑️</span></td></tr>`;
-        });
+    // DAILY LOG
+    function renderDailyLog(container) {
+      const dailyLogs = allData.filter(d => d.type === 'daily-log');
+      
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800">سجل اليوميات</h2>
+              <p class="text-sm text-slate-500 mt-1">تتبع إيرادات الأماكن والمصورين</p>
+            </div>
+            <button onclick="openDailyLogModal()" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
+              <i data-lucide="plus" class="w-5 h-5"></i> تسجيل يومية
+            </button>
+          </div>
+
+          <!-- Statistics -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${venues.map(venue => {
+              const venueLogs = dailyLogs.filter(d => d.venue_name === venue.name);
+              const totalRevenue = venueLogs.reduce((acc, curr) => acc + (Number(curr.venue_revenue) || 0), 0);
+              const netRevenue = totalRevenue - (venueLogs.length * venue.pay);
+              
+              return `
+                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-800 text-lg">${venue.name}</h3>
+                    <i data-lucide="map-pin" class="w-6 h-6 text-amber-600"></i>
+                  </div>
+                  <div class="space-y-2">
+                    <div class="flex justify-between p-2 bg-blue-50 rounded">
+                      <span class="text-xs text-slate-600">الإيرادات</span>
+                      <span class="font-bold text-blue-600">${totalRevenue} ج.م</span>
+                    </div>
+                    <div class="flex justify-between p-2 bg-amber-50 rounded">
+                      <span class="text-xs text-slate-600">عبض المكان</span>
+                      <span class="font-bold text-amber-600">${venue.pay * venueLogs.length} ج.م</span>
+                    </div>
+                    <div class="flex justify-between p-2 bg-green-50 rounded">
+                      <span class="text-xs text-slate-600">الصافي</span>
+                      <span class="font-bold text-green-600">${netRevenue} ج.م</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">عدد التسجيلات: ${venueLogs.length}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Logs Table -->
+          <div class="glass-card rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-4 bg-gradient-to-r from-slate-100 to-slate-200 border-b">
+              <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="list" class="w-5 h-5"></i>
+                جميع اليوميات
+              </h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-right text-sm">
+                <thead class="bg-slate-50 border-b">
+                  <tr>
+                    <th class="p-4 text-slate-600">التاريخ</th>
+                    <th class="p-4 text-slate-600">المكان</th>
+                    <th class="p-4 text-slate-600">الإيرادات</th>
+                    <th class="p-4 text-slate-600">العبض</th>
+                    <th class="p-4 text-slate-600">الصافي</th>
+                    <th class="p-4 text-slate-600">المصورين</th>
+                    <th class="p-4 text-slate-600">الإجراء</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${dailyLogs.slice().reverse().map(log => {
+                    const venue = venues.find(v => v.name === log.venue_name);
+                    const venueShare = venue ? venue.pay : 0;
+                    return `
+                      <tr class="border-t hover:bg-blue-50 transition-all">
+                        <td class="p-4 font-bold">${log.log_date}</td>
+                        <td class="p-4"><span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">${log.venue_name}</span></td>
+                        <td class="p-4 font-bold text-green-600">${log.venue_revenue} ج.م</td>
+                        <td class="p-4 text-amber-600 font-bold">${venueShare} ج.م</td>
+                        <td class="p-4 font-bold text-green-600">${Number(log.venue_revenue) - venueShare} ج.م</td>
+                        <td class="p-4 text-xs">
+                          <div class="flex flex-wrap gap-1">
+                            ${log.photographer_list?.split(',').map(p => `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">${p.trim()}</span>`).join('') || '-'}
+                          </div>
+                        </td>
+                        <td class="p-4">
+                          <button onclick="deleteRecord('${log.__backendId}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition-all">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-400">لا توجد تسجيلات</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
-    function renderWorkerSelect() {
-        document.getElementById('workerPickGrid').innerHTML = db.workers.map(w => `<div class="col-6 col-md-4 p-1"><div class="worker-pill small fw-bold" onclick="window.viewWLog('${w.name}', this)">${w.name}</div></div>`).join('');
-        document.getElementById('payWorkerName').innerHTML = db.workers.map(w => `<option value="${w.name}">${w.name}</option>`).join('');
+    // STAFF MANAGER
+    function renderStaffManager(container) {
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800">إدارة المصورين</h2>
+              <p class="text-sm text-slate-500 mt-1">أضف وأدر المصورين وتتبع أدائهم</p>
+            </div>
+            <button onclick="openStaffModal()" class="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
+              <i data-lucide="plus" class="w-5 h-5"></i> إضافة مصور
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            ${staffMembers.length > 0 ? staffMembers.map(staff => {
+              const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staff.staff_name));
+              const totalEarnings = staffBookings.length * staff.staff_pay;
+              const portalLink = staff.staff_portal_link || staff.staff_slug;
+              
+              return `
+                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                      <div class="w-14 h-14 gradient-badge text-white rounded-full flex items-center justify-center text-xl font-bold">
+                        ${staff.staff_name[0]}
+                      </div>
+                      <div>
+                        <h4 class="font-bold text-slate-800 text-lg">${staff.staff_name}</h4>
+                        <p class="text-xs text-blue-600 font-semibold">${staff.staff_role}</p>
+                      </div>
+                    </div>
+                    <button onclick="openEditStaffModal('${staff.__backendId}')" class="text-blue-600 hover:bg-blue-50 p-2 rounded transition-all">
+                      <i data-lucide="edit" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="space-y-2 mb-4">
+                    <div class="flex justify-between p-3 bg-slate-50 rounded-lg">
+                      <span class="text-xs text-slate-600">قيمة الحجز</span>
+                      <span class="font-bold">${staff.staff_pay} ج.م</span>
+                    </div>
+                    <div class="flex justify-between p-3 bg-blue-50 rounded-lg">
+                      <span class="text-xs text-blue-600">الحجوزات</span>
+                      <span class="font-bold text-blue-800">${staffBookings.length}</span>
+                    </div>
+                    <div class="flex justify-between p-3 bg-green-50 rounded-lg">
+                      <span class="text-xs text-green-600">المستحقات</span>
+                      <span class="font-bold text-green-800">${totalEarnings} ج.م</span>
+                    </div>
+                  </div>
+
+                  <div class="space-y-2">
+                    <a href="#" onclick="openPhotographerPortalLogin(); return false;" class="w-full py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-2 block">
+                      <i data-lucide="lock" class="w-4 h-4"></i> 🔐 دخول البوابة الآمنة
+                    </a>
+                    <button onclick="copyPortalLink('${portalLink}')" class="w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                      <i data-lucide="link" class="w-4 h-4"></i> نسخ رابط البوابة
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('') : '<div class="col-span-full py-16 text-center"><i data-lucide="users" class="w-16 h-16 mx-auto text-slate-300 mb-4"></i><p class="text-slate-400 font-semibold">لم يتم إضافة مصورين بعد</p></div>'}
+          </div>
+        </div>
+      `;
     }
 
-    window.viewWLog = (n, el) => {
-        activeW = n; document.querySelectorAll('.worker-pill').forEach(p => p.classList.remove('active')); el.classList.add('active'); document.getElementById('workerStatsView').classList.remove('hidden');
-        let earned = 0, withdrawn = 0; const tbody = document.getElementById('workerHistoryBody'); tbody.innerHTML = '';
-        db.logs.forEach(l => { if(l.pays[n]) { earned += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>حضور: ${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
-        db.withdrawals.forEach(w => { if(w.name === n) { withdrawn += w.amount; tbody.innerHTML += `<tr class="text-danger"><td>${w.date}</td><td>سحب نقدية</td><td>-${w.amount} ج</td></tr>`; }});
-        document.getElementById('balanceSummary').innerText = `المتبقي له: ${earned - withdrawn} ج`;
-        const link = window.location.href.split('#')[0] + "#" + encodeURIComponent(n);
-        document.getElementById('workerLinkBox').innerText = link;
-    };
+    // PACKAGES MANAGER
+    function renderPackagesManager(container) {
+      const packages = allData.filter(d => d.type === 'package');
+      const equipment = allData.filter(d => d.type === 'equipment');
 
-    window.addWithdrawal = () => {
-        const n = document.getElementById('payWorkerName').value, a = parseFloat(document.getElementById('payAmount').value);
-        if(a > 0) { db.withdrawals.push({ name: n, amount: a, date: new Date().toISOString().split('T')[0] }); window.save(); alert("تم تسجيل السحب"); }
-    };
+      container.innerHTML = `
+        <div class="space-y-8">
+          <!-- Packages Section -->
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <h2 class="text-2xl font-bold text-slate-800">قوالب التصوير</h2>
+                <p class="text-sm text-slate-500 mt-1">أضف وأدر قوالب الحجز</p>
+              </div>
+              <button onclick="openPackageModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
+                <i data-lucide="plus" class="w-5 h-5"></i> قالب جديد
+              </button>
+            </div>
 
-    function renderAdminInbox() {
-        document.getElementById('inboxBadge').innerText = db.requests.length;
-        document.getElementById('inboxBadge').classList.toggle('hidden', db.requests.length === 0);
-        document.getElementById('adminInbox').innerHTML = db.requests.length ? db.requests.map((r, i) => `<div class="p-2 bg-black border rounded mb-2 small shadow-sm"><strong>${r.from}</strong>: ${r.note}<button class="btn btn-sm text-danger" onclick="window.delI('requests', ${i})">حذف</button></div>`).join('') : 'لا توجد طلبات';
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              ${packages.length > 0 ? packages.map(pkg => `
+                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-blue-500">
+                  <div class="flex justify-between items-start mb-3">
+                    <h4 class="font-bold text-slate-800 text-lg">${pkg.package_name}</h4>
+                    <button onclick="deleteRecord('${pkg.__backendId}')" class="text-red-500 hover:bg-red-50 p-2 rounded transition-all">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                  <p class="text-sm text-slate-600 mb-4">${pkg.package_desc}</p>
+                  <button onclick="openEditPackageModal('${pkg.__backendId}')" class="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="edit" class="w-4 h-4"></i> تعديل
+                  </button>
+                </div>
+              `).join('') : '<div class="col-span-full py-12 text-center text-slate-400">لم يتم إضافة قوالب بعد</div>'}
+            </div>
+          </div>
+
+          <div class="border-t-2 border-slate-300 my-8"></div>
+
+          <!-- Equipment Section -->
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <h2 class="text-2xl font-bold text-slate-800">المعدات والآلات</h2>
+                <p class="text-sm text-slate-500 mt-1">أضف وأدر قوالب المعدات</p>
+              </div>
+              <button onclick="openEquipmentModal()" class="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
+                <i data-lucide="plus" class="w-5 h-5"></i> معدة جديدة
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              ${equipment.length > 0 ? equipment.map(equip => `
+                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-amber-500">
+                  <div class="flex justify-between items-start mb-3">
+                    <h4 class="font-bold text-slate-800 text-lg">${equip.equipment_name}</h4>
+                    <button onclick="deleteRecord('${equip.__backendId}')" class="text-red-500 hover:bg-red-50 p-2 rounded transition-all">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                  <p class="text-sm text-slate-600 mb-3">${equip.equipment_desc}</p>
+                  <div class="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                    <span class="font-bold text-amber-800">السعر:</span>
+                    <span class="text-amber-600 font-bold">${equip.equipment_price} ج.م</span>
+                  </div>
+                  <button onclick="openEditEquipmentModal('${equip.__backendId}')" class="w-full py-2 mt-3 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="edit" class="w-4 h-4"></i> تعديل
+                  </button>
+                </div>
+              `).join('') : '<div class="col-span-full py-12 text-center text-slate-400">لم يتم إضافة معدات بعد</div>'}
+            </div>
+          </div>
+        </div>
+      `;
     }
 
-    function renderSettings() {
-        document.getElementById('hList').innerHTML = db.halls.map((h, i) => `<span class="badge bg-secondary p-2 m-1">${h} <span onclick="window.delI('halls', ${i})" style="cursor:pointer">×</span></span>`).join('');
-        document.getElementById('eqList').innerHTML = db.equipment.map((e, i) => `<span class="badge bg-warning text-dark p-2 m-1">${e.name} (${e.price}) <span onclick="window.delI('equipment', ${i})" style="cursor:pointer">×</span></span>`).join('');
-        document.getElementById('wEditList').innerHTML = db.workers.map((w, i) => `<div class="row g-1 mb-1 align-items-center bg-black p-1 rounded border small"><div class="col-7"><input type="text" class="form-control form-control-sm" value="${w.name}" onchange="window.upW(${i}, 'name', this.value)"></div><div class="col-3"><input type="number" class="form-control form-control-sm" value="${w.salary}" onchange="window.upW(${i}, 'salary', this.value)"></div><div class="col-2 text-center"><span class="text-danger" onclick="window.delI('workers', ${i})">🗑️</span></div></div>`).join('');
+    // MODALS
+
+    function openBookingModal() {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      const packages = allData.filter(d => d.type === 'package');
+      const equipment = allData.filter(d => d.type === 'equipment');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600 transition-all">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">حجز موعد تصوير جديد</h2>
+          <form onsubmit="handleBooking(event)" class="space-y-6">
+            <!-- Client Info -->
+            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200">
+              <h3 class="font-bold text-blue-900 mb-4">بيانات العميل</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold mb-2">اسم العميل</label>
+                  <input required name="client_name" class="w-full p-3 rounded-xl border bg-white" placeholder="أدخل اسم العميل">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">رقم الهاتف</label>
+                  <input required name="phone" type="tel" class="w-full p-3 rounded-xl border bg-white" placeholder="مثال: 01012345678">
+                </div>
+                <div class="col-span-full">
+                  <label class="block text-sm font-bold mb-2">العنوان</label>
+                  <input required name="address" class="w-full p-3 rounded-xl border bg-white" placeholder="العنوان بالتفصيل">
+                </div>
+              </div>
+            </div>
+
+            <!-- Booking Details -->
+            <div class="bg-green-50 p-6 rounded-2xl border border-green-200">
+              <h3 class="font-bold text-green-900 mb-4">تفاصيل الحجز</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold mb-2">التاريخ</label>
+                  <input required type="date" name="date" class="w-full p-3 rounded-xl border bg-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">القالب</label>
+                  <select name="package" class="w-full p-3 rounded-xl border bg-white">
+                    <option value="">-- اختر قالب --</option>
+                    ${packages.map(p => `<option value="${p.package_name}">${p.package_name}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">المبلغ الإجمالي (ج.م)</label>
+                  <input required type="number" name="total_amount" id="total-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">المدفوع (ج.م)</label>
+                  <input required type="number" name="paid_amount" id="paid-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">المتبقي (ج.م)</label>
+                  <input type="number" name="remaining_amount" id="remaining-amount" class="w-full p-3 rounded-xl border bg-slate-100" disabled>
+                </div>
+              </div>
+            </div>
+
+            <!-- Photographers Selection -->
+            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-200">
+              <h3 class="font-bold text-purple-900 mb-4">اختر الفريق</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                ${staffMembers.length > 0 ? staffMembers.map(staff => `
+                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-purple-100 hover:border-purple-400 hover:bg-purple-50 cursor-pointer transition-all">
+                    <input type="checkbox" name="photographers" value="${staff.staff_name}" class="w-5 h-5 cursor-pointer">
+                    <div class="flex-1">
+                      <div class="font-bold text-sm text-slate-800">${staff.staff_name}</div>
+                      <div class="text-xs text-slate-500">${staff.staff_role} - ${staff.staff_pay} ج.م</div>
+                    </div>
+                  </label>
+                `).join('') : '<p class="text-center py-4 text-slate-400 col-span-full">لم يتم إضافة مصورين</p>'}
+              </div>
+            </div>
+
+            <!-- Equipment Selection -->
+            ${equipment.length > 0 ? `
+            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
+              <h3 class="font-bold text-amber-900 mb-4">المعدات الإضافية (اختياري)</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                ${equipment.map(equip => `
+                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-amber-100 hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-all">
+                    <input type="checkbox" name="equipment" value="${equip.equipment_name}" class="w-5 h-5 cursor-pointer">
+                    <div class="flex-1">
+                      <div class="font-bold text-sm text-slate-800">${equip.equipment_name}</div>
+                      <div class="text-xs text-slate-500">${equip.equipment_price} ج.م</div>
+                    </div>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+            ` : ''}
+
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition-all">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all">تأكيد الحجز</button>
+            </div>
+          </form>
+        </div>
+      `;
+      lucide.createIcons();
     }
 
-    function populateFilters() {
-        const m = document.getElementById('filterMonth'), y = document.getElementById('filterYear'); if(m.options.length > 0) return;
-        ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"].forEach((n,i) => m.innerHTML += `<option value="${i}" ${i === curM ? 'selected' : ''}>${n}</option>`);
-        for(let yr=2024; yr<=2026; yr++) y.innerHTML += `<option value="${yr}" ${yr === curY ? 'selected' : ''}>${yr}</option>`;
+    function openBookingModalWithDate(dateStr) {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      const packages = allData.filter(d => d.type === 'package');
+      const equipment = allData.filter(d => d.type === 'equipment');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">حجز في ${dateStr}</h2>
+          <form onsubmit="handleBooking(event)" class="space-y-6">
+            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200">
+              <h3 class="font-bold text-blue-900 mb-4">بيانات العميل</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold mb-2">اسم العميل</label>
+                  <input required name="client_name" class="w-full p-3 rounded-xl border bg-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">رقم الهاتف</label>
+                  <input required name="phone" type="tel" class="w-full p-3 rounded-xl border bg-white">
+                </div>
+                <div class="col-span-full">
+                  <label class="block text-sm font-bold mb-2">العنوان</label>
+                  <input required name="address" class="w-full p-3 rounded-xl border bg-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">التاريخ</label>
+                  <input required type="date" name="date" value="${dateStr}" class="w-full p-3 rounded-xl border bg-white">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">القالب</label>
+                  <select name="package" class="w-full p-3 rounded-xl border bg-white">
+                    ${packages.map(p => `<option value="${p.package_name}">${p.package_name}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">المبلغ الإجمالي</label>
+                  <input required type="number" name="total_amount" id="total-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">المدفوع</label>
+                  <input required type="number" name="paid_amount" id="paid-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold mb-2">المتبقي</label>
+                  <input type="number" name="remaining_amount" id="remaining-amount" class="w-full p-3 rounded-xl border bg-slate-100" disabled>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-200">
+              <h3 class="font-bold text-purple-900 mb-4">الفريق</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                ${staffMembers.map(staff => `
+                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-purple-100 hover:border-purple-400 cursor-pointer">
+                    <input type="checkbox" name="photographers" value="${staff.staff_name}" class="w-5 h-5">
+                    <div>
+                      <div class="font-bold text-sm">${staff.staff_name}</div>
+                      <div class="text-xs text-slate-500">${staff.staff_pay} ج.م</div>
+                    </div>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">حفظ الحجز</button>
+            </div>
+          </form>
+        </div>
+      `;
+      lucide.createIcons();
     }
 
-    // --- WORKER PORTAL ---
-    function renderWorkerPortal(n) {
-        document.getElementById('workerPortalView').classList.remove('hidden');
-        document.getElementById('portalHeader').innerHTML = `<h5 class="fw-bold mb-0">${n}</h5><small>Mrakby Visuals</small>`;
-        const now = new Date().toISOString().split('T')[0];
-        const tj = db.bookings.find(b => b.workers.includes(n) && b.date === now);
-        if(tj) document.getElementById('workerAlerts').innerHTML = `<div class="alert-today text-start">📍 النهاردة: ${tj.hall} (${tj.title})<br><small>📍 العنوان: ${tj.bAddress}</small></div>`;
-        const tom = new Date(); tom.setDate(tom.getDate()+1); const tomStr = tom.toISOString().split('T')[0];
-        const tmj = db.bookings.find(b => b.workers.includes(n) && b.date === tomStr);
-        if(tmj) document.getElementById('workerAlerts').innerHTML += `<div class="alert-tomorrow text-start">⚠️ تذكير: عندك شغل بكره في ${tmj.hall}</div>`;
-
-        const up = db.bookings.filter(b => b.workers.includes(n) && b.date >= now).sort((a,b)=>new Date(a.date)-new Date(b.date));
-        document.getElementById('workerUpcoming').innerHTML = up.map(u => `<div class="upcoming-item">📅 ${u.date} | ${u.hall}<br><b>${u.title}</b></div>`).join('') || 'لا توجد مواعيد';
-        
-        const dates = up.map(u => u.date), repls = db.workers.filter(w => w.name !== n).map(w => w.name);
-        document.getElementById('reqDate').innerHTML = `<option value="">الموعد</option>` + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
-        document.getElementById('reqRepl').innerHTML = `<option value="">البديل</option>` + repls.map(r=>`<option value="${r}">${r}</option>`).join('');
-
-        let earned = 0, withdrawn = 0; const tbody = document.getElementById('pHistoryBody'); tbody.innerHTML = '';
-        db.logs.forEach(l => { if(l.pays[n]) { earned += l.pays[n]; tbody.innerHTML += `<tr><td>${l.date}</td><td>حضور: ${l.hall}</td><td>${l.pays[n]} ج</td></tr>`; }});
-        db.withdrawals.forEach(w => { if(w.name === n) { withdrawn += w.amount; tbody.innerHTML += `<tr class="text-danger"><td>${w.date}</td><td>سحب</td><td>-${w.amount} ج</td></tr>`; }});
-        document.getElementById('pBalance').innerText = (earned - withdrawn === 0) ? "الحساب خالص ✅" : `المتبقي لك: ${earned - withdrawn} ج`;
+    function openDailyLogModal() {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">تسجيل يومية جديدة</h2>
+          <form onsubmit="handleDailyLog(event)" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">التاريخ</label>
+              <input required type="date" name="log_date" value="${new Date().toISOString().split('T')[0]}" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">المكان</label>
+              <select name="venue_name" required class="w-full p-3 rounded-xl border bg-slate-50">
+                <option value="">-- اختر المكان --</option>
+                ${venues.map(v => `<option value="${v.name}">${v.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">إيرادات المكان (ج.م)</label>
+              <input required type="number" name="venue_revenue" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">المصورين الذين اشتغلوا</label>
+              <div class="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto bg-slate-50 p-3 rounded-xl border">
+                ${staffMembers.map(staff => `
+                  <label class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded cursor-pointer">
+                    <input type="checkbox" name="photographer" value="${staff.staff_name}" class="w-4 h-4">
+                    <span class="text-sm font-medium">${staff.staff_name}</span>
+                  </label>
+                `).join('') || '<span class="text-slate-400 col-span-2">لا توجد مصورين</span>'}
+              </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">حفظ</button>
+            </div>
+          </form>
+        </div>
+      `;
+      lucide.createIcons();
     }
 
-    window.sendIntReq = () => {
-        const d = document.getElementById('reqDate').value, t = document.getElementById('reqType').value, r = document.getElementById('reqRepl') ? document.getElementById('reqRepl').value : '', note = document.getElementById('reqNote').value;
-        if(!note) return alert("اكتب ملاحظة");
-        db.requests.unshift({ from: activeW, note: `${d} - ${t}: ${note} ${r ? '(البديل:'+r+')' : ''}` });
-        window.save(); alert("تم الإرسال!");
-    };
+    function openStaffModal() {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">إضافة مصور جديد</h2>
+          <form onsubmit="handleAddStaff(event)" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">اسم المصور</label>
+              <input required name="staff_name" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">الدور</label>
+              <input required name="staff_role" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: مصور كاميرا">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">قيمة الحجز (ج.م)</label>
+              <input required type="number" name="staff_pay" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">إضافة</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
 
-    window.addH = () => { let v = document.getElementById('hNew').value; if(v){ db.halls.push(v); window.save(); document.getElementById('hNew').value=''; } };
-    window.addW = () => { let n = document.getElementById('wn').value, s = parseFloat(document.getElementById('ws').value); if(n){ db.workers.push({name:n, salary:s}); window.save(); } };
-    window.addEquip = () => { let n = document.getElementById('eqName').value, p = parseFloat(document.getElementById('eqPrice').value); if(n){ db.equipment.push({name:n, price:p}); window.save(); } };
-    window.delI = (t, i) => { if(confirm("حذف؟")) { db[t].splice(i, 1); window.save(); } };
-    window.upW = (i, k, v) => { db.workers[i][k] = k==='salary'?parseFloat(v):v; window.save(); };
-    window.changeMonth = (d) => { curM += d; if(curM>11){curM=0;curYear++;} if(curM<0){curM=11;curY--;} renderCal(); };
-    window.resetDevice = () => { let w = db.workers.find(x => x.name === activeW); if(w && confirm("فك قفل الموبايل؟")) { w.lockedId = null; window.save(); alert("تم"); } };
-    window.resetFilters = () => { document.getElementById('filterMonth').value = new Date().getMonth(); document.getElementById('filterYear').value = new Date().getFullYear(); refreshUI(); };
-    document.getElementById('inDate').valueAsDate = new Date();
-</script>
-</body>
+    function openPackageModal() {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">إضافة قالب جديد</h2>
+          <form onsubmit="handleAddPackage(event)" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">اسم القالب</label>
+              <input required name="package_name" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: ميكسر كامل">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">الوصف</label>
+              <textarea required name="package_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24" placeholder="وصف القالب والخدمات المتضمنة"></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">إضافة</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function openEquipmentModal() {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">إضافة معدة جديدة</h2>
+          <form onsubmit="handleAddEquipment(event)" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">اسم المعدة</label>
+              <input required name="equipment_name" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: كاميرا احترافية">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">الوصف</label>
+              <textarea required name="equipment_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24" placeholder="مواصفات المعدة"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">سعر الإيجار (ج.م)</label>
+              <input required type="number" name="equipment_price" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700">إضافة</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    // Photographer Portal with Security
+    let currentPhotographerSession = null;
+
+    function openPhotographerPortalLogin() {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-2xl mb-6 text-center">
+            <i data-lucide="lock" class="w-12 h-12 mx-auto mb-2"></i>
+            <h2 class="text-2xl font-bold">بوابة المصور الخاصة</h2>
+            <p class="text-blue-100 text-sm mt-1">منطقة آمنة وسرية</p>
+          </div>
+          
+          <form onsubmit="handlePhotographerLogin(event)" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">اختر اسمك</label>
+              <select name="photographer_name" required class="w-full p-3 rounded-xl border bg-slate-50 font-bold">
+                <option value="">-- اختر من القائمة --</option>
+                ${staffMembers.map(s => `<option value="${s.staff_name}">${s.staff_name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">كود الوصول</label>
+              <input type="password" name="access_code" required class="w-full p-3 rounded-xl border bg-slate-50" placeholder="أدخل كود الوصول">
+              <p class="text-xs text-slate-500 mt-1">ملاحظة: كود الوصول يتم تعيينه من قبل الإدارة</p>
+            </div>
+            <div class="flex gap-3 pt-4">
+              <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition-all">إلغاء</button>
+              <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all">دخول آمن</button>
+            </div>
+          </form>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function handlePhotographerLogin(e) {
+      e.preventDefault();
+      const form = e.target;
+      const photographerName = form.photographer_name.value;
+      const accessCode = form.access_code.value;
+      
+      // Simple security: access code must match photographer name first 3 letters
+      const validCode = photographerName.substring(0, 3) + '123';
+      
+      if (accessCode !== validCode) {
+        showError('❌ كود الوصول غير صحيح!');
+        return;
+      }
+      
+      currentPhotographerSession = photographerName;
+      closeModal();
+      openStaffPortal(photographerName);
+    }
+
+    function openStaffPortal(staffName) {
+      // Security Check: Ensure only the logged-in photographer can view their data
+      if (currentPhotographerSession && currentPhotographerSession !== staffName) {
+        showError('🔒 لا يمكنك الوصول لبيانات مصور آخر!');
+        return;
+      }
+
+      const staff = staffMembers.find(s => s.staff_name === staffName);
+      if (!staff) return;
+
+      const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staffName));
+      const withdrawals = allData.filter(w => w.type === 'withdrawal' && w.staff_name === staffName);
+      const messages = allData.filter(m => m.type === 'message' && m.message_to === staffName);
+      const totalWithdrawn = withdrawals.reduce((acc, curr) => acc + (Number(curr.withdrawal_amount) || 0), 0);
+      const totalEarnings = staffBookings.length * staff.staff_pay;
+      const remaining = totalEarnings - totalWithdrawn;
+      
+      // Categorize bookings
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const upcomingBookings = staffBookings.filter(b => new Date(b.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
+      const pastBookings = staffBookings.filter(b => new Date(b.date) < today).sort((a, b) => new Date(b.date) - new Date(a.date)).reverse();
+
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
+          <button onclick="closeModal(); currentPhotographerSession = null;" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+
+          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 rounded-2xl mb-6 text-center border-2 border-blue-400">
+            <div class="flex items-center justify-center gap-2 mb-2">
+              <i data-lucide="shield" class="w-6 h-6"></i>
+              <span class="text-xs font-bold bg-blue-800 px-3 py-1 rounded-full">منطقة آمنة</span>
+            </div>
+            <h2 class="text-3xl font-bold mb-2">${staff.staff_name}</h2>
+            <p class="text-blue-100">${staff.staff_role} • ${staff.staff_pay} ج.م لكل حجز</p>
+          </div>
+
+          <!-- Statistics Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-green-500">
+              <p class="text-xs text-slate-600 font-semibold mb-1">إجمالي المستحقات</p>
+              <h3 class="text-2xl font-bold text-green-600">${totalEarnings}</h3>
+              <p class="text-xs text-slate-500 mt-1">ج.م</p>
+            </div>
+            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-blue-500">
+              <p class="text-xs text-slate-600 font-semibold mb-1">الحجوزات</p>
+              <h3 class="text-2xl font-bold text-blue-600">${staffBookings.length}</h3>
+              <p class="text-xs text-slate-500 mt-1">${upcomingBookings.length} قادمة</p>
+            </div>
+            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-amber-500">
+              <p class="text-xs text-slate-600 font-semibold mb-1">تم السحب</p>
+              <h3 class="text-2xl font-bold text-amber-600">${totalWithdrawn}</h3>
+              <p class="text-xs text-slate-500 mt-1">ج.م</p>
+            </div>
+            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-purple-500">
+              <p class="text-xs text-slate-600 font-semibold mb-1">رصيدك</p>
+              <h3 class="text-2xl font-bold text-purple-600">${remaining}</h3>
+              <p class="text-xs text-slate-500 mt-1">ج.م متاح</p>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="flex gap-2 mb-6 border-b border-slate-200 overflow-x-auto">
+            <button onclick="switchPhotographerTab('bookings')" id="photo-tab-bookings" class="px-4 py-3 font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">📅 المواعيد</button>
+            <button onclick="switchPhotographerTab('messages')" id="photo-tab-messages" class="px-4 py-3 font-bold text-slate-600 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap">💬 الرسائل (${messages.length})</button>
+            <button onclick="switchPhotographerTab('history')" id="photo-tab-history" class="px-4 py-3 font-bold text-slate-600 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap">📊 السجل</button>
+            <button onclick="switchPhotographerTab('account')" id="photo-tab-account" class="px-4 py-3 font-bold text-slate-600 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap">⚙️ الحساب</button>
+          </div>
+
+          <!-- Bookings Tab -->
+          <div id="photo-content-bookings" class="space-y-4">
+            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+              <i data-lucide="calendar-check" class="w-5 h-5 text-blue-600"></i>
+              المواعيد القادمة
+            </h3>
+            <div class="space-y-3">
+              ${upcomingBookings.length > 0 ? upcomingBookings.map(b => `
+                <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 rounded-r-lg hover:shadow-md transition-all">
+                  <div class="flex justify-between items-start mb-2">
+                    <div>
+                      <div class="font-bold text-slate-900 text-lg">${b.client_name}</div>
+                      <div class="text-sm text-slate-600 mt-1">📱 ${b.phone}</div>
+                    </div>
+                    <span class="px-3 py-1 bg-blue-600 text-white rounded-full font-bold text-xs">قادم</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2 mt-3">
+                    <div class="text-xs">
+                      <span class="text-slate-600">📅 التاريخ</span>
+                      <div class="font-bold text-slate-900">${b.date}</div>
+                    </div>
+                    <div class="text-xs">
+                      <span class="text-slate-600">🎬 النوع</span>
+                      <div class="font-bold text-slate-900">${b.package || 'عام'}</div>
+                    </div>
+                    <div class="text-xs col-span-2">
+                      <span class="text-slate-600">📍 العنوان</span>
+                      <div class="font-bold text-slate-900">${b.address}</div>
+                    </div>
+                  </div>
+                </div>
+              `).join('') : '<div class="p-8 text-center bg-slate-50 rounded-xl"><i data-lucide="calendar-off" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i><p class="text-slate-400 font-semibold">لا توجد مواعيد قادمة</p></div>'}
+            </div>
+          </div>
+
+          <!-- Messages Tab -->
+          <div id="photo-content-messages" class="hidden space-y-4">
+            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+              <i data-lucide="message-square" class="w-5 h-5 text-purple-600"></i>
+              الرسائل والإشعارات
+            </h3>
+            <div class="space-y-3 max-h-96 overflow-y-auto">
+              ${messages.length > 0 ? messages.map(m => `
+                <div class="p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-500 rounded-r-lg">
+                  <div class="flex justify-between items-start mb-2">
+                    <span class="font-bold text-slate-900">${m.message_from}</span>
+                    <span class="text-xs text-slate-500">${m.message_date || 'اليوم'}</span>
+                  </div>
+                  <p class="text-slate-700 mb-2">${m.message_content}</p>
+                  ${m.message_type === 'excuse_request' ? '<span class="inline-block px-3 py-1 bg-amber-200 text-amber-800 rounded-full font-bold text-xs">طلب اعتذار</span>' : ''}
+                  ${m.message_type === 'warning' ? '<span class="inline-block px-3 py-1 bg-red-200 text-red-800 rounded-full font-bold text-xs">⚠️ تنبيه</span>' : ''}
+                </div>
+              `).join('') : '<div class="p-8 text-center bg-slate-50 rounded-xl"><i data-lucide="mail-open" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i><p class="text-slate-400 font-semibold">لا توجد رسائل</p></div>'}
+            </div>
+            <button onclick="openExcuseRequestModal('${staffName}')" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2">
+              <i data-lucide="alert-circle" class="w-5 h-5"></i> طلب اعتذار أو إجازة
+            </button>
+          </div>
+
+          <!-- History Tab -->
+          <div id="photo-content-history" class="hidden space-y-4">
+            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+              <i data-lucide="history" class="w-5 h-5 text-green-600"></i>
+              السجل الكامل للحجوزات
+            </h3>
+            <div class="space-y-2 max-h-96 overflow-y-auto">
+              ${pastBookings.length > 0 ? pastBookings.map(b => `
+                <div class="p-3 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg text-sm">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <span class="font-bold text-slate-900">${b.client_name}</span>
+                      <div class="text-xs text-slate-500 mt-1">📅 ${b.date}</div>
+                    </div>
+                    <span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-bold">منتهي</span>
+                  </div>
+                </div>
+              `).join('') : '<p class="text-center py-8 text-slate-400">لا توجد حجوزات سابقة</p>'}
+            </div>
+          </div>
+
+          <!-- Account Tab -->
+          <div id="photo-content-account" class="hidden space-y-4">
+            <h3 class="font-bold text-lg text-slate-800 mb-4">معلومات الحساب والسحوبات</h3>
+            
+            <div class="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-2xl border border-green-300 mb-4">
+              <h4 class="font-bold text-green-900 mb-3">السحوبات السابقة</h4>
+              <div class="space-y-2">
+                ${withdrawals.length > 0 ? withdrawals.map(w => `
+                  <div class="flex justify-between items-center p-3 bg-white rounded-lg">
+                    <div>
+                      <div class="font-bold text-slate-900">${w.withdrawal_amount} ج.م</div>
+                      <div class="text-xs text-slate-500">${w.withdrawal_date}</div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full font-bold text-xs ${w.withdrawal_status === 'completed' ? 'bg-green-200 text-green-800' : 'bg-amber-200 text-amber-800'}">
+                      ${w.withdrawal_status === 'completed' ? '✅ مكتمل' : '⏳ قيد الانتظار'}
+                    </span>
+                  </div>
+                `).join('') : '<p class="text-center py-6 text-slate-600">لم تقدم طلبات سحب بعد</p>'}
+              </div>
+            </div>
+
+            <button onclick="openWithdrawalModal('${staffName}')" class="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg">
+              <i data-lucide="credit-card" class="w-5 h-5"></i> طلب سحب نقدي جديد
+            </button>
+
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-sm">
+              <p class="text-blue-900 font-semibold mb-2">⚠️ معلومات الأمان:</p>
+              <ul class="text-blue-800 space-y-1 text-xs">
+                <li>✓ جلستك آمنة وسرية تماماً</li>
+                <li>✓ لا أحد يستطيع رؤية بيانات حسابك سوى الإدارة</li>
+                <li>✓ سيتم تسجيل خروجك عند إغلاق هذه النافذة</li>
+              </ul>
+            </div>
+          </div>
+
+          <button onclick="closeModal(); currentPhotographerSession = null;" class="w-full mt-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+            <i data-lucide="log-out" class="w-5 h-5"></i> تسجيل خروج آمن
+          </button>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function switchPhotographerTab(tab) {
+      const tabs = ['bookings', 'messages', 'history', 'account'];
+      tabs.forEach(t => {
+        const tabBtn = document.getElementById(`photo-tab-${t}`);
+        const content = document.getElementById(`photo-content-${t}`);
+        if (tabBtn) tabBtn.classList.remove('text-blue-600', 'border-blue-600');
+        if (tabBtn) tabBtn.classList.add('text-slate-600', 'border-transparent');
+        if (content) content.classList.add('hidden');
+      });
+      
+      const activeBtn = document.getElementById(`photo-tab-${tab}`);
+      const activeContent = document.getElementById(`photo-content-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-600', 'border-transparent');
+        activeBtn.classList.add('text-blue-600', 'border-blue-600');
+      }
+      if (activeContent) activeContent.classList.remove('hidden');
+    }
+
+    function openExcuseRequestModal(staffName) {
+      const modal = document.getElementById('modal-container');
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in" style="z-index: 51;">
+          <button onclick="openStaffPortal('${staffName}')" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">📝 طلب اعتذار أو إجازة</h2>
+          <form onsubmit="handleExcuseRequest(event, '${staffName}')" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">نوع الطلب</label>
+              <select name="excuse_type" required class="w-full p-3 rounded-xl border bg-slate-50 font-bold">
+                <option value="">-- اختر --</option>
+                <option value="absence">غياب يوم معين</option>
+                <option value="vacation">إجازة</option>
+                <option value="urgent">ظرف طارئ</option>
+                <option value="other">أخرى</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">التاريخ أو الفترة</label>
+              <input type="text" name="excuse_date" required class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: 15 يناير أو 15-20 يناير">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">التفاصيل</label>
+              <textarea name="excuse_reason" required class="w-full p-3 rounded-xl border bg-slate-50 h-24" placeholder="اشرح السبب بإيجاز..."></textarea>
+            </div>
+            <div class="flex gap-3 pt-4 border-t">
+              <button type="button" onclick="openStaffPortal('${staffName}')" class="flex-1 px-4 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="flex-1 px-4 py-3 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all">إرسال الطلب</button>
+            </div>
+          </form>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    async function handleExcuseRequest(e, staffName) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      const data = {
+        type: 'message',
+        message_from: staffName,
+        message_to: 'إدارة',
+        message_type: 'excuse_request',
+        message_content: `${formData.get('excuse_type')}: ${formData.get('excuse_date')} - ${formData.get('excuse_reason')}`,
+        message_date: new Date().toISOString().split('T')[0]
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.create(data);
+      if (result.isOk) {
+        showSuccess('✅ تم إرسال طلبك بنجاح! ستتم مراجعته من قبل الإدارة');
+        setTimeout(() => openStaffPortal(staffName), 2000);
+      } else {
+        showError('خطأ في الإرسال');
+      }
+    }
+
+    function openPhotographerPortal(staffName) {
+      openStaffPortal(staffName);
+    }
+
+    function copyPortalLink(portalLink) {
+      const link = `${window.location.origin}?portal=${portalLink}`;
+      const textarea = document.createElement('textarea');
+      textarea.value = link;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showSuccess('تم نسخ الرابط بنجاح!');
+    }
+
+    function openWithdrawalModal(staffName) {
+      const staff = staffMembers.find(s => s.staff_name === staffName);
+      if (!staff) return;
+
+      const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staffName));
+      const withdrawals = allData.filter(w => w.type === 'withdrawal' && w.staff_name === staffName);
+      const totalWithdrawn = withdrawals.reduce((acc, curr) => acc + (Number(curr.withdrawal_amount) || 0), 0);
+      const totalEarnings = staffBookings.length * staff.staff_pay;
+      const available = totalEarnings - totalWithdrawn;
+
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-2 text-slate-800">طلب سحب نقدي</h2>
+          <p class="text-sm text-slate-500 mb-6">متاح للسحب: <span class="font-bold text-green-600">${available} ج.م</span></p>
+          
+          <form onsubmit="handleWithdrawalRequest(event, '${staffName}')" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">مبلغ السحب (ج.م)</label>
+              <input required type="number" name="withdrawal_amount" max="${available}" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="أدخل المبلغ المطلوب سحبه">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">طريقة الدفع</label>
+              <select name="payment_method" required class="w-full p-3 rounded-xl border bg-slate-50">
+                <option value="">-- اختر طريقة الدفع --</option>
+                <option value="cash">نقدي</option>
+                <option value="bank_transfer">تحويل بنكي</option>
+                <option value="wallet">محفظة رقمية</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">ملاحظات إضافية</label>
+              <textarea name="notes" class="w-full p-3 rounded-xl border bg-slate-50 h-20" placeholder="أضف أي ملاحظات..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">طلب السحب</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function closeModal() {
+      document.getElementById('modal-container').classList.add('hidden');
+    }
+
+    function openClientDetails(bookingId) {
+      const booking = allData.find(b => b.type === 'booking' && b.__backendId === bookingId);
+      if (!booking) return;
+
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600 transition-all">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+
+          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-2xl mb-6">
+            <h2 class="text-2xl font-bold mb-2">${booking.client_name}</h2>
+            <p class="text-blue-100">تفاصيل الحجز</p>
+          </div>
+
+          <!-- Client Information -->
+          <div class="space-y-6">
+            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200">
+              <h3 class="font-bold text-blue-900 mb-4">بيانات العميل</h3>
+              <div class="space-y-3">
+                <div class="flex justify-between items-start pb-3 border-b border-blue-200">
+                  <span class="text-slate-600 font-semibold">الاسم</span>
+                  <span class="font-bold text-slate-900">${booking.client_name}</span>
+                </div>
+                <div class="flex justify-between items-start pb-3 border-b border-blue-200">
+                  <span class="text-slate-600 font-semibold">رقم الهاتف</span>
+                  <a href="tel:${booking.phone}" class="font-bold text-blue-600 hover:underline flex items-center gap-2">
+                    <i data-lucide="phone" class="w-4 h-4"></i>
+                    ${booking.phone}
+                  </a>
+                </div>
+                <div class="flex justify-between items-start pb-3 border-b border-blue-200">
+                  <span class="text-slate-600 font-semibold">العنوان</span>
+                  <span class="font-bold text-slate-900 text-right">${booking.address}</span>
+                </div>
+                <div class="flex justify-between items-start">
+                  <span class="text-slate-600 font-semibold">الحالة</span>
+                  <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full font-bold text-xs">${booking.status || 'مؤكد'}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Booking Details -->
+            <div class="bg-green-50 p-6 rounded-2xl border border-green-200">
+              <h3 class="font-bold text-green-900 mb-4">تفاصيل الحجز</h3>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-3 border-b border-green-200">
+                  <span class="text-slate-600 font-semibold">التاريخ</span>
+                  <span class="font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
+                    ${booking.date}
+                  </span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-green-200">
+                  <span class="text-slate-600 font-semibold">القالب</span>
+                  <span class="font-bold text-slate-900">${booking.package || 'لم يتم التحديد'}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
+              <h3 class="font-bold text-amber-900 mb-4">تفاصيل الدفع</h3>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center pb-3 border-b border-amber-200">
+                  <span class="text-slate-600 font-semibold">المبلغ الإجمالي</span>
+                  <span class="font-bold text-amber-900 text-lg">${booking.total_amount} ج.م</span>
+                </div>
+                <div class="flex justify-between items-center pb-3 border-b border-amber-200">
+                  <span class="text-slate-600 font-semibold">المدفوع</span>
+                  <span class="font-bold text-green-600 text-lg">${booking.paid_amount} ج.م</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-600 font-semibold">المتبقي</span>
+                  <span class="font-bold text-red-600 text-lg">${booking.remaining_amount} ج.م</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Team -->
+            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-200">
+              <h3 class="font-bold text-purple-900 mb-4">فريق التصوير</h3>
+              <div class="space-y-2">
+                ${booking.photographers_list ? booking.photographers_list.split(',').map(p => `
+                  <div class="p-3 bg-white border-l-4 border-purple-400 rounded-r-lg">
+                    <span class="font-bold text-slate-800">${p.trim()}</span>
+                  </div>
+                `).join('') : '<p class="text-slate-500">لم يتم تحديد فريق</p>'}
+              </div>
+            </div>
+
+            <button onclick="closeModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold transition-all mt-4">إغلاق</button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function updateBookingCalc() {
+      const total = Number(document.getElementById('total-amount')?.value || 0);
+      const paid = Number(document.getElementById('paid-amount')?.value || 0);
+      const remaining = total - paid;
+      const remainingEl = document.getElementById('remaining-amount');
+      if (remainingEl) remainingEl.value = remaining;
+    }
+
+    // HANDLERS
+    async function handleBooking(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const photographers = Array.from(form.querySelectorAll('input[name="photographers"]:checked')).map(cb => cb.value).join(', ');
+      
+      const data = {
+        type: 'booking',
+        client_name: formData.get('client_name'),
+        phone: formData.get('phone'),
+        address: formData.get('address'),
+        date: formData.get('date'),
+        venue: 'عام',
+        package: formData.get('package'),
+        total_amount: Number(formData.get('total_amount')),
+        paid_amount: Number(formData.get('paid_amount')),
+        remaining_amount: Number(formData.get('total_amount')) - Number(formData.get('paid_amount')),
+        photographers_list: photographers,
+        status: 'مؤكد'
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+      if (allData.length >= 999) return showError('تم الوصول للحد الأقصى من السجلات');
+
+      const result = await window.dataSdk.create(data);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم حفظ الحجز بنجاح!');
+      } else {
+        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      }
+    }
+
+    async function handleDailyLog(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const photographers = Array.from(form.querySelectorAll('input[name="photographer"]:checked')).map(cb => cb.value).join(', ');
+      
+      const data = {
+        type: 'daily-log',
+        log_date: formData.get('log_date'),
+        venue_name: formData.get('venue_name'),
+        venue_revenue: Number(formData.get('venue_revenue')),
+        photographer_list: photographers
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.create(data);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم تسجيل اليومية بنجاح!');
+      } else {
+        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      }
+    }
+
+    async function handleAddStaff(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      const data = {
+        type: 'staff',
+        staff_name: formData.get('staff_name'),
+        staff_role: formData.get('staff_role'),
+        staff_pay: Number(formData.get('staff_pay')),
+        staff_slug: formData.get('staff_name').toLowerCase().replace(/\s+/g, '-')
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.create(data);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم إضافة المصور بنجاح!');
+      } else {
+        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      }
+    }
+
+    async function handleAddPackage(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      const data = {
+        type: 'package',
+        package_name: formData.get('package_name'),
+        package_desc: formData.get('package_desc')
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.create(data);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم إضافة القالب بنجاح!');
+        renderUI();
+      } else {
+        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      }
+    }
+
+    async function handleAddEquipment(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      const data = {
+        type: 'equipment',
+        equipment_name: formData.get('equipment_name'),
+        equipment_desc: formData.get('equipment_desc'),
+        equipment_price: Number(formData.get('equipment_price'))
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.create(data);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم إضافة المعدة بنجاح!');
+        renderUI();
+      } else {
+        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      }
+    }
+
+    async function handleWithdrawalRequest(e, staffName) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      const data = {
+        type: 'withdrawal',
+        staff_name: staffName,
+        withdrawal_amount: Number(formData.get('withdrawal_amount')),
+        withdrawal_date: new Date().toISOString().split('T')[0],
+        withdrawal_status: 'pending',
+        payment_method: formData.get('payment_method'),
+        notes: formData.get('notes')
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.create(data);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم تقديم طلب السحب بنجاح! سيتم مراجعته من قبل الإدارة.');
+      } else {
+        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      }
+    }
+
+    async function deleteRecord(id) {
+      if (!window.dataSdk) return;
+      const record = allData.find(d => d.__backendId === id);
+      if (record) {
+        const result = await window.dataSdk.delete(record);
+        if (result.isOk) {
+          showSuccess('تم الحذف بنجاح!');
+        }
+      }
+    }
+
+    function openEditStaffModal(staffId) {
+      const staff = staffMembers.find(s => s.__backendId === staffId);
+      if (!staff) return;
+
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">تعديل بيانات المصور</h2>
+          <form onsubmit="handleEditStaff(event, '${staffId}')" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">اسم المصور</label>
+              <input required name="staff_name" value="${staff.staff_name}" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">الدور</label>
+              <input required name="staff_role" value="${staff.staff_role}" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">قيمة الحجز (ج.م)</label>
+              <input required type="number" name="staff_pay" value="${staff.staff_pay}" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">حفظ التعديلات</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    async function handleEditStaff(e, staffId) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const staff = staffMembers.find(s => s.__backendId === staffId);
+      if (!staff) return;
+
+      const updatedStaff = {
+        ...staff,
+        staff_name: formData.get('staff_name'),
+        staff_role: formData.get('staff_role'),
+        staff_pay: Number(formData.get('staff_pay'))
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.update(updatedStaff);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم التعديل بنجاح!');
+      } else {
+        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
+      }
+    }
+
+    function openEditPackageModal(packageId) {
+      const pkg = allData.find(d => d.type === 'package' && d.__backendId === packageId);
+      if (!pkg) return;
+
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">تعديل القالب</h2>
+          <form onsubmit="handleEditPackage(event, '${packageId}')" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">اسم القالب</label>
+              <input required name="package_name" value="${pkg.package_name}" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">الوصف</label>
+              <textarea required name="package_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24">${pkg.package_desc}</textarea>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold">حفظ</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    async function handleEditPackage(e, packageId) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const pkg = allData.find(d => d.type === 'package' && d.__backendId === packageId);
+      if (!pkg) return;
+
+      const updatedPkg = {
+        ...pkg,
+        package_name: formData.get('package_name'),
+        package_desc: formData.get('package_desc')
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.update(updatedPkg);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم التعديل بنجاح!');
+      } else {
+        showError('خطأ');
+      }
+    }
+
+    function openEditEquipmentModal(equipmentId) {
+      const equip = allData.find(d => d.type === 'equipment' && d.__backendId === equipmentId);
+      if (!equip) return;
+
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      
+      modal.innerHTML = `
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
+          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+          <h2 class="text-2xl font-bold mb-6 text-slate-800">تعديل المعدة</h2>
+          <form onsubmit="handleEditEquipment(event, '${equipmentId}')" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold mb-2">اسم المعدة</label>
+              <input required name="equipment_name" value="${equip.equipment_name}" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">الوصف</label>
+              <textarea required name="equipment_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24">${equip.equipment_desc}</textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-2">السعر</label>
+              <input required type="number" name="equipment_price" value="${equip.equipment_price}" class="w-full p-3 rounded-xl border bg-slate-50">
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
+              <button type="submit" class="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold">حفظ</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    async function handleEditEquipment(e, equipmentId) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const equip = allData.find(d => d.type === 'equipment' && d.__backendId === equipmentId);
+      if (!equip) return;
+
+      const updatedEquip = {
+        ...equip,
+        equipment_name: formData.get('equipment_name'),
+        equipment_desc: formData.get('equipment_desc'),
+        equipment_price: Number(formData.get('equipment_price'))
+      };
+
+      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
+
+      const result = await window.dataSdk.update(updatedEquip);
+      if (result.isOk) {
+        closeModal();
+        showSuccess('تم التعديل بنجاح!');
+      } else {
+        showError('خطأ');
+      }
+    }
+
+    function showError(msg) {
+      const el = document.createElement('div');
+      el.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 font-bold toast';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    function showSuccess(msg) {
+      const el = document.createElement('div');
+      el.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 font-bold toast';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0e9ac753f3e1d1',t:'MTc3NDI4MTE2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
