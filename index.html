@@ -1,1934 +1,555 @@
-<!doctype html>
-<html lang="ar" dir="rtl" class="h-full">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&amp;display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Cairo', sans-serif; }
-    .app-container { height: 100%; display: flex; flex-direction: column; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); }
-    .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; }
-    .modal-overlay { background: rgba(0, 0, 0, 0.6); z-index: 50; }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-    .gradient-badge { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); }
-    .fade-in { animation: fadeIn 0.3s ease-in-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    .toast { animation: slideIn 0.3s ease-out; }
-    @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
-    .invoice-print { background: white; padding: 40px; border-radius: 12px; }
-  </style>
-  <style>body { box-sizing: border-box; }</style>
- </head>
- <body class="h-full m-0 p-0">
-  <div id="app" class="app-container w-full">
-   <header class="glass-card shadow-lg px-6 py-4 flex justify-between items-center sticky top-0 z-40 border-b">
-    <div>
-     <h1 id="main-title" class="text-3xl font-bold text-slate-800">يومية الاستوديو المتقدمة</h1>
-     <p class="text-sm text-slate-500">لوحة إدارة احترافية</p>
-    </div>
-    <div class="flex items-center gap-2">
-     <button onclick="openBookingModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all text-sm font-semibold shadow-lg"> <i data-lucide="plus-circle" class="w-5 h-5"></i> حجز جديد </button>
-    </div>
-   </header>
-   <nav class="glass-card border-b px-6 flex gap-4 overflow-x-auto whitespace-nowrap sticky z-30" style="top: 80px;">
-    <button onclick="setTab('dashboard')" id="tab-dashboard" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all tab-active">الرئيسية</button> <button onclick="setTab('calendar')" id="tab-calendar" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">التقويم والحجوزات</button> <button onclick="setTab('daily-log')" id="tab-daily-log" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">اليومية</button> <button onclick="setTab('staff')" id="tab-staff" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">المصورين</button> <button onclick="setTab('packages')" id="tab-packages" class="py-4 font-semibold text-slate-600 hover:text-blue-600 transition-all">القوالب والمعدات</button>
-   </nav>
-   <main id="main-content" class="flex-1 p-6 overflow-y-auto">
-   </main>
-   <footer class="glass-card border-t p-4 text-center text-slate-500 text-sm">
-    <p id="footer-note">جميع الحقوق محفوظة © 2024</p>
-   </footer>
-  </div>
-  <div id="modal-container" class="hidden fixed inset-0 modal-overlay flex items-center justify-center p-4 overflow-y-auto">
-  </div>
-  <script>
-    // Config & Initialization
-    const defaultConfig = {
-      main_title: "يومية الاستوديو المتقدمة",
-      footer_note: "جميع الحقوق محفوظة © 2024"
-    };
-
-    let config = { ...defaultConfig };
-    let currentTab = 'dashboard';
-    let allData = [];
-    let staffMembers = [];
-    let venues = [
-      { id: 'v1', name: 'قاعة الفيروز', pay: 1000 },
-      { id: 'v2', name: 'قاعة الشافعى', pay: 800 },
-      { id: 'v3', name: 'شغل الشارع', pay: 600 }
-    ];
-
-    // Default photographers
-    const defaultPhotographers = [
-      { name: 'محمود المراكبى', role: 'مخرج' },
-      { name: 'محمد المراكبى', role: 'مخرج' },
-      { name: 'محمد نادر', role: 'مصور' },
-      { name: 'محمد ايهاب', role: 'مصور كرين' },
-      { name: 'محمد عادل', role: 'مصور أول' },
-      { name: 'محمود كوكو', role: 'مصور' },
-      { name: 'السيد الشربجى', role: 'مصور' }
-    ];
-
-    // SDK Initialization
-    let sdkReady = false;
-    let initAttempts = 0;
-    const maxInitAttempts = 5;
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الاستوديو المطور</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    async function initApp() {
-      initAttempts++;
-      
-      try {
-        // Initialize Data SDK first
-        if (window.dataSdk) {
-          const dataHandler = {
-            onDataChanged: (data) => {
-              allData = data || [];
-              staffMembers = allData.filter(d => d.type === 'staff');
-              renderUI();
-            }
-          };
-          
-          try {
-            const result = await window.dataSdk.init(dataHandler);
-            if (result && result.isOk) {
-              sdkReady = true;
-              showSuccess('✅ تم الاتصال بقاعدة البيانات بنجاح');
-              initAttempts = 0;
-            } else if (result && result.isError) {
-              console.error('Data SDK init failed:', result.error);
-              showError('⚠️ خطأ في قاعدة البيانات: ' + (result.error?.message || 'خطأ غير معروف'));
-              if (initAttempts < maxInitAttempts) {
-                setTimeout(initApp, 2000);
-              }
-              return;
-            }
-          } catch (initErr) {
-            console.error('Data SDK init error:', initErr);
-            if (initAttempts < maxInitAttempts) {
-              showError('⚠️ جاري محاولة الاتصال بقاعدة البيانات...');
-              setTimeout(initApp, 2000);
-            } else {
-              showError('❌ فشل الاتصال بقاعدة البيانات بعد عدة محاولات');
-            }
-            return;
-          }
-        } else {
-          console.warn('Data SDK not available yet');
-          if (initAttempts < maxInitAttempts) {
-            setTimeout(initApp, 1000);
-            return;
-          } else {
-            showError('❌ فشل تحميل Data SDK');
-          }
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Initialize Element SDK
-        if (window.elementSdk) {
-          window.elementSdk.init({
-            defaultConfig,
-            onConfigChange: async (newConfig) => {
-              config = { ...config, ...newConfig };
-              renderUI();
-            },
-            mapToCapabilities: () => ({
-              recolorables: [],
-              borderables: [],
-              fontEditable: undefined,
-              fontSizeable: undefined
-            }),
-            mapToEditPanelValues: (cfg) => new Map([
-              ["main_title", cfg.main_title],
-              ["footer_note", cfg.footer_note]
-            ])
-          });
-        }
-      } catch (err) {
-        console.error('Initialization error:', err);
-        showError('⚠️ خطأ في تحميل البرنامج: ' + err.message);
-      }
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'studio-pro-v2';
 
-      lucide.createIcons();
-      renderUI();
-    }
+        window.fb = { 
+            auth, db, appId, collection, doc, setDoc, onSnapshot, deleteDoc, query, where, 
+            signInAnonymously, signInWithCustomToken, onAuthStateChanged 
+        };
+    </script>
 
-    function renderUI() {
-      document.getElementById('main-title').textContent = config.main_title;
-      document.getElementById('footer-note').textContent = config.footer_note;
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
+        .animate-pop { animation: pop 0.3s cubic-bezier(0.26, 0.53, 0.74, 1.48); }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-      const content = document.getElementById('main-content');
-      content.innerHTML = '';
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-      switch(currentTab) {
-        case 'dashboard': renderDashboard(content); break;
-        case 'calendar': renderCalendar(content); break;
-        case 'daily-log': renderDailyLog(content); break;
-        case 'staff': renderStaffManager(content); break;
-        case 'packages': renderPackagesManager(content); break;
-      }
-      lucide.createIcons();
-    }
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [view, setView] = useState('home');
+            const [staffId, setStaffId] = useState(null);
+            const [data, setData] = useState({ bookings: [], logs: [], staff: [], services: [] });
+            const [selectedEntity, setSelectedEntity] = useState(null);
 
-    function setTab(tab) {
-      currentTab = tab;
-      const tabs = ['dashboard', 'calendar', 'daily-log', 'staff', 'packages'];
-      tabs.forEach(t => {
-        const el = document.getElementById(`tab-${t}`);
-        if (el) {
-          el.classList.remove('tab-active');
-          el.classList.add('text-slate-600');
-        }
-      });
-      const activeTab = document.getElementById(`tab-${tab}`);
-      if (activeTab) {
-        activeTab.classList.add('tab-active');
-        activeTab.classList.remove('text-slate-600');
-      }
-      renderUI();
-    }
+            useEffect(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const sId = urlParams.get('staff');
+                if (sId) {
+                    setStaffId(sId);
+                    setView('staff_portal');
+                }
 
-    // DASHBOARD
-    function renderDashboard(container) {
-      const bookings = allData.filter(d => d.type === 'booking');
-      const dailyLogs = allData.filter(d => d.type === 'daily-log');
-      
-      const totalRevenue = bookings.reduce((acc, curr) => acc + (Number(curr.paid_amount) || 0), 0);
-      const totalRemaining = bookings.reduce((acc, curr) => acc + (Number(curr.remaining_amount) || 0), 0);
-      
-      container.innerHTML = `
-        <div class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <div class="flex items-center justify-between mb-3">
-                <p class="text-slate-600 text-sm font-semibold">إجمالي الحجوزات</p>
-                <i data-lucide="calendar" class="w-6 h-6 text-blue-600"></i>
-              </div>
-              <h3 class="text-3xl font-bold text-slate-800">${bookings.length}</h3>
-              <p class="text-xs text-slate-500 mt-2">من بداية النشاط</p>
-            </div>
+                const { auth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = window.fb;
 
-            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <div class="flex items-center justify-between mb-3">
-                <p class="text-slate-600 text-sm font-semibold">المحصل</p>
-                <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
-              </div>
-              <h3 class="text-3xl font-bold text-green-600">${totalRevenue.toLocaleString()} ج.م</h3>
-              <p class="text-xs text-slate-500 mt-2">دفع بالفعل</p>
-            </div>
+                const initAuth = async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Auth Initialization Error:", error);
+                    }
+                };
 
-            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <div class="flex items-center justify-between mb-3">
-                <p class="text-slate-600 text-sm font-semibold">المتبقي</p>
-                <i data-lucide="alert-circle" class="w-6 h-6 text-amber-600"></i>
-              </div>
-              <h3 class="text-3xl font-bold text-amber-600">${totalRemaining.toLocaleString()} ج.م</h3>
-              <p class="text-xs text-slate-500 mt-2">تحت التحصيل</p>
-            </div>
+                initAuth();
+                const unsubscribe = onAuthStateChanged(auth, (u) => {
+                    setUser(u);
+                });
 
-            <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-              <div class="flex items-center justify-between mb-3">
-                <p class="text-slate-600 text-sm font-semibold">اليوميات</p>
-                <i data-lucide="clipboard-list" class="w-6 h-6 text-purple-600"></i>
-              </div>
-              <h3 class="text-3xl font-bold text-purple-600">${dailyLogs.length}</h3>
-              <p class="text-xs text-slate-500 mt-2">تسجيل يومي</p>
-            </div>
-          </div>
+                return () => unsubscribe();
+            }, []);
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="glass-card p-6 rounded-2xl shadow-lg">
-              <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
-                <i data-lucide="trending-up" class="w-5 h-5 text-blue-600"></i>
-                آخر الحجوزات
-              </h3>
-              <div class="space-y-3 max-h-80 overflow-y-auto">
-                ${bookings.slice(-5).reverse().map(b => `
-                  <div class="p-4 border-l-4 border-blue-400 bg-blue-50 rounded-r-lg hover:bg-blue-100 transition-all">
-                    <div class="font-bold text-slate-800">${b.client_name}</div>
-                    <div class="text-xs text-slate-500 mt-1">${b.date}</div>
-                    <div class="text-xs text-blue-600 font-semibold mt-2">المبلغ: ${b.total_amount} ج.م | المدفوع: ${b.paid_amount} ج.م</div>
-                  </div>
-                `).join('') || '<p class="text-center py-6 text-slate-400">لا توجد حجوزات</p>'}
-              </div>
-            </div>
+            useEffect(() => {
+                if (!user) return;
+                const { db, appId, collection, onSnapshot } = window.fb;
 
-            <div class="glass-card p-6 rounded-2xl shadow-lg">
-              <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
-                <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
-                المصورين النشطين
-              </h3>
-              <div class="space-y-3 max-h-80 overflow-y-auto">
-                ${staffMembers.slice(0, 8).map(staff => {
-                  const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staff.staff_name));
-                  return `
-                    <div class="p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
-                      <div class="flex justify-between items-center">
-                        <span class="font-semibold text-slate-800">${staff.staff_name}</span>
-                        <span class="px-3 py-1 bg-purple-200 text-purple-800 rounded-full font-bold text-xs">${staffBookings.length} حجز</span>
-                      </div>
+                const sync = (colName, key) => {
+                    const q = collection(db, 'artifacts', appId, 'public', 'data', colName);
+                    return onSnapshot(q, (snap) => {
+                        setData(prev => ({ ...prev, [key]: snap.docs.map(d => ({ id: d.id, ...d.data() })) }));
+                    }, (err) => console.error(`Sync error ${colName}:`, err));
+                };
+
+                const unsubs = [
+                    sync('bookings', 'bookings'), 
+                    sync('dailyLogs', 'logs'), 
+                    sync('staff', 'staff'), 
+                    sync('services', 'services')
+                ];
+                return () => unsubs.forEach(u => u());
+            }, [user]);
+
+            const globalStats = useMemo(() => {
+                const income = data.logs.reduce((s, l) => s + Number(l.collectedAmount || 0), 0);
+                const expense = data.logs.reduce((s, l) => s + Number(l.totalExpenses || 0), 0);
+                return { income, expense, net: income - expense };
+            }, [data.logs]);
+
+            const save = async (col, item, id = Math.random().toString(36).substr(2, 9)) => {
+                if (!user) return;
+                const { db, appId, doc, setDoc } = window.fb;
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id), item);
+            };
+
+            const remove = async (col, id) => {
+                if (!user) return;
+                const { db, appId, doc, deleteDoc } = window.fb;
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
+            };
+
+            if (view === 'staff_portal') return <StaffPortal staffId={staffId} data={data} onBack={() => { window.history.pushState({}, '', '/'); setView('home'); }} />;
+
+            return (
+                <div className="min-h-screen">
+                    {view === 'home' ? (
+                        <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white p-6 text-center">
+                            <h1 className="text-5xl font-black mb-4 text-emerald-400">STUDIO PRO</h1>
+                            <p className="mb-12 text-slate-400">نظام إدارة المحتوى السحابي الذكي</p>
+                            {!user && <div className="mb-4 animate-pulse text-amber-400 text-sm">جاري الاتصال بالسحابة...</div>}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                                <button onClick={() => setView('admin')} className="p-8 bg-slate-800 rounded-3xl border border-slate-700 hover:border-emerald-500 transition-all text-2xl font-bold">دخول المدير</button>
+                                <div className="p-8 bg-slate-800 rounded-3xl border border-slate-700">
+                                    <p className="text-sm mb-4 text-slate-400">بوابة المصورين (اختر للدخول)</p>
+                                    <select onChange={(e) => { 
+                                        const id = e.target.value;
+                                        if(!id) return;
+                                        window.history.pushState({}, '', `?staff=${id}`);
+                                        setStaffId(id); setView('staff_portal');
+                                    }} className="w-full p-3 bg-slate-900 border border-slate-600 rounded-xl outline-none">
+                                        <option value="">-- اختر مصوراً --</option>
+                                        {data.staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col md:flex-row h-screen">
+                            <aside className="w-full md:w-64 bg-slate-900 text-white p-6">
+                                <h2 className="text-2xl font-black text-emerald-400 mb-8">لوحة التحكم</h2>
+                                <nav className="space-y-4">
+                                    <button onClick={() => setView('admin')} className="w-full text-right p-3 hover:bg-slate-800 rounded-xl block">🏠 اليومية والمحاسبة</button>
+                                    <button onClick={() => setView('bookings')} className="w-full text-right p-3 hover:bg-slate-800 rounded-xl block">📅 الحجوزات القادمة</button>
+                                    <button onClick={() => setView('settings')} className="w-full text-right p-3 hover:bg-slate-800 rounded-xl block">⚙️ إعدادات الطاقم</button>
+                                    <button onClick={() => setView('home')} className="w-full text-right p-3 text-red-400 hover:bg-red-500/10 rounded-xl block mt-10">🚪 خروج</button>
+                                </nav>
+                            </aside>
+
+                            <main className="flex-1 overflow-y-auto bg-slate-50 p-6">
+                                {view === 'admin' && <AccountingView stats={globalStats} data={data} save={save} remove={remove} />}
+                                {view === 'bookings' && <BookingsView data={data} save={save} remove={remove} onClientClick={setSelectedEntity} />}
+                                {view === 'settings' && <SettingsView data={data} save={save} remove={remove} />}
+                            </main>
+                        </div>
+                    )}
+
+                    {selectedEntity && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedEntity(null)}>
+                            <div className="bg-white rounded-3xl p-8 max-w-lg w-full animate-pop shadow-2xl" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-2xl font-black mb-4 border-b pb-2">تفاصيل العميل</h3>
+                                <div className="space-y-4 text-slate-700">
+                                    <p><strong className="text-slate-900">الاسم:</strong> {selectedEntity.clientName}</p>
+                                    <p><strong className="text-slate-900">الهاتف:</strong> {selectedEntity.phone}</p>
+                                    <p><strong className="text-slate-900">العنوان:</strong> {selectedEntity.address}</p>
+                                    <p><strong className="text-slate-900">تاريخ الحجز:</strong> {selectedEntity.date}</p>
+                                    <p><strong className="text-slate-900">المكان المسجل:</strong> {selectedEntity.location}</p>
+                                    <div className="p-4 bg-slate-50 rounded-2xl border">
+                                        <p className="font-bold mb-2">الخدمات:</p>
+                                        <ul className="list-disc list-inside text-sm">
+                                            {selectedEntity.services?.map((s,i) => <li key={i}>{s.name} - {s.price} ج.م</li>)}
+                                        </ul>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-4">
+                                        <div className="text-red-600 font-black">المتبقي: {selectedEntity.remainingAmount} ج.م</div>
+                                        <button onClick={() => setSelectedEntity(null)} className="px-6 py-2 bg-slate-900 text-white rounded-xl">إغلاق</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Views Components
+        const AccountingView = ({ stats, data, save, remove }) => {
+            const [showModal, setShowModal] = useState(false);
+            return (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border-b-4 border-emerald-500">
+                            <p className="text-slate-500 text-sm font-bold">إجمالي الإيرادات</p>
+                            <h3 className="text-3xl font-black text-slate-900">{stats.income} ج.م</h3>
+                        </div>
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border-b-4 border-red-500">
+                            <p className="text-slate-500 text-sm font-bold">إجمالي المصروفات</p>
+                            <h3 className="text-3xl font-black text-slate-900">{stats.expense} ج.م</h3>
+                        </div>
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border-b-4 border-blue-500">
+                            <p className="text-slate-500 text-sm font-bold">صافي الأرباح</p>
+                            <h3 className="text-3xl font-black text-slate-900">{stats.net} ج.م</h3>
+                        </div>
                     </div>
-                  `;
-                }).join('') || '<p class="text-center py-6 text-slate-400">لم يتم إضافة مصورين بعد</p>'}
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Calendar navigation state
-    let calendarMonth = new Date().getMonth();
-    let calendarYear = new Date().getFullYear();
-
-    // CALENDAR
-    function renderCalendar(container) {
-      const bookings = allData.filter(d => d.type === 'booking');
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const upcomingBookings = bookings
-        .filter(b => new Date(b.date) >= today)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      const year = calendarYear;
-      const month = calendarMonth;
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const daysInMonth = lastDay.getDate();
-      const startingDayOfWeek = firstDay.getDay();
-      
-      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
-                         'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-
-      container.innerHTML = `
-        <div class="flex flex-col lg:flex-row gap-8">
-          <div class="flex-1">
-            <div class="glass-card p-6 rounded-2xl shadow-lg">
-              <!-- Month/Year Navigation -->
-              <div class="flex items-center justify-between mb-6">
-                <button onclick="previousMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-600 hover:text-slate-900">
-                  <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                </button>
-                
-                <div class="flex items-center gap-4">
-                  <select id="month-select" onchange="changeMonth(this.value)" class="px-4 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-800">
-                    ${monthNames.map((m, idx) => `<option value="${idx}" ${idx === month ? 'selected' : ''}>${m}</option>`).join('')}
-                  </select>
-                  
-                  <select id="year-select" onchange="changeYear(this.value)" class="px-4 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-800">
-                    ${Array.from({length: 5}, (_, i) => year - 2 + i).map(y => `<option value="${y}" ${y === year ? 'selected' : ''}>${y}</option>`).join('')}
-                  </select>
-                </div>
-
-                <button onclick="nextMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-600 hover:text-slate-900">
-                  <i data-lucide="chevron-left" class="w-6 h-6"></i>
-                </button>
-              </div>
-
-              <button onclick="goToToday()" class="w-full mb-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-sm font-bold transition-all">
-                🎯 اليوم
-              </button>
-              
-              <div class="grid grid-cols-7 gap-2 mb-4">
-                ${['ح', 'ن', 'ث', 'ع', 'خ', 'ج', 'س'].map(d => 
-                  `<div class="text-center text-xs font-bold text-slate-500 p-3 bg-slate-100 rounded">${d}</div>`
-                ).join('')}
-              </div>
-              
-              <div class="grid grid-cols-7 gap-2">
-                ${Array.from({length: startingDayOfWeek}).map(() => 
-                  `<div class="aspect-square"></div>`
-                ).join('')}
-                
-                ${Array.from({length: daysInMonth}).map((_, i) => {
-                  const day = i + 1;
-                  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                  const dayBookings = bookings.filter(b => b.date === dateStr);
-                  const isToday = new Date().toISOString().split('T')[0] === dateStr;
-                  
-                  return `<button onclick="openBookingModalWithDate('${dateStr}')" 
-                    class="aspect-square border-2 rounded-lg p-2 flex flex-col items-center justify-between hover:border-blue-300 hover:bg-blue-50 transition-all ${dayBookings.length > 0 ? 'bg-blue-50 border-blue-300' : 'border-slate-300'} ${isToday ? 'ring-2 ring-blue-500' : ''}">
-                    <span class="text-xs font-bold ${dayBookings.length > 0 ? 'text-blue-600' : 'text-slate-500'}">${day}</span>
-                    ${dayBookings.length > 0 ? `<span class="text-xs text-blue-600 font-semibold">${dayBookings.length}</span>` : ''}
-                  </button>`;
-                }).join('')}
-              </div>
-
-              <!-- Month Statistics -->
-              <div class="mt-6 p-4 bg-gradient-to-r from-slate-100 to-slate-200 rounded-xl">
-                <h4 class="font-bold text-slate-800 mb-3 text-sm">📊 إحصائيات الشهر</h4>
-                <div class="grid grid-cols-3 gap-3 text-xs">
-                  <div class="bg-white p-3 rounded-lg text-center">
-                    <div class="text-slate-600 font-semibold mb-1">الحجوزات</div>
-                    <div class="text-2xl font-bold text-blue-600">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length}</div>
-                  </div>
-                  <div class="bg-white p-3 rounded-lg text-center">
-                    <div class="text-slate-600 font-semibold mb-1">الأيام النشطة</div>
-                    <div class="text-2xl font-bold text-green-600">${new Set(bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).map(b => b.date)).size}</div>
-                  </div>
-                  <div class="bg-white p-3 rounded-lg text-center">
-                    <div class="text-slate-600 font-semibold mb-1">الإيرادات</div>
-                    <div class="text-lg font-bold text-amber-600">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).reduce((acc, b) => acc + Number(b.paid_amount || 0), 0)} ج.م</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="w-full lg:w-96 space-y-6">
-            <div class="glass-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-red-600 to-red-700 text-white">
-              <h3 class="font-bold mb-4 flex items-center gap-2">
-                <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                المواعيد القادمة
-              </h3>
-              <div class="space-y-2 max-h-80 overflow-y-auto">
-                ${upcomingBookings.slice(0, 8).map(b => `
-                  <button onclick="openClientDetails('${b.__backendId}')" class="w-full text-right p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-all border-r-4 border-red-400 hover:border-red-500">
-                    <div class="font-bold text-slate-900 text-sm">${b.client_name}</div>
-                    <div class="text-xs text-red-700 mt-1">📅 ${b.date}</div>
-                    <div class="text-xs font-semibold text-red-600 mt-1">المبلغ: ${b.total_amount} ج.م</div>
-                  </button>
-                `).join('') || '<p class="text-center py-6 text-red-200">لا توجد مواعيد قادمة</p>'}
-              </div>
-            </div>
-
-            <div class="glass-card p-6 rounded-2xl shadow-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-              <h3 class="font-bold mb-4">📈 تفاصيل الشهر</h3>
-              <div class="space-y-2">
-                <div class="flex justify-between pb-2 border-b border-blue-400">
-                  <span>إجمالي الحجوزات</span>
-                  <span class="font-bold">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length}</span>
-                </div>
-                <div class="flex justify-between pb-2 border-b border-blue-400">
-                  <span>أيام بها حجوزات</span>
-                  <span class="font-bold">${new Set(bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).map(b => b.date)).size}</span>
-                </div>
-                <div class="flex justify-between pb-2 border-b border-blue-400">
-                  <span>الإيرادات المحصلة</span>
-                  <span class="font-bold">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).reduce((acc, b) => acc + Number(b.paid_amount || 0), 0)} ج.م</span>
-                </div>
-                <div class="flex justify-between">
-                  <span>المتبقي من الحجوزات</span>
-                  <span class="font-bold">${bookings.filter(b => b.date.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).reduce((acc, b) => acc + Number(b.remaining_amount || 0), 0)} ج.م</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // DAILY LOG
-    function renderDailyLog(container) {
-      const dailyLogs = allData.filter(d => d.type === 'daily-log');
-      
-      container.innerHTML = `
-        <div class="space-y-6">
-          <div class="flex justify-between items-center">
-            <div>
-              <h2 class="text-2xl font-bold text-slate-800">سجل اليوميات</h2>
-              <p class="text-sm text-slate-500 mt-1">تتبع إيرادات الأماكن والمصورين</p>
-            </div>
-            <button onclick="openDailyLogModal()" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
-              <i data-lucide="plus" class="w-5 h-5"></i> تسجيل يومية
-            </button>
-          </div>
-
-          <!-- Statistics -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            ${venues.map(venue => {
-              const venueLogs = dailyLogs.filter(d => d.venue_name === venue.name);
-              const totalRevenue = venueLogs.reduce((acc, curr) => acc + (Number(curr.venue_revenue) || 0), 0);
-              const netRevenue = totalRevenue - (venueLogs.length * venue.pay);
-              
-              return `
-                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-                  <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-slate-800 text-lg">${venue.name}</h3>
-                    <i data-lucide="map-pin" class="w-6 h-6 text-amber-600"></i>
-                  </div>
-                  <div class="space-y-2">
-                    <div class="flex justify-between p-2 bg-blue-50 rounded">
-                      <span class="text-xs text-slate-600">الإيرادات</span>
-                      <span class="font-bold text-blue-600">${totalRevenue} ج.م</span>
+                    <div className="bg-white rounded-3xl p-6 shadow-sm">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-black">سجل اليومية والمحاسبة</h2>
+                            <button onClick={() => setShowModal(true)} className="bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold">+ إضافة عملية</button>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-right">
+                                <thead>
+                                    <tr className="border-b text-slate-400 text-sm">
+                                        <th className="p-3">التاريخ</th>
+                                        <th className="p-3">المكان</th>
+                                        <th className="p-3">المحصل</th>
+                                        <th className="p-3">المصاريف</th>
+                                        <th className="p-3">الصافي</th>
+                                        <th className="p-3"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.logs.map(log => (
+                                        <tr key={log.id} className="border-b hover:bg-slate-50">
+                                            <td className="p-3 font-bold">{log.date}</td>
+                                            <td className="p-3">{log.location}</td>
+                                            <td className="p-3 text-emerald-600 font-bold">{log.collectedAmount}</td>
+                                            <td className="p-3 text-red-500 font-bold">{log.totalExpenses}</td>
+                                            <td className="p-3 text-blue-600 font-black">{log.collectedAmount - log.totalExpenses}</td>
+                                            <td className="p-3 text-left">
+                                                <button onClick={() => remove('dailyLogs', log.id)} className="text-red-400 hover:text-red-600">حذف</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="flex justify-between p-2 bg-amber-50 rounded">
-                      <span class="text-xs text-slate-600">عبض المكان</span>
-                      <span class="font-bold text-amber-600">${venue.pay * venueLogs.length} ج.م</span>
+                    {showModal && <DailyModal data={data} onSave={(d) => { save('dailyLogs', d); setShowModal(false); }} onClose={() => setShowModal(false)} />}
+                </div>
+            );
+        };
+
+        const BookingsView = ({ data, save, remove, onClientClick }) => {
+            const [showModal, setShowModal] = useState(false);
+            const today = new Date().toISOString().split('T')[0];
+            const upcoming = data.bookings
+                .filter(b => b.date >= today)
+                .sort((a,b) => a.date.localeCompare(b.date));
+
+            return (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-1 space-y-4">
+                            <h3 className="text-lg font-black text-slate-800">تذكير المواعيد القريبة</h3>
+                            {upcoming.slice(0, 5).map(b => (
+                                <div key={b.id} onClick={() => onClientClick(b)} className="bg-white border border-slate-200 p-4 rounded-2xl cursor-pointer hover:border-emerald-500 transition-all shadow-sm">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className={`text-xs font-bold px-2 py-1 rounded-lg border ${b.date === today ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                            {b.date === today ? 'اليوم!' : b.date}
+                                        </span>
+                                        <span className="text-xs text-slate-500">{b.location}</span>
+                                    </div>
+                                    <p className="font-bold text-slate-800">{b.clientName}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm h-fit">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-black">كافة الحجوزات</h2>
+                                <button onClick={() => setShowModal(true)} className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">+ حجز جديد</button>
+                            </div>
+                            <div className="space-y-4">
+                                {data.bookings.map(b => (
+                                    <div key={b.id} className="flex items-center justify-between p-4 border rounded-2xl hover:border-blue-400 transition-colors">
+                                        <div className="flex gap-4 items-center">
+                                            <div className="bg-blue-50 p-3 rounded-xl text-blue-600 font-bold text-center leading-tight">
+                                                {b.date.split('-')[2]}<br/>
+                                                <span className="text-[10px]">{b.date.split('-')[1]}</span>
+                                            </div>
+                                            <div>
+                                                <button onClick={() => onClientClick(b)} className="font-black text-slate-800 hover:text-blue-600">{b.clientName}</button>
+                                                <p className="text-xs text-slate-400">{b.phone}</p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => remove('bookings', b.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg">حذف</button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex justify-between p-2 bg-green-50 rounded">
-                      <span class="text-xs text-slate-600">الصافي</span>
-                      <span class="font-bold text-green-600">${netRevenue} ج.م</span>
+                    {showModal && <BookingModal data={data} onSave={(d) => { save('bookings', d); setShowModal(false); }} onClose={() => setShowModal(false)} />}
+                </div>
+            );
+        };
+
+        const SettingsView = ({ data, save, remove }) => {
+            const addStaff = (e) => {
+                e.preventDefault();
+                const f = new FormData(e.target);
+                const name = f.get('name');
+                const rate = f.get('rate');
+                if(!name || !rate) return;
+                save('staff', { name, rate: Number(rate) });
+                e.target.reset();
+            };
+
+            return (
+                <div className="max-w-4xl space-y-8">
+                    <div className="bg-white p-8 rounded-3xl shadow-sm">
+                        <h2 className="text-2xl font-black mb-6">إعدادات طاقم التصوير</h2>
+                        <form onSubmit={addStaff} className="flex gap-4 mb-8">
+                            <input name="name" required placeholder="اسم المصور" className="flex-1 p-3 border rounded-xl outline-none" />
+                            <input name="rate" required type="number" placeholder="الأجر" className="w-32 p-3 border rounded-xl outline-none" />
+                            <button className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold">إضافة</button>
+                        </form>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {data.staff.map(s => (
+                                <div key={s.id} className="p-4 border rounded-2xl flex justify-between items-center group">
+                                    <div>
+                                        <p className="font-bold">{s.name}</p>
+                                        <p className="text-xs text-emerald-600">الأجر الافتراضي: {s.rate} ج.م</p>
+                                        <code className="text-[10px] text-slate-400 block mt-2 select-all">?staff={s.id}</code>
+                                    </div>
+                                    <button onClick={() => remove('staff', s.id)} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2">حذف</button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div class="text-xs text-slate-500 mt-2">عدد التسجيلات: ${venueLogs.length}</div>
-                  </div>
                 </div>
-              `;
-            }).join('')}
-          </div>
+            );
+        };
 
-          <!-- Logs Table -->
-          <div class="glass-card rounded-2xl shadow-lg overflow-hidden">
-            <div class="p-4 bg-gradient-to-r from-slate-100 to-slate-200 border-b">
-              <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                <i data-lucide="list" class="w-5 h-5"></i>
-                جميع اليوميات
-              </h3>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-right text-sm">
-                <thead class="bg-slate-50 border-b">
-                  <tr>
-                    <th class="p-4 text-slate-600">التاريخ</th>
-                    <th class="p-4 text-slate-600">المكان</th>
-                    <th class="p-4 text-slate-600">الإيرادات</th>
-                    <th class="p-4 text-slate-600">العبض</th>
-                    <th class="p-4 text-slate-600">الصافي</th>
-                    <th class="p-4 text-slate-600">المصورين</th>
-                    <th class="p-4 text-slate-600">الإجراء</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${dailyLogs.slice().reverse().map(log => {
-                    const venue = venues.find(v => v.name === log.venue_name);
-                    const venueShare = venue ? venue.pay : 0;
-                    return `
-                      <tr class="border-t hover:bg-blue-50 transition-all">
-                        <td class="p-4 font-bold">${log.log_date}</td>
-                        <td class="p-4"><span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">${log.venue_name}</span></td>
-                        <td class="p-4 font-bold text-green-600">${log.venue_revenue} ج.م</td>
-                        <td class="p-4 text-amber-600 font-bold">${venueShare} ج.م</td>
-                        <td class="p-4 font-bold text-green-600">${Number(log.venue_revenue) - venueShare} ج.م</td>
-                        <td class="p-4 text-xs">
-                          <div class="flex flex-wrap gap-1">
-                            ${log.photographer_list?.split(',').map(p => `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">${p.trim()}</span>`).join('') || '-'}
-                          </div>
-                        </td>
-                        <td class="p-4">
-                          <button onclick="deleteRecord('${log.__backendId}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded transition-all">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    `;
-                  }).join('') || '<tr><td colspan="7" class="p-8 text-center text-slate-400">لا توجد تسجيلات</td></tr>'}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+        const BookingModal = ({ data, onSave, onClose }) => {
+            const [form, setForm] = useState({ 
+                clientName: '', phone: '', address: '', date: '', location: '', 
+                paidAmount: 0, services: [] 
+            });
 
-    // STAFF MANAGER
-    function renderStaffManager(container) {
-      container.innerHTML = `
-        <div class="space-y-6">
-          <div class="flex justify-between items-center">
-            <div>
-              <h2 class="text-2xl font-bold text-slate-800">إدارة المصورين</h2>
-              <p class="text-sm text-slate-500 mt-1">أضف وأدر المصورين وتتبع أدائهم</p>
-            </div>
-            <button onclick="openStaffModal()" class="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
-              <i data-lucide="plus" class="w-5 h-5"></i> إضافة مصور
-            </button>
-          </div>
+            const [customServices, setCustomServices] = useState([
+                { id: '1', name: 'تصوير فوتوغرافى', price: 1500 },
+                { id: '2', name: 'تصوير فيديو', price: 2000 },
+                { id: '3', name: 'ألبوم صور', price: 800 }
+            ]);
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            ${staffMembers.length > 0 ? staffMembers.map(staff => {
-              const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staff.staff_name));
-              const totalEarnings = staffBookings.length * staff.staff_pay;
-              const portalLink = staff.staff_portal_link || staff.staff_slug;
-              
-              return `
-                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all">
-                  <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-4">
-                      <div class="w-14 h-14 gradient-badge text-white rounded-full flex items-center justify-center text-xl font-bold">
-                        ${staff.staff_name[0]}
-                      </div>
-                      <div>
-                        <h4 class="font-bold text-slate-800 text-lg">${staff.staff_name}</h4>
-                        <p class="text-xs text-blue-600 font-semibold">${staff.staff_role}</p>
-                      </div>
+            const total = form.services.reduce((s, x) => s + Number(x.price), 0);
+
+            const toggleSrv = (srv) => {
+                const exists = form.services.find(s => s.id === srv.id);
+                setForm({ ...form, services: exists ? form.services.filter(s => s.id !== srv.id) : [...form.services, srv] });
+            };
+
+            const updatePrice = (id, newPrice) => {
+                const price = Number(newPrice);
+                setCustomServices(customServices.map(s => s.id === id ? {...s, price} : s));
+                setForm(prev => ({
+                    ...prev,
+                    services: prev.services.map(s => s.id === id ? {...s, price} : s)
+                }));
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-3xl p-8 max-w-2xl w-full animate-pop my-auto">
+                        <h2 className="text-2xl font-black mb-6">حجز جديد</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <input placeholder="اسم العميل" className="p-3 border rounded-xl" value={form.clientName} onChange={e => setForm({...form, clientName: e.target.value})} />
+                            <input placeholder="رقم الهاتف" className="p-3 border rounded-xl" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+                            <input placeholder="العنوان" className="p-3 border rounded-xl col-span-full" value={form.address} onChange={e => setForm({...form, address: e.target.value})} />
+                            <input type="date" className="p-3 border rounded-xl font-bold" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
+                            <input placeholder="القاعة / المكان" className="p-3 border rounded-xl" value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
+                        </div>
+                        <div className="mb-6">
+                            <p className="font-bold mb-3">الخدمات الأساسية (عدل السعر):</p>
+                            <div className="space-y-2">
+                                {customServices.map(s => (
+                                    <div key={s.id} className="flex items-center gap-4 bg-slate-50 p-3 rounded-2xl border">
+                                        <input type="checkbox" className="w-5 h-5 accent-emerald-600" onChange={() => toggleSrv(s)} checked={!!form.services.find(x => x.id === s.id)} />
+                                        <span className="flex-1 font-bold">{s.name}</span>
+                                        <input type="number" value={s.price} onChange={e => updatePrice(s.id, e.target.value)} className="w-24 p-1 border rounded text-center font-bold text-blue-600" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-slate-900 p-6 rounded-3xl text-white mb-6">
+                            <div className="flex justify-between mb-2 opacity-70"><span>الإجمالي:</span><span>{total} ج.م</span></div>
+                            <div className="flex justify-between items-center gap-4">
+                                <span>المدفوع حالياً:</span>
+                                <input type="number" className="bg-slate-800 border-none p-2 rounded-xl text-emerald-400 font-bold w-32 text-center" value={form.paidAmount} onChange={e => setForm({...form, paidAmount: Number(e.target.value)})} />
+                            </div>
+                            <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-800">
+                                <span className="font-bold">المتبقي:</span><span className="text-2xl font-black text-red-400">{total - form.paidAmount} ج.م</span>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <button onClick={() => onSave({ ...form, totalAmount: total, remainingAmount: total - form.paidAmount })} className="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-bold hover:bg-emerald-700 transition-colors">تأكيد الحجز</button>
+                            <button onClick={onClose} className="px-8 bg-slate-200 py-4 rounded-2xl font-bold hover:bg-slate-300">إلغاء</button>
+                        </div>
                     </div>
-                    <button onclick="openEditStaffModal('${staff.__backendId}')" class="text-blue-600 hover:bg-blue-50 p-2 rounded transition-all">
-                      <i data-lucide="edit" class="w-4 h-4"></i>
-                    </button>
-                  </div>
-                  
-                  <div class="space-y-2 mb-4">
-                    <div class="flex justify-between p-3 bg-slate-50 rounded-lg">
-                      <span class="text-xs text-slate-600">قيمة الحجز</span>
-                      <span class="font-bold">${staff.staff_pay} ج.م</span>
+                </div>
+            );
+        };
+
+        const DailyModal = ({ data, onSave, onClose }) => {
+            const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], location: '', collectedAmount: 0, totalExpenses: 0, staff: [], expenses: [] });
+            const [newExp, setNewExp] = useState({ desc: '', amount: 0 });
+
+            const addStaff = (sId) => {
+                const s = data.staff.find(x => x.id === sId);
+                if (s && !form.staff.find(x => x.id === sId)) {
+                    const newStaffList = [...form.staff, { id: s.id, name: s.name, rate: s.rate }];
+                    const newExpTotal = newStaffList.reduce((a,b)=>a+b.rate, 0) + form.expenses.reduce((a,b)=>a+b.amount,0);
+                    setForm({ ...form, staff: newStaffList, totalExpenses: newExpTotal });
+                }
+            };
+
+            const addExp = () => {
+                if (!newExp.desc || !newExp.amount) return;
+                const newExpenses = [...form.expenses, newExp];
+                const newExpTotal = form.staff.reduce((a,b)=>a+b.rate, 0) + newExpenses.reduce((a,b)=>a+b.amount,0);
+                setForm({ ...form, expenses: newExpenses, totalExpenses: newExpTotal });
+                setNewExp({ desc: '', amount: 0 });
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-3xl p-8 max-w-xl w-full animate-pop my-auto">
+                        <h2 className="text-2xl font-black mb-6">تسجيل إيراد يومية</h2>
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="col-span-2">
+                                <label className="text-xs font-bold text-slate-400 px-2">مكان العمل (القاعة / المناسبة)</label>
+                                <input placeholder="مثلاً: قاعة الأميرة" className="w-full p-3 border rounded-xl" value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 px-2">المبلغ المحصل</label>
+                                <input type="number" className="w-full p-3 border rounded-xl font-bold text-emerald-600" value={form.collectedAmount} onChange={e => setForm({...form, collectedAmount: Number(e.target.value)})} />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 px-2">التاريخ</label>
+                                <input type="date" value={form.date} className="w-full p-3 border rounded-xl" onChange={e => setForm({...form, date: e.target.value})} />
+                            </div>
+                        </div>
+                        <div className="mb-6 p-4 bg-slate-50 rounded-2xl border">
+                            <p className="font-bold mb-2 text-sm">طاقم العمل المشارك:</p>
+                            <select className="w-full p-2 mb-3 rounded-lg border bg-white" onChange={e => addStaff(e.target.value)}>
+                                <option value="">+ اختر مصوراً</option>
+                                {data.staff.map(s => <option key={s.id} value={s.id}>{s.name} ({s.rate} ج)</option>)}
+                            </select>
+                            <div className="flex flex-wrap gap-2">
+                                {form.staff.map(s => <span key={s.id} className="bg-white border px-3 py-1 rounded-full text-xs font-bold text-slate-600 shadow-sm">{s.name}</span>)}
+                            </div>
+                        </div>
+                        <div className="mb-6 p-4 bg-slate-50 rounded-2xl border">
+                            <p className="font-bold mb-2 text-sm">مصاريف نثرية (إيجار/معدات):</p>
+                            <div className="flex gap-2">
+                                <input placeholder="البيان" className="flex-1 p-2 border rounded-lg text-sm" value={newExp.desc} onChange={e => setNewExp({...newExp, desc: e.target.value})} />
+                                <input type="number" placeholder="المبلغ" className="w-20 p-2 border rounded-lg text-sm" value={newExp.amount} onChange={e => setNewExp({...newExp, amount: Number(e.target.value)})} />
+                                <button onClick={addExp} className="bg-slate-900 text-white px-3 rounded-lg text-xs font-bold">إضافة</button>
+                            </div>
+                        </div>
+                        <div className="text-center p-6 bg-blue-50 rounded-3xl border border-blue-100 mb-6">
+                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">الصافي المحقق</p>
+                            <h3 className="text-4xl font-black text-slate-900">{form.collectedAmount - form.totalExpenses} ج.م</h3>
+                        </div>
+                        <div className="flex gap-4">
+                            <button onClick={() => onSave(form)} className="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all">حفظ العملية</button>
+                            <button onClick={onClose} className="px-8 bg-slate-200 py-4 rounded-2xl font-bold hover:bg-slate-300">إلغاء</button>
+                        </div>
                     </div>
-                    <div class="flex justify-between p-3 bg-blue-50 rounded-lg">
-                      <span class="text-xs text-blue-600">الحجوزات</span>
-                      <span class="font-bold text-blue-800">${staffBookings.length}</span>
-                    </div>
-                    <div class="flex justify-between p-3 bg-green-50 rounded-lg">
-                      <span class="text-xs text-green-600">المستحقات</span>
-                      <span class="font-bold text-green-800">${totalEarnings} ج.م</span>
-                    </div>
-                  </div>
-
-                  <div class="space-y-2">
-                    <a href="#" onclick="openPhotographerPortalLogin(); return false;" class="w-full py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg text-xs font-bold text-center transition-all flex items-center justify-center gap-2 block">
-                      <i data-lucide="lock" class="w-4 h-4"></i> 🔐 دخول البوابة الآمنة
-                    </a>
-                    <button onclick="copyPortalLink('${portalLink}')" class="w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
-                      <i data-lucide="link" class="w-4 h-4"></i> نسخ رابط البوابة
-                    </button>
-                  </div>
                 </div>
-              `;
-            }).join('') : '<div class="col-span-full py-16 text-center"><i data-lucide="users" class="w-16 h-16 mx-auto text-slate-300 mb-4"></i><p class="text-slate-400 font-semibold">لم يتم إضافة مصورين بعد</p></div>'}
-          </div>
-        </div>
-      `;
-    }
+            );
+        };
 
-    // PACKAGES MANAGER
-    function renderPackagesManager(container) {
-      const packages = allData.filter(d => d.type === 'package');
-      const equipment = allData.filter(d => d.type === 'equipment');
-
-      container.innerHTML = `
-        <div class="space-y-8">
-          <!-- Packages Section -->
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <h2 class="text-2xl font-bold text-slate-800">قوالب التصوير</h2>
-                <p class="text-sm text-slate-500 mt-1">أضف وأدر قوالب الحجز</p>
-              </div>
-              <button onclick="openPackageModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
-                <i data-lucide="plus" class="w-5 h-5"></i> قالب جديد
-              </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              ${packages.length > 0 ? packages.map(pkg => `
-                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-blue-500">
-                  <div class="flex justify-between items-start mb-3">
-                    <h4 class="font-bold text-slate-800 text-lg">${pkg.package_name}</h4>
-                    <button onclick="deleteRecord('${pkg.__backendId}')" class="text-red-500 hover:bg-red-50 p-2 rounded transition-all">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                  </div>
-                  <p class="text-sm text-slate-600 mb-4">${pkg.package_desc}</p>
-                  <button onclick="openEditPackageModal('${pkg.__backendId}')" class="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
-                    <i data-lucide="edit" class="w-4 h-4"></i> تعديل
-                  </button>
-                </div>
-              `).join('') : '<div class="col-span-full py-12 text-center text-slate-400">لم يتم إضافة قوالب بعد</div>'}
-            </div>
-          </div>
-
-          <div class="border-t-2 border-slate-300 my-8"></div>
-
-          <!-- Equipment Section -->
-          <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <h2 class="text-2xl font-bold text-slate-800">المعدات والآلات</h2>
-                <p class="text-sm text-slate-500 mt-1">أضف وأدر قوالب المعدات</p>
-              </div>
-              <button onclick="openEquipmentModal()" class="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg">
-                <i data-lucide="plus" class="w-5 h-5"></i> معدة جديدة
-              </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              ${equipment.length > 0 ? equipment.map(equip => `
-                <div class="glass-card p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-amber-500">
-                  <div class="flex justify-between items-start mb-3">
-                    <h4 class="font-bold text-slate-800 text-lg">${equip.equipment_name}</h4>
-                    <button onclick="deleteRecord('${equip.__backendId}')" class="text-red-500 hover:bg-red-50 p-2 rounded transition-all">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                  </div>
-                  <p class="text-sm text-slate-600 mb-3">${equip.equipment_desc}</p>
-                  <div class="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
-                    <span class="font-bold text-amber-800">السعر:</span>
-                    <span class="text-amber-600 font-bold">${equip.equipment_price} ج.م</span>
-                  </div>
-                  <button onclick="openEditEquipmentModal('${equip.__backendId}')" class="w-full py-2 mt-3 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2">
-                    <i data-lucide="edit" class="w-4 h-4"></i> تعديل
-                  </button>
-                </div>
-              `).join('') : '<div class="col-span-full py-12 text-center text-slate-400">لم يتم إضافة معدات بعد</div>'}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // MODALS
-
-    function openBookingModal() {
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      const packages = allData.filter(d => d.type === 'package');
-      const equipment = allData.filter(d => d.type === 'equipment');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600 transition-all">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">حجز موعد تصوير جديد</h2>
-          <form onsubmit="handleBooking(event)" class="space-y-6">
-            <!-- Client Info -->
-            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200">
-              <h3 class="font-bold text-blue-900 mb-4">بيانات العميل</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-bold mb-2">اسم العميل</label>
-                  <input required name="client_name" class="w-full p-3 rounded-xl border bg-white" placeholder="أدخل اسم العميل">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">رقم الهاتف</label>
-                  <input required name="phone" type="tel" class="w-full p-3 rounded-xl border bg-white" placeholder="مثال: 01012345678">
-                </div>
-                <div class="col-span-full">
-                  <label class="block text-sm font-bold mb-2">العنوان</label>
-                  <input required name="address" class="w-full p-3 rounded-xl border bg-white" placeholder="العنوان بالتفصيل">
-                </div>
-              </div>
-            </div>
-
-            <!-- Booking Details -->
-            <div class="bg-green-50 p-6 rounded-2xl border border-green-200">
-              <h3 class="font-bold text-green-900 mb-4">تفاصيل الحجز</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-bold mb-2">التاريخ</label>
-                  <input required type="date" name="date" class="w-full p-3 rounded-xl border bg-white">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">القالب</label>
-                  <select name="package" class="w-full p-3 rounded-xl border bg-white">
-                    <option value="">-- اختر قالب --</option>
-                    ${packages.map(p => `<option value="${p.package_name}">${p.package_name}</option>`).join('')}
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">المبلغ الإجمالي (ج.م)</label>
-                  <input required type="number" name="total_amount" id="total-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">المدفوع (ج.م)</label>
-                  <input required type="number" name="paid_amount" id="paid-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">المتبقي (ج.م)</label>
-                  <input type="number" name="remaining_amount" id="remaining-amount" class="w-full p-3 rounded-xl border bg-slate-100" disabled>
-                </div>
-              </div>
-            </div>
-
-            <!-- Photographers Selection -->
-            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-200">
-              <h3 class="font-bold text-purple-900 mb-4">اختر الفريق</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-                ${staffMembers.length > 0 ? staffMembers.map(staff => `
-                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-purple-100 hover:border-purple-400 hover:bg-purple-50 cursor-pointer transition-all">
-                    <input type="checkbox" name="photographers" value="${staff.staff_name}" class="w-5 h-5 cursor-pointer">
-                    <div class="flex-1">
-                      <div class="font-bold text-sm text-slate-800">${staff.staff_name}</div>
-                      <div class="text-xs text-slate-500">${staff.staff_role} - ${staff.staff_pay} ج.م</div>
-                    </div>
-                  </label>
-                `).join('') : '<p class="text-center py-4 text-slate-400 col-span-full">لم يتم إضافة مصورين</p>'}
-              </div>
-            </div>
-
-            <!-- Equipment Selection -->
-            ${equipment.length > 0 ? `
-            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
-              <h3 class="font-bold text-amber-900 mb-4">المعدات الإضافية (اختياري)</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-                ${equipment.map(equip => `
-                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-amber-100 hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-all">
-                    <input type="checkbox" name="equipment" value="${equip.equipment_name}" class="w-5 h-5 cursor-pointer">
-                    <div class="flex-1">
-                      <div class="font-bold text-sm text-slate-800">${equip.equipment_name}</div>
-                      <div class="text-xs text-slate-500">${equip.equipment_price} ج.م</div>
-                    </div>
-                  </label>
-                `).join('')}
-              </div>
-            </div>
-            ` : ''}
-
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition-all">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all">تأكيد الحجز</button>
-            </div>
-          </form>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-
-    function openBookingModalWithDate(dateStr) {
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      const packages = allData.filter(d => d.type === 'package');
-      const equipment = allData.filter(d => d.type === 'equipment');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">حجز في ${dateStr}</h2>
-          <form onsubmit="handleBooking(event)" class="space-y-6">
-            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200">
-              <h3 class="font-bold text-blue-900 mb-4">بيانات العميل</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-bold mb-2">اسم العميل</label>
-                  <input required name="client_name" class="w-full p-3 rounded-xl border bg-white">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">رقم الهاتف</label>
-                  <input required name="phone" type="tel" class="w-full p-3 rounded-xl border bg-white">
-                </div>
-                <div class="col-span-full">
-                  <label class="block text-sm font-bold mb-2">العنوان</label>
-                  <input required name="address" class="w-full p-3 rounded-xl border bg-white">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">التاريخ</label>
-                  <input required type="date" name="date" value="${dateStr}" class="w-full p-3 rounded-xl border bg-white">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">القالب</label>
-                  <select name="package" class="w-full p-3 rounded-xl border bg-white">
-                    ${packages.map(p => `<option value="${p.package_name}">${p.package_name}</option>`).join('')}
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">المبلغ الإجمالي</label>
-                  <input required type="number" name="total_amount" id="total-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">المدفوع</label>
-                  <input required type="number" name="paid_amount" id="paid-amount" class="w-full p-3 rounded-xl border bg-white" onchange="updateBookingCalc()">
-                </div>
-                <div>
-                  <label class="block text-sm font-bold mb-2">المتبقي</label>
-                  <input type="number" name="remaining_amount" id="remaining-amount" class="w-full p-3 rounded-xl border bg-slate-100" disabled>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-200">
-              <h3 class="font-bold text-purple-900 mb-4">الفريق</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                ${staffMembers.map(staff => `
-                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg border-2 border-purple-100 hover:border-purple-400 cursor-pointer">
-                    <input type="checkbox" name="photographers" value="${staff.staff_name}" class="w-5 h-5">
-                    <div>
-                      <div class="font-bold text-sm">${staff.staff_name}</div>
-                      <div class="text-xs text-slate-500">${staff.staff_pay} ج.م</div>
-                    </div>
-                  </label>
-                `).join('')}
-              </div>
-            </div>
-
-            <div class="flex justify-end gap-3 pt-4">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">حفظ الحجز</button>
-            </div>
-          </form>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-
-    function openDailyLogModal() {
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">تسجيل يومية جديدة</h2>
-          <form onsubmit="handleDailyLog(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">التاريخ</label>
-              <input required type="date" name="log_date" value="${new Date().toISOString().split('T')[0]}" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">المكان</label>
-              <select name="venue_name" required class="w-full p-3 rounded-xl border bg-slate-50">
-                <option value="">-- اختر المكان --</option>
-                ${venues.map(v => `<option value="${v.name}">${v.name}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">إيرادات المكان (ج.م)</label>
-              <input required type="number" name="venue_revenue" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">المصورين الذين اشتغلوا</label>
-              <div class="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto bg-slate-50 p-3 rounded-xl border">
-                ${staffMembers.map(staff => `
-                  <label class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded cursor-pointer">
-                    <input type="checkbox" name="photographer" value="${staff.staff_name}" class="w-4 h-4">
-                    <span class="text-sm font-medium">${staff.staff_name}</span>
-                  </label>
-                `).join('') || '<span class="text-slate-400 col-span-2">لا توجد مصورين</span>'}
-              </div>
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">حفظ</button>
-            </div>
-          </form>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-
-    function openStaffModal() {
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">إضافة مصور جديد</h2>
-          <form onsubmit="handleAddStaff(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">اسم المصور</label>
-              <input required name="staff_name" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">الدور</label>
-              <input required name="staff_role" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: مصور كاميرا">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">قيمة الحجز (ج.م)</label>
-              <input required type="number" name="staff_pay" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700">إضافة</button>
-            </div>
-          </form>
-        </div>
-      `;
-    }
-
-    function openPackageModal() {
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">إضافة قالب جديد</h2>
-          <form onsubmit="handleAddPackage(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">اسم القالب</label>
-              <input required name="package_name" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: ميكسر كامل">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">الوصف</label>
-              <textarea required name="package_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24" placeholder="وصف القالب والخدمات المتضمنة"></textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">إضافة</button>
-            </div>
-          </form>
-        </div>
-      `;
-    }
-
-    function openEquipmentModal() {
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">إضافة معدة جديدة</h2>
-          <form onsubmit="handleAddEquipment(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">اسم المعدة</label>
-              <input required name="equipment_name" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: كاميرا احترافية">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">الوصف</label>
-              <textarea required name="equipment_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24" placeholder="مواصفات المعدة"></textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">سعر الإيجار (ج.م)</label>
-              <input required type="number" name="equipment_price" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700">إضافة</button>
-            </div>
-          </form>
-        </div>
-      `;
-    }
-
-    // Photographer Portal with Security
-    let currentPhotographerSession = null;
-
-    function openPhotographerPortalLogin() {
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-2xl mb-6 text-center">
-            <i data-lucide="lock" class="w-12 h-12 mx-auto mb-2"></i>
-            <h2 class="text-2xl font-bold">بوابة المصور الخاصة</h2>
-            <p class="text-blue-100 text-sm mt-1">منطقة آمنة وسرية</p>
-          </div>
-          
-          <form onsubmit="handlePhotographerLogin(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">اختر اسمك</label>
-              <select name="photographer_name" required class="w-full p-3 rounded-xl border bg-slate-50 font-bold">
-                <option value="">-- اختر من القائمة --</option>
-                ${staffMembers.map(s => `<option value="${s.staff_name}">${s.staff_name}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">كود الوصول</label>
-              <input type="password" name="access_code" required class="w-full p-3 rounded-xl border bg-slate-50" placeholder="أدخل كود الوصول">
-              <p class="text-xs text-slate-500 mt-1">ملاحظة: كود الوصول يتم تعيينه من قبل الإدارة</p>
-            </div>
-            <div class="flex gap-3 pt-4">
-              <button type="button" onclick="closeModal()" class="flex-1 px-4 py-3 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition-all">إلغاء</button>
-              <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all">دخول آمن</button>
-            </div>
-          </form>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-
-    function handlePhotographerLogin(e) {
-      e.preventDefault();
-      const form = e.target;
-      const photographerName = form.photographer_name.value;
-      const accessCode = form.access_code.value;
-      
-      // Simple security: access code must match photographer name first 3 letters
-      const validCode = photographerName.substring(0, 3) + '123';
-      
-      if (accessCode !== validCode) {
-        showError('❌ كود الوصول غير صحيح!');
-        return;
-      }
-      
-      currentPhotographerSession = photographerName;
-      closeModal();
-      openStaffPortal(photographerName);
-    }
-
-    function openStaffPortal(staffName) {
-      // Security Check: Ensure only the logged-in photographer can view their data
-      if (currentPhotographerSession && currentPhotographerSession !== staffName) {
-        showError('🔒 لا يمكنك الوصول لبيانات مصور آخر!');
-        return;
-      }
-
-      const staff = staffMembers.find(s => s.staff_name === staffName);
-      if (!staff) return;
-
-      const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staffName));
-      const withdrawals = allData.filter(w => w.type === 'withdrawal' && w.staff_name === staffName);
-      const messages = allData.filter(m => m.type === 'message' && m.message_to === staffName);
-      const totalWithdrawn = withdrawals.reduce((acc, curr) => acc + (Number(curr.withdrawal_amount) || 0), 0);
-      const totalEarnings = staffBookings.length * staff.staff_pay;
-      const remaining = totalEarnings - totalWithdrawn;
-      
-      // Categorize bookings
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const upcomingBookings = staffBookings.filter(b => new Date(b.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
-      const pastBookings = staffBookings.filter(b => new Date(b.date) < today).sort((a, b) => new Date(b.date) - new Date(a.date)).reverse();
-
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-4xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
-          <button onclick="closeModal(); currentPhotographerSession = null;" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-
-          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-8 rounded-2xl mb-6 text-center border-2 border-blue-400">
-            <div class="flex items-center justify-center gap-2 mb-2">
-              <i data-lucide="shield" class="w-6 h-6"></i>
-              <span class="text-xs font-bold bg-blue-800 px-3 py-1 rounded-full">منطقة آمنة</span>
-            </div>
-            <h2 class="text-3xl font-bold mb-2">${staff.staff_name}</h2>
-            <p class="text-blue-100">${staff.staff_role} • ${staff.staff_pay} ج.م لكل حجز</p>
-          </div>
-
-          <!-- Statistics Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-green-500">
-              <p class="text-xs text-slate-600 font-semibold mb-1">إجمالي المستحقات</p>
-              <h3 class="text-2xl font-bold text-green-600">${totalEarnings}</h3>
-              <p class="text-xs text-slate-500 mt-1">ج.م</p>
-            </div>
-            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-blue-500">
-              <p class="text-xs text-slate-600 font-semibold mb-1">الحجوزات</p>
-              <h3 class="text-2xl font-bold text-blue-600">${staffBookings.length}</h3>
-              <p class="text-xs text-slate-500 mt-1">${upcomingBookings.length} قادمة</p>
-            </div>
-            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-amber-500">
-              <p class="text-xs text-slate-600 font-semibold mb-1">تم السحب</p>
-              <h3 class="text-2xl font-bold text-amber-600">${totalWithdrawn}</h3>
-              <p class="text-xs text-slate-500 mt-1">ج.م</p>
-            </div>
-            <div class="glass-card p-4 rounded-2xl shadow-lg border-l-4 border-purple-500">
-              <p class="text-xs text-slate-600 font-semibold mb-1">رصيدك</p>
-              <h3 class="text-2xl font-bold text-purple-600">${remaining}</h3>
-              <p class="text-xs text-slate-500 mt-1">ج.م متاح</p>
-            </div>
-          </div>
-
-          <!-- Tabs -->
-          <div class="flex gap-2 mb-6 border-b border-slate-200 overflow-x-auto">
-            <button onclick="switchPhotographerTab('bookings')" id="photo-tab-bookings" class="px-4 py-3 font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">📅 المواعيد</button>
-            <button onclick="switchPhotographerTab('messages')" id="photo-tab-messages" class="px-4 py-3 font-bold text-slate-600 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap">💬 الرسائل (${messages.length})</button>
-            <button onclick="switchPhotographerTab('history')" id="photo-tab-history" class="px-4 py-3 font-bold text-slate-600 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap">📊 السجل</button>
-            <button onclick="switchPhotographerTab('account')" id="photo-tab-account" class="px-4 py-3 font-bold text-slate-600 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap">⚙️ الحساب</button>
-          </div>
-
-          <!-- Bookings Tab -->
-          <div id="photo-content-bookings" class="space-y-4">
-            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-              <i data-lucide="calendar-check" class="w-5 h-5 text-blue-600"></i>
-              المواعيد القادمة
-            </h3>
-            <div class="space-y-3">
-              ${upcomingBookings.length > 0 ? upcomingBookings.map(b => `
-                <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 rounded-r-lg hover:shadow-md transition-all">
-                  <div class="flex justify-between items-start mb-2">
-                    <div>
-                      <div class="font-bold text-slate-900 text-lg">${b.client_name}</div>
-                      <div class="text-sm text-slate-600 mt-1">📱 ${b.phone}</div>
-                    </div>
-                    <span class="px-3 py-1 bg-blue-600 text-white rounded-full font-bold text-xs">قادم</span>
-                  </div>
-                  <div class="grid grid-cols-2 gap-2 mt-3">
-                    <div class="text-xs">
-                      <span class="text-slate-600">📅 التاريخ</span>
-                      <div class="font-bold text-slate-900">${b.date}</div>
-                    </div>
-                    <div class="text-xs">
-                      <span class="text-slate-600">🎬 النوع</span>
-                      <div class="font-bold text-slate-900">${b.package || 'عام'}</div>
-                    </div>
-                    <div class="text-xs col-span-2">
-                      <span class="text-slate-600">📍 العنوان</span>
-                      <div class="font-bold text-slate-900">${b.address}</div>
-                    </div>
-                  </div>
-                </div>
-              `).join('') : '<div class="p-8 text-center bg-slate-50 rounded-xl"><i data-lucide="calendar-off" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i><p class="text-slate-400 font-semibold">لا توجد مواعيد قادمة</p></div>'}
-            </div>
-          </div>
-
-          <!-- Messages Tab -->
-          <div id="photo-content-messages" class="hidden space-y-4">
-            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-              <i data-lucide="message-square" class="w-5 h-5 text-purple-600"></i>
-              الرسائل والإشعارات
-            </h3>
-            <div class="space-y-3 max-h-96 overflow-y-auto">
-              ${messages.length > 0 ? messages.map(m => `
-                <div class="p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-500 rounded-r-lg">
-                  <div class="flex justify-between items-start mb-2">
-                    <span class="font-bold text-slate-900">${m.message_from}</span>
-                    <span class="text-xs text-slate-500">${m.message_date || 'اليوم'}</span>
-                  </div>
-                  <p class="text-slate-700 mb-2">${m.message_content}</p>
-                  ${m.message_type === 'excuse_request' ? '<span class="inline-block px-3 py-1 bg-amber-200 text-amber-800 rounded-full font-bold text-xs">طلب اعتذار</span>' : ''}
-                  ${m.message_type === 'warning' ? '<span class="inline-block px-3 py-1 bg-red-200 text-red-800 rounded-full font-bold text-xs">⚠️ تنبيه</span>' : ''}
-                </div>
-              `).join('') : '<div class="p-8 text-center bg-slate-50 rounded-xl"><i data-lucide="mail-open" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i><p class="text-slate-400 font-semibold">لا توجد رسائل</p></div>'}
-            </div>
-            <button onclick="openExcuseRequestModal('${staffName}')" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold transition-all flex items-center justify-center gap-2">
-              <i data-lucide="alert-circle" class="w-5 h-5"></i> طلب اعتذار أو إجازة
-            </button>
-          </div>
-
-          <!-- History Tab -->
-          <div id="photo-content-history" class="hidden space-y-4">
-            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-              <i data-lucide="history" class="w-5 h-5 text-green-600"></i>
-              السجل الكامل للحجوزات
-            </h3>
-            <div class="space-y-2 max-h-96 overflow-y-auto">
-              ${pastBookings.length > 0 ? pastBookings.map(b => `
-                <div class="p-3 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg text-sm">
-                  <div class="flex justify-between items-start">
-                    <div>
-                      <span class="font-bold text-slate-900">${b.client_name}</span>
-                      <div class="text-xs text-slate-500 mt-1">📅 ${b.date}</div>
-                    </div>
-                    <span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded text-xs font-bold">منتهي</span>
-                  </div>
-                </div>
-              `).join('') : '<p class="text-center py-8 text-slate-400">لا توجد حجوزات سابقة</p>'}
-            </div>
-          </div>
-
-          <!-- Account Tab -->
-          <div id="photo-content-account" class="hidden space-y-4">
-            <h3 class="font-bold text-lg text-slate-800 mb-4">معلومات الحساب والسحوبات</h3>
+        const StaffPortal = ({ staffId, data, onBack }) => {
+            const member = data.staff.find(s => s.id === staffId);
+            const myWork = data.logs.filter(l => l.staff?.some(s => s.id === staffId));
+            const totalEarned = myWork.reduce((s, l) => s + (l.staff.find(x => x.id === staffId)?.rate || 0), 0);
             
-            <div class="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-2xl border border-green-300 mb-4">
-              <h4 class="font-bold text-green-900 mb-3">السحوبات السابقة</h4>
-              <div class="space-y-2">
-                ${withdrawals.length > 0 ? withdrawals.map(w => `
-                  <div class="flex justify-between items-center p-3 bg-white rounded-lg">
-                    <div>
-                      <div class="font-bold text-slate-900">${w.withdrawal_amount} ج.م</div>
-                      <div class="text-xs text-slate-500">${w.withdrawal_date}</div>
+            const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            const hasJobTomorrow = data.bookings.find(b => b.date === tomorrowStr);
+
+            if (!member) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse">جاري التحقق من الهوية...</div>;
+
+            return (
+                <div className="min-h-screen bg-slate-50">
+                    <header className="bg-slate-900 p-8 text-white rounded-b-[3rem] shadow-xl">
+                        <div className="max-w-xl mx-auto flex justify-between items-center">
+                            <div>
+                                <h1 className="text-2xl font-black text-emerald-400">مرحباً {member.name} 🎥</h1>
+                                <p className="text-xs opacity-60">بوابة المصور الشخصية</p>
+                            </div>
+                            <button onClick={onBack} className="bg-slate-800/50 hover:bg-red-500 transition-colors p-3 rounded-2xl text-xs font-bold">تسجيل خروج</button>
+                        </div>
+                    </header>
+
+                    <div className="max-w-xl mx-auto p-6 -mt-8 space-y-6">
+                        {hasJobTomorrow && (
+                            <div className="bg-emerald-600 text-white p-6 rounded-3xl shadow-xl animate-pop">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="bg-white/20 p-2 rounded-lg">📢</div>
+                                    <h3 className="font-black text-lg">لديك عمل غداً!</h3>
+                                </div>
+                                <div className="space-y-1 opacity-90 text-sm">
+                                    <p>📍 <strong>الموقع:</strong> {hasJobTomorrow.location}</p>
+                                    <p>🏠 <strong>العنوان:</strong> {hasJobTomorrow.address}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white p-6 rounded-3xl shadow-sm text-center border border-slate-100">
+                                <p className="text-slate-400 text-[10px] font-bold mb-1">إجمالي المستحقات</p>
+                                <h4 className="text-2xl font-black text-slate-800">{totalEarned} <span className="text-xs">ج.م</span></h4>
+                            </div>
+                            <div className="bg-white p-6 rounded-3xl shadow-sm text-center border border-slate-100">
+                                <p className="text-slate-400 text-[10px] font-bold mb-1">أيام العمل المنفذة</p>
+                                <h4 className="text-2xl font-black text-slate-800">{myWork.length} <span className="text-xs">يوم</span></h4>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 overflow-hidden">
+                            <h3 className="font-black mb-4 flex items-center gap-2">📑 سجل العمليات السابقة</h3>
+                            {myWork.length === 0 ? (
+                                <p className="text-center py-10 text-slate-300 text-sm italic">لا يوجد سجل عمليات حالياً</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {myWork.map(w => (
+                                        <div key={w.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <div>
+                                                <p className="font-bold text-slate-800">{w.date}</p>
+                                                <p className="text-[10px] text-slate-400">{w.location}</p>
+                                            </div>
+                                            <div className="font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl text-sm">
+                                                +{w.staff.find(x => x.id === staffId)?.rate}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <span class="px-3 py-1 rounded-full font-bold text-xs ${w.withdrawal_status === 'completed' ? 'bg-green-200 text-green-800' : 'bg-amber-200 text-amber-800'}">
-                      ${w.withdrawal_status === 'completed' ? '✅ مكتمل' : '⏳ قيد الانتظار'}
-                    </span>
-                  </div>
-                `).join('') : '<p class="text-center py-6 text-slate-600">لم تقدم طلبات سحب بعد</p>'}
-              </div>
-            </div>
-
-            <button onclick="openWithdrawalModal('${staffName}')" class="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg">
-              <i data-lucide="credit-card" class="w-5 h-5"></i> طلب سحب نقدي جديد
-            </button>
-
-            <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 text-sm">
-              <p class="text-blue-900 font-semibold mb-2">⚠️ معلومات الأمان:</p>
-              <ul class="text-blue-800 space-y-1 text-xs">
-                <li>✓ جلستك آمنة وسرية تماماً</li>
-                <li>✓ لا أحد يستطيع رؤية بيانات حسابك سوى الإدارة</li>
-                <li>✓ سيتم تسجيل خروجك عند إغلاق هذه النافذة</li>
-              </ul>
-            </div>
-          </div>
-
-          <button onclick="closeModal(); currentPhotographerSession = null;" class="w-full mt-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-            <i data-lucide="log-out" class="w-5 h-5"></i> تسجيل خروج آمن
-          </button>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-
-    function switchPhotographerTab(tab) {
-      const tabs = ['bookings', 'messages', 'history', 'account'];
-      tabs.forEach(t => {
-        const tabBtn = document.getElementById(`photo-tab-${t}`);
-        const content = document.getElementById(`photo-content-${t}`);
-        if (tabBtn) tabBtn.classList.remove('text-blue-600', 'border-blue-600');
-        if (tabBtn) tabBtn.classList.add('text-slate-600', 'border-transparent');
-        if (content) content.classList.add('hidden');
-      });
-      
-      const activeBtn = document.getElementById(`photo-tab-${tab}`);
-      const activeContent = document.getElementById(`photo-content-${tab}`);
-      if (activeBtn) {
-        activeBtn.classList.remove('text-slate-600', 'border-transparent');
-        activeBtn.classList.add('text-blue-600', 'border-blue-600');
-      }
-      if (activeContent) activeContent.classList.remove('hidden');
-    }
-
-    function openExcuseRequestModal(staffName) {
-      const modal = document.getElementById('modal-container');
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in" style="z-index: 51;">
-          <button onclick="openStaffPortal('${staffName}')" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">📝 طلب اعتذار أو إجازة</h2>
-          <form onsubmit="handleExcuseRequest(event, '${staffName}')" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">نوع الطلب</label>
-              <select name="excuse_type" required class="w-full p-3 rounded-xl border bg-slate-50 font-bold">
-                <option value="">-- اختر --</option>
-                <option value="absence">غياب يوم معين</option>
-                <option value="vacation">إجازة</option>
-                <option value="urgent">ظرف طارئ</option>
-                <option value="other">أخرى</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">التاريخ أو الفترة</label>
-              <input type="text" name="excuse_date" required class="w-full p-3 rounded-xl border bg-slate-50" placeholder="مثال: 15 يناير أو 15-20 يناير">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">التفاصيل</label>
-              <textarea name="excuse_reason" required class="w-full p-3 rounded-xl border bg-slate-50 h-24" placeholder="اشرح السبب بإيجاز..."></textarea>
-            </div>
-            <div class="flex gap-3 pt-4 border-t">
-              <button type="button" onclick="openStaffPortal('${staffName}')" class="flex-1 px-4 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="flex-1 px-4 py-3 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-700 transition-all">إرسال الطلب</button>
-            </div>
-          </form>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-
-    async function handleExcuseRequest(e, staffName) {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-      
-      const data = {
-        type: 'message',
-        message_from: staffName,
-        message_to: 'إدارة',
-        message_type: 'excuse_request',
-        message_content: `${formData.get('excuse_type')}: ${formData.get('excuse_date')} - ${formData.get('excuse_reason')}`,
-        message_date: new Date().toISOString().split('T')[0]
-      };
-
-      if (!window.dataSdk || !sdkReady) {
-        showError('⚠️ قاعدة البيانات غير متاحة حالياً');
-        return;
-      }
-
-      const result = await window.dataSdk.create(data);
-      if (result.isOk) {
-        showSuccess('✅ تم إرسال طلبك بنجاح! ستتم مراجعته من قبل الإدارة');
-        setTimeout(() => openStaffPortal(staffName), 2000);
-      } else {
-        showError('خطأ في الإرسال');
-      }
-    }
-
-    function openPhotographerPortal(staffName) {
-      openStaffPortal(staffName);
-    }
-
-    function copyPortalLink(portalLink) {
-      const link = `${window.location.origin}?portal=${portalLink}`;
-      const textarea = document.createElement('textarea');
-      textarea.value = link;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      showSuccess('تم نسخ الرابط بنجاح!');
-    }
-
-    function openWithdrawalModal(staffName) {
-      const staff = staffMembers.find(s => s.staff_name === staffName);
-      if (!staff) return;
-
-      const staffBookings = allData.filter(b => b.type === 'booking' && b.photographers_list?.includes(staffName));
-      const withdrawals = allData.filter(w => w.type === 'withdrawal' && w.staff_name === staffName);
-      const totalWithdrawn = withdrawals.reduce((acc, curr) => acc + (Number(curr.withdrawal_amount) || 0), 0);
-      const totalEarnings = staffBookings.length * staff.staff_pay;
-      const available = totalEarnings - totalWithdrawn;
-
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-2 text-slate-800">طلب سحب نقدي</h2>
-          <p class="text-sm text-slate-500 mb-6">متاح للسحب: <span class="font-bold text-green-600">${available} ج.م</span></p>
-          
-          <form onsubmit="handleWithdrawalRequest(event, '${staffName}')" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">مبلغ السحب (ج.م)</label>
-              <input required type="number" name="withdrawal_amount" max="${available}" class="w-full p-3 rounded-xl border bg-slate-50" placeholder="أدخل المبلغ المطلوب سحبه">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">طريقة الدفع</label>
-              <select name="payment_method" required class="w-full p-3 rounded-xl border bg-slate-50">
-                <option value="">-- اختر طريقة الدفع --</option>
-                <option value="cash">نقدي</option>
-                <option value="bank_transfer">تحويل بنكي</option>
-                <option value="wallet">محفظة رقمية</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">ملاحظات إضافية</label>
-              <textarea name="notes" class="w-full p-3 rounded-xl border bg-slate-50 h-20" placeholder="أضف أي ملاحظات..."></textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">طلب السحب</button>
-            </div>
-          </form>
-        </div>
-      `;
-    }
-
-    function closeModal() {
-      document.getElementById('modal-container').classList.add('hidden');
-    }
-
-    function previousMonth() {
-      calendarMonth--;
-      if (calendarMonth < 0) {
-        calendarMonth = 11;
-        calendarYear--;
-      }
-      renderCalendar(document.getElementById('main-content'));
-      lucide.createIcons();
-    }
-
-    function nextMonth() {
-      calendarMonth++;
-      if (calendarMonth > 11) {
-        calendarMonth = 0;
-        calendarYear++;
-      }
-      renderCalendar(document.getElementById('main-content'));
-      lucide.createIcons();
-    }
-
-    function changeMonth(monthValue) {
-      calendarMonth = Number(monthValue);
-      renderCalendar(document.getElementById('main-content'));
-      lucide.createIcons();
-    }
-
-    function changeYear(yearValue) {
-      calendarYear = Number(yearValue);
-      renderCalendar(document.getElementById('main-content'));
-      lucide.createIcons();
-    }
-
-    function goToToday() {
-      calendarMonth = new Date().getMonth();
-      calendarYear = new Date().getFullYear();
-      renderCalendar(document.getElementById('main-content'));
-      lucide.createIcons();
-    }
-
-    function openClientDetails(bookingId) {
-      const booking = allData.find(b => b.type === 'booking' && b.__backendId === bookingId);
-      if (!booking) return;
-
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400 hover:text-slate-600 transition-all">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-
-          <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-2xl mb-6">
-            <h2 class="text-2xl font-bold mb-2">${booking.client_name}</h2>
-            <p class="text-blue-100">تفاصيل الحجز</p>
-          </div>
-
-          <!-- Client Information -->
-          <div class="space-y-6">
-            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-200">
-              <h3 class="font-bold text-blue-900 mb-4">بيانات العميل</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between items-start pb-3 border-b border-blue-200">
-                  <span class="text-slate-600 font-semibold">الاسم</span>
-                  <span class="font-bold text-slate-900">${booking.client_name}</span>
                 </div>
-                <div class="flex justify-between items-start pb-3 border-b border-blue-200">
-                  <span class="text-slate-600 font-semibold">رقم الهاتف</span>
-                  <a href="tel:${booking.phone}" class="font-bold text-blue-600 hover:underline flex items-center gap-2">
-                    <i data-lucide="phone" class="w-4 h-4"></i>
-                    ${booking.phone}
-                  </a>
-                </div>
-                <div class="flex justify-between items-start pb-3 border-b border-blue-200">
-                  <span class="text-slate-600 font-semibold">العنوان</span>
-                  <span class="font-bold text-slate-900 text-right">${booking.address}</span>
-                </div>
-                <div class="flex justify-between items-start">
-                  <span class="text-slate-600 font-semibold">الحالة</span>
-                  <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full font-bold text-xs">${booking.status || 'مؤكد'}</span>
-                </div>
-              </div>
-            </div>
+            );
+        };
 
-            <!-- Booking Details -->
-            <div class="bg-green-50 p-6 rounded-2xl border border-green-200">
-              <h3 class="font-bold text-green-900 mb-4">تفاصيل الحجز</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center pb-3 border-b border-green-200">
-                  <span class="text-slate-600 font-semibold">التاريخ</span>
-                  <span class="font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
-                    ${booking.date}
-                  </span>
-                </div>
-                <div class="flex justify-between items-center pb-3 border-b border-green-200">
-                  <span class="text-slate-600 font-semibold">القالب</span>
-                  <span class="font-bold text-slate-900">${booking.package || 'لم يتم التحديد'}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Payment Details -->
-            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200">
-              <h3 class="font-bold text-amber-900 mb-4">تفاصيل الدفع</h3>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center pb-3 border-b border-amber-200">
-                  <span class="text-slate-600 font-semibold">المبلغ الإجمالي</span>
-                  <span class="font-bold text-amber-900 text-lg">${booking.total_amount} ج.م</span>
-                </div>
-                <div class="flex justify-between items-center pb-3 border-b border-amber-200">
-                  <span class="text-slate-600 font-semibold">المدفوع</span>
-                  <span class="font-bold text-green-600 text-lg">${booking.paid_amount} ج.م</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-slate-600 font-semibold">المتبقي</span>
-                  <span class="font-bold text-red-600 text-lg">${booking.remaining_amount} ج.م</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Team -->
-            <div class="bg-purple-50 p-6 rounded-2xl border border-purple-200">
-              <h3 class="font-bold text-purple-900 mb-4">فريق التصوير</h3>
-              <div class="space-y-2">
-                ${booking.photographers_list ? booking.photographers_list.split(',').map(p => `
-                  <div class="p-3 bg-white border-l-4 border-purple-400 rounded-r-lg">
-                    <span class="font-bold text-slate-800">${p.trim()}</span>
-                  </div>
-                `).join('') : '<p class="text-slate-500">لم يتم تحديد فريق</p>'}
-              </div>
-            </div>
-
-            <button onclick="closeModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold transition-all mt-4">إغلاق</button>
-          </div>
-        </div>
-      `;
-      lucide.createIcons();
-    }
-
-    function updateBookingCalc() {
-      const total = Number(document.getElementById('total-amount')?.value || 0);
-      const paid = Number(document.getElementById('paid-amount')?.value || 0);
-      const remaining = total - paid;
-      const remainingEl = document.getElementById('remaining-amount');
-      if (remainingEl) remainingEl.value = remaining;
-    }
-
-    // HANDLERS
-    async function handleBooking(e) {
-      e.preventDefault();
-      
-      if (!window.dataSdk || !sdkReady) {
-        showError('⚠️ قاعدة البيانات غير متاحة حالياً. حاول مرة أخرى أو حدّث الصفحة.');
-        return;
-      }
-
-      const form = e.target;
-      const formData = new FormData(form);
-      const photographers = Array.from(form.querySelectorAll('input[name="photographers"]:checked')).map(cb => cb.value).join(', ');
-      
-      const data = {
-        type: 'booking',
-        client_name: formData.get('client_name'),
-        phone: formData.get('phone'),
-        address: formData.get('address'),
-        date: formData.get('date'),
-        venue: 'عام',
-        package: formData.get('package'),
-        total_amount: Number(formData.get('total_amount')),
-        paid_amount: Number(formData.get('paid_amount')),
-        remaining_amount: Number(formData.get('total_amount')) - Number(formData.get('paid_amount')),
-        photographers_list: photographers,
-        status: 'مؤكد'
-      };
-
-      if (allData.length >= 999) {
-        showError('❌ تم الوصول للحد الأقصى من السجلات (999)');
-        return;
-      }
-
-      try {
-        const result = await window.dataSdk.create(data);
-        if (result.isOk) {
-          closeModal();
-          showSuccess('✅ تم حفظ الحجز بنجاح!');
-        } else {
-          showError('❌ خطأ: ' + (result.error?.message || 'فشل حفظ البيانات'));
-        }
-      } catch (err) {
-        showError('❌ خطأ: ' + err.message);
-      }
-    }
-
-    async function handleDailyLog(e) {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-      const photographers = Array.from(form.querySelectorAll('input[name="photographer"]:checked')).map(cb => cb.value).join(', ');
-      
-      const data = {
-        type: 'daily-log',
-        log_date: formData.get('log_date'),
-        venue_name: formData.get('venue_name'),
-        venue_revenue: Number(formData.get('venue_revenue')),
-        photographer_list: photographers
-      };
-
-      if (!window.dataSdk || !sdkReady) {
-        showError('⚠️ قاعدة البيانات غير متاحة حالياً');
-        return;
-      }
-
-      const result = await window.dataSdk.create(data);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم تسجيل اليومية بنجاح!');
-      } else {
-        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
-      }
-    }
-
-    async function handleAddStaff(e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      
-      const data = {
-        type: 'staff',
-        staff_name: formData.get('staff_name'),
-        staff_role: formData.get('staff_role'),
-        staff_pay: Number(formData.get('staff_pay')),
-        staff_slug: formData.get('staff_name').toLowerCase().replace(/\s+/g, '-')
-      };
-
-      if (!window.dataSdk || !sdkReady) {
-        showError('⚠️ قاعدة البيانات غير متاحة حالياً');
-        return;
-      }
-
-      const result = await window.dataSdk.create(data);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم إضافة المصور بنجاح!');
-      } else {
-        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
-      }
-    }
-
-    async function handleAddPackage(e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      
-      const data = {
-        type: 'package',
-        package_name: formData.get('package_name'),
-        package_desc: formData.get('package_desc')
-      };
-
-      if (!window.dataSdk || !sdkReady) {
-        showError('⚠️ قاعدة البيانات غير متاحة حالياً');
-        return;
-      }
-
-      const result = await window.dataSdk.create(data);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم إضافة القالب بنجاح!');
-        renderUI();
-      } else {
-        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
-      }
-    }
-
-    async function handleAddEquipment(e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      
-      const data = {
-        type: 'equipment',
-        equipment_name: formData.get('equipment_name'),
-        equipment_desc: formData.get('equipment_desc'),
-        equipment_price: Number(formData.get('equipment_price'))
-      };
-
-      if (!window.dataSdk || !sdkReady) {
-        showError('⚠️ قاعدة البيانات غير متاحة حالياً');
-        return;
-      }
-
-      const result = await window.dataSdk.create(data);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم إضافة المعدة بنجاح!');
-        renderUI();
-      } else {
-        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
-      }
-    }
-
-    async function handleWithdrawalRequest(e, staffName) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      
-      const data = {
-        type: 'withdrawal',
-        staff_name: staffName,
-        withdrawal_amount: Number(formData.get('withdrawal_amount')),
-        withdrawal_date: new Date().toISOString().split('T')[0],
-        withdrawal_status: 'pending',
-        payment_method: formData.get('payment_method'),
-        notes: formData.get('notes')
-      };
-
-      if (!window.dataSdk || !sdkReady) {
-        showError('⚠️ قاعدة البيانات غير متاحة حالياً');
-        return;
-      }
-
-      const result = await window.dataSdk.create(data);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم تقديم طلب السحب بنجاح! سيتم مراجعته من قبل الإدارة.');
-      } else {
-        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
-      }
-    }
-
-    async function deleteRecord(id) {
-      if (!window.dataSdk) return;
-      const record = allData.find(d => d.__backendId === id);
-      if (record) {
-        const result = await window.dataSdk.delete(record);
-        if (result.isOk) {
-          showSuccess('تم الحذف بنجاح!');
-        }
-      }
-    }
-
-    function openEditStaffModal(staffId) {
-      const staff = staffMembers.find(s => s.__backendId === staffId);
-      if (!staff) return;
-
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">تعديل بيانات المصور</h2>
-          <form onsubmit="handleEditStaff(event, '${staffId}')" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">اسم المصور</label>
-              <input required name="staff_name" value="${staff.staff_name}" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">الدور</label>
-              <input required name="staff_role" value="${staff.staff_role}" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">قيمة الحجز (ج.م)</label>
-              <input required type="number" name="staff_pay" value="${staff.staff_pay}" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">حفظ التعديلات</button>
-            </div>
-          </form>
-        </div>
-      `;
-    }
-
-    async function handleEditStaff(e, staffId) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const staff = staffMembers.find(s => s.__backendId === staffId);
-      if (!staff) return;
-
-      const updatedStaff = {
-        ...staff,
-        staff_name: formData.get('staff_name'),
-        staff_role: formData.get('staff_role'),
-        staff_pay: Number(formData.get('staff_pay'))
-      };
-
-      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
-
-      const result = await window.dataSdk.update(updatedStaff);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم التعديل بنجاح!');
-      } else {
-        showError('خطأ: ' + (result.error?.message || 'خطأ غير معروف'));
-      }
-    }
-
-    function openEditPackageModal(packageId) {
-      const pkg = allData.find(d => d.type === 'package' && d.__backendId === packageId);
-      if (!pkg) return;
-
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">تعديل القالب</h2>
-          <form onsubmit="handleEditPackage(event, '${packageId}')" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">اسم القالب</label>
-              <input required name="package_name" value="${pkg.package_name}" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">الوصف</label>
-              <textarea required name="package_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24">${pkg.package_desc}</textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold">حفظ</button>
-            </div>
-          </form>
-        </div>
-      `;
-    }
-
-    async function handleEditPackage(e, packageId) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const pkg = allData.find(d => d.type === 'package' && d.__backendId === packageId);
-      if (!pkg) return;
-
-      const updatedPkg = {
-        ...pkg,
-        package_name: formData.get('package_name'),
-        package_desc: formData.get('package_desc')
-      };
-
-      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
-
-      const result = await window.dataSdk.update(updatedPkg);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم التعديل بنجاح!');
-      } else {
-        showError('خطأ');
-      }
-    }
-
-    function openEditEquipmentModal(equipmentId) {
-      const equip = allData.find(d => d.type === 'equipment' && d.__backendId === equipmentId);
-      if (!equip) return;
-
-      const modal = document.getElementById('modal-container');
-      modal.classList.remove('hidden');
-      
-      modal.innerHTML = `
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative fade-in">
-          <button onclick="closeModal()" class="absolute left-6 top-6 text-slate-400">
-            <i data-lucide="x" class="w-6 h-6"></i>
-          </button>
-          <h2 class="text-2xl font-bold mb-6 text-slate-800">تعديل المعدة</h2>
-          <form onsubmit="handleEditEquipment(event, '${equipmentId}')" class="space-y-4">
-            <div>
-              <label class="block text-sm font-bold mb-2">اسم المعدة</label>
-              <input required name="equipment_name" value="${equip.equipment_name}" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">الوصف</label>
-              <textarea required name="equipment_desc" class="w-full p-3 rounded-xl border bg-slate-50 h-24">${equip.equipment_desc}</textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-bold mb-2">السعر</label>
-              <input required type="number" name="equipment_price" value="${equip.equipment_price}" class="w-full p-3 rounded-xl border bg-slate-50">
-            </div>
-            <div class="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold">إلغاء</button>
-              <button type="submit" class="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold">حفظ</button>
-            </div>
-          </form>
-        </div>
-      `;
-    }
-
-    async function handleEditEquipment(e, equipmentId) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const equip = allData.find(d => d.type === 'equipment' && d.__backendId === equipmentId);
-      if (!equip) return;
-
-      const updatedEquip = {
-        ...equip,
-        equipment_name: formData.get('equipment_name'),
-        equipment_desc: formData.get('equipment_desc'),
-        equipment_price: Number(formData.get('equipment_price'))
-      };
-
-      if (!window.dataSdk) return showError('خطأ: قاعدة البيانات غير متاحة');
-
-      const result = await window.dataSdk.update(updatedEquip);
-      if (result.isOk) {
-        closeModal();
-        showSuccess('تم التعديل بنجاح!');
-      } else {
-        showError('خطأ');
-      }
-    }
-
-    function showError(msg) {
-      const el = document.createElement('div');
-      el.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 font-bold toast';
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 4000);
-    }
-
-    function showSuccess(msg) {
-      const el = document.createElement('div');
-      el.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 font-bold toast';
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 3000);
-    }
-
-    window.addEventListener('DOMContentLoaded', initApp);
-  </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e0f6117f56ce1d1',t:'MTc3NDI4OTI4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>
