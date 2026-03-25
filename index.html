@@ -104,7 +104,7 @@
                     <h2 class="text-xl font-bold text-emerald-700 mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-calendar-days"></i> الحجوزات القادمة
                     </h2>
-                    <div id="bookingsList" class="space-y-3"></div>
+                    <div id="bookingsList" class="space-y-4"></div> <!-- زيادة المسافة بين الكروت -->
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border">
                     <h2 class="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
@@ -146,7 +146,7 @@
             <h3 class="font-bold mb-3 text-gray-700">مواعيدك القادمة</h3>
             <div id="pv_upcomingList" class="space-y-3 mb-6"></div>
 
-            <h3 class="font-bold mb-3 text-gray-700">سجل العمل</h3>
+            <h3 class="font-bold mb-3 text-gray-700">سجل العمل (يومياتك)</h3>
             <div id="pv_historyList" class="space-y-3"></div>
         </div>
     </div>
@@ -232,7 +232,10 @@
                 <button onclick="closeModal('bookingModal')">&times;</button>
             </div>
             <div class="p-6 space-y-4 overflow-y-auto">
-                <input type="text" id="b_name" placeholder="اسم العميل" class="w-full border p-2 rounded">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="b_name" placeholder="اسم العميل" class="border p-2 rounded w-full">
+                    <input type="tel" id="b_phone" placeholder="رقم الهاتف (مهم للفاتورة)" class="border p-2 rounded w-full">
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <input type="date" id="b_date" class="border p-2 rounded">
                     <select id="b_hall" class="border p-2 rounded">
@@ -317,13 +320,11 @@
         // --- مزامنة Firebase ---
         window.saveData = async function() {
             try {
-                // حفظ البيانات في السحابة
                 await setDoc(doc(db, "weddingSystem", "mainData"), state);
                 updateUI();
             } catch (error) {
                 console.error("خطأ في حفظ البيانات في السحابة: ", error);
                 window.showToast("خطأ في المزامنة. يرجى التحقق من الصلاحيات.");
-                // كبديل مؤقت، يتم الحفظ محلياً
                 localStorage.setItem('weddingSystemData', JSON.stringify(state));
                 updateUI();
             }
@@ -331,14 +332,11 @@
 
         window.loadData = async function() {
             try {
-                // مصادقة مجهولة للقراءة والكتابة
                 await signInAnonymously(auth);
                 
-                // الاستماع للتغيرات اللحظية من السحابة
                 onSnapshot(doc(db, "weddingSystem", "mainData"), (docSnap) => {
                     if (docSnap.exists()) {
                         state = docSnap.data();
-                        // حماية للمصفوفات الفارغة
                         if(!state.templates) state.templates = [];
                         if(!state.halls) state.halls = [];
                         if(!state.photographers) state.photographers = [];
@@ -348,16 +346,14 @@
                         
                         updateUI();
                     } else {
-                        // لأول مرة: تحقق لو فيه داتا سابقة في اللوكال ستورج نرفعها
                         const localData = localStorage.getItem('weddingSystemData');
                         if (localData) {
                             state = JSON.parse(localData);
                         }
-                        window.saveData(); // رفع الداتا لأول مرة
+                        window.saveData(); 
                     }
                 }, (error) => {
                     console.error("خطأ في الاستماع للبيانات: ", error);
-                    // في حالة انقطاع الانترنت نقرأ محلياً
                     const d = localStorage.getItem('weddingSystemData');
                     if(d) state = JSON.parse(d);
                     updateUI();
@@ -470,8 +466,13 @@
             `).join('');
             selectedBookingPhotos = [];
             
+            document.getElementById('b_name').value = '';
+            document.getElementById('b_phone').value = ''; // تصفير الهاتف
+            document.getElementById('b_date').value = '';
+            document.getElementById('b_address').value = '';
             document.getElementById('b_services').value = '';
             document.getElementById('b_price').value = '';
+            
             const tplList = document.getElementById('bookingTemplatesList');
             if(state.templates.length === 0) {
                 tplList.innerHTML = `<span class="text-xs text-gray-500">لا توجد قوالب. يمكنك إضافتها من الإعدادات.</span>`;
@@ -515,10 +516,19 @@
         }
 
         window.saveBooking = function() {
+            const name = document.getElementById('b_name').value;
+            const date = document.getElementById('b_date').value;
+            
+            if(!name || !date) {
+                window.showToast("يرجى إدخال اسم العميل وتاريخ الحجز");
+                return;
+            }
+
             const b = {
                 id: Date.now(),
-                name: document.getElementById('b_name').value,
-                date: document.getElementById('b_date').value,
+                name: name,
+                phone: document.getElementById('b_phone').value, // حفظ الهاتف
+                date: date,
                 hallId: document.getElementById('b_hall').value,
                 address: document.getElementById('b_address').value,
                 services: document.getElementById('b_services').value,
@@ -564,13 +574,14 @@
                 return mMatch && yMatch;
             });
 
+            // ترتيب الحجوزات حسب التاريخ (الأقرب أولاً)
             const filteredBookings = state.bookings.filter(b => {
                 if(!b.date) return true;
                 const d = new Date(b.date);
                 const mMatch = filterMonth === 'all' || (d.getMonth() + 1).toString() === filterMonth;
                 const yMatch = filterYear === 'all' || d.getFullYear().toString() === filterYear;
                 return mMatch && yMatch;
-            });
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
             const totalIncome = filteredRecords.reduce((sum, r) => sum + r.income, 0);
             const totalSalaries = filteredRecords.reduce((sum, r) => sum + r.photographers.reduce((s, p) => s + p.rate, 0), 0);
@@ -631,16 +642,30 @@
                 const addressText = [hallName, b.address].filter(Boolean).join(' - ');
                 const servicesHtml = b.services ? `<div class="mt-2 text-xs text-indigo-700 bg-indigo-50 p-2 rounded border border-indigo-100"><i class="fa-solid fa-clipboard-check ml-1"></i>${b.services.replace(/\n/g, '<br>')}</div>` : '';
                 const priceHtml = b.price ? `<div class="mt-2 inline-block bg-green-100 text-green-800 px-2 py-1 rounded font-bold text-xs"><i class="fa-solid fa-money-bill-wave ml-1"></i>${b.price} ج.م</div>` : '';
+                const phoneHtml = b.phone ? `<span class="text-xs text-gray-500 ml-2"><i class="fa-solid fa-phone ml-1"></i>${b.phone}</span>` : '';
                 
+                // تجهيز بيانات الفاتورة للواتساب والتقويم
+                const bookingDataStr = encodeURIComponent(JSON.stringify(b));
+
                 return `
-                <div class="bg-gray-50 p-3 rounded-lg border flex justify-between items-start">
+                <div class="bg-gray-50 p-3 rounded-lg border flex flex-col sm:flex-row justify-between items-start gap-4">
                     <div class="flex-1">
-                        <div class="font-bold text-sm text-emerald-800">${b.name}</div>
+                        <div class="font-bold text-sm text-emerald-800">${b.name} ${phoneHtml}</div>
                         <div class="text-xs text-gray-600 mt-1"><i class="fa-regular fa-calendar ml-1"></i>${b.date} | <i class="fa-solid fa-location-dot ml-1"></i>${addressText}</div>
                         ${servicesHtml}
                         ${priceHtml}
                     </div>
-                    <button onclick="deleteBooking(${b.id})" class="text-red-500 text-sm mr-2 p-2 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>
+                    <div class="flex gap-2 self-end sm:self-start mt-2 sm:mt-0">
+                        <button onclick="sendInvoiceWhatsApp('${bookingDataStr}')" class="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition" title="إرسال فاتورة واتساب">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </button>
+                        <button onclick="addToGoogleCalendar('${bookingDataStr}')" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition" title="إضافة لتقويم جوجل">
+                            <i class="fa-regular fa-calendar-plus"></i>
+                        </button>
+                        <button onclick="deleteBooking(${b.id})" class="text-red-500 p-2 hover:bg-red-50 rounded border border-red-100" title="حذف الحجز">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
                 `;
             }).join('');
@@ -675,6 +700,70 @@
             }).join('');
         }
 
+        // --- وظائف الفاتورة وتقويم جوجل ---
+        window.sendInvoiceWhatsApp = function(bookingDataStr) {
+            const b = JSON.parse(decodeURIComponent(bookingDataStr));
+            const hallName = b.hallId ? (state.halls.find(h => h.id == b.hallId)?.name || '') : '';
+            const location = [hallName, b.address].filter(Boolean).join(' - ');
+            
+            let msg = `*مرحباً ${b.name}* 🌟\n\n`;
+            msg += `تم تأكيد حجزك بنجاح، إليك تفاصيل الفاتورة:\n`;
+            msg += `━━━━━━━━━━━━━━━\n`;
+            msg += `📅 *التاريخ:* ${b.date}\n`;
+            if(location) msg += `📍 *المكان:* ${location}\n`;
+            if(b.services) msg += `\n📋 *الخدمات المطلوبة:*\n${b.services}\n`;
+            msg += `━━━━━━━━━━━━━━━\n`;
+            if(b.price) msg += `💰 *إجمالي التكلفة:* ${b.price} ج.م\n`;
+            msg += `\nشكراً لاختيارك لنا! 🎥✨`;
+
+            const encodedMsg = encodeURIComponent(msg);
+            let whatsappUrl = `https://wa.me/?text=${encodedMsg}`;
+            
+            // إذا كان هناك رقم هاتف، قم بتوجيه الرسالة إليه مباشرة
+            if (b.phone) {
+                // إزالة الأصفار في البداية وإضافة كود البلد إذا لزم الأمر (مثال لمصر: +20)
+                let phone = b.phone.replace(/^0+/, '');
+                // يمكنك إضافة 20 للرقم المصري هنا إذا أردت: phone = '20' + phone;
+                whatsappUrl = `https://wa.me/${phone}?text=${encodedMsg}`;
+            }
+
+            window.open(whatsappUrl, '_blank');
+        }
+
+        window.addToGoogleCalendar = function(bookingDataStr) {
+            const b = JSON.parse(decodeURIComponent(bookingDataStr));
+            const hallName = b.hallId ? (state.halls.find(h => h.id == b.hallId)?.name || '') : '';
+            const location = [hallName, b.address].filter(Boolean).join(' - ');
+            
+            // تجهيز العنوان مع رمز الكاميرا
+            const title = encodeURIComponent(`${b.name} - حجز تصوير 🎥`);
+            
+            // تجهيز الوصف
+            let details = `تفاصيل الحجز لـ: ${b.name}\n`;
+            if(b.phone) details += `📞 الهاتف: ${b.phone}\n`;
+            details += `━━━━━━━━━━━━\n`;
+            if(b.services) details += `📋 الخدمات:\n${b.services}\n`;
+            if(b.price) details += `💰 السعر: ${b.price} ج.م\n`;
+            
+            const desc = encodeURIComponent(details);
+            const loc = encodeURIComponent(location);
+            
+            // تحويل التاريخ لصيغة جوجل تقويم (YYYYMMDD)
+            // بما أننا لا نملك وقتاً محدداً، سنجعله حدثاً لليوم بأكمله
+            const dateStr = b.date.replace(/-/g, '');
+            // نضيف يوم للتاريخ الثاني لأن جوجل تعتبر النهاية غير متضمنة في اليوم الكامل
+            const endDateObj = new Date(b.date);
+            endDateObj.setDate(endDateObj.getDate() + 1);
+            const endDateStr = endDateObj.toISOString().split('T')[0].replace(/-/g, '');
+            
+            const dates = `${dateStr}/${endDateStr}`;
+
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${desc}&location=${loc}&dates=${dates}`;
+            
+            window.open(url, '_blank');
+        }
+
+        // --- باقي الوظائف ---
         function renderTemplatesSettings() {
             const list = document.getElementById('settingsTemplatesList');
             if(!list) return;
@@ -691,8 +780,10 @@
         }
 
         window.deleteBooking = function(id) {
-            state.bookings = state.bookings.filter(b => b.id !== id);
-            window.saveData();
+            if(confirm("هل أنت متأكد من حذف هذا الحجز؟")) {
+                state.bookings = state.bookings.filter(b => b.id !== id);
+                window.saveData();
+            }
         }
 
         window.copyLink = function(link) {
@@ -740,12 +831,23 @@
                 </div>
             `).join('');
 
-            document.getElementById('pv_historyList').innerHTML = myWork.reverse().map(w => `
+            // --- التعديل هنا: إظهار اسم القاعة كقالب صغير بجانب التاريخ ---
+            document.getElementById('pv_historyList').innerHTML = myWork.reverse().map(w => {
+                // جلب اسم القاعة بناءً على المعرف، وإذا لم يوجد يكتب "مكان غير محدد"
+                const hallName = state.halls.find(h => h.id == w.hallId)?.name || 'مكان غير محدد';
+                
+                return `
                 <div class="bg-white p-3 rounded-xl shadow-sm border flex justify-between items-center">
-                    <div class="text-xs font-bold text-gray-600">${w.date}</div>
+                    <div class="flex flex-col gap-1">
+                        <div class="text-xs font-bold text-gray-600"><i class="fa-regular fa-calendar ml-1"></i>${w.date}</div>
+                        <span class="inline-block bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold w-fit">
+                            <i class="fa-solid fa-location-dot ml-1"></i>${hallName}
+                        </span>
+                    </div>
                     <div class="text-sm font-black text-purple-700">${w.myRate} ج.م</div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         window.photographerWithdraw = function() {
@@ -777,7 +879,6 @@
                 document.getElementById('adminApp').style.display = 'block';
                 document.getElementById('photographerView').style.display = 'none';
             }
-            // استدعاء البيانات من السحابة بدلاً من اللوكال ستورج
             window.loadData();
         };
     </script>
