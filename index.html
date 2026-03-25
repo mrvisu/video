@@ -1,268 +1,115 @@
-import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, query, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { Calculator, DollarSign, Users, PlusCircle, Trash2, Receipt, Save, UserPlus, Settings, X, CalendarDays, Phone, ClipboardList, BookOpen, MapPin, CalendarPlus, MessageCircle, PackagePlus, Edit2, Loader2 } from 'lucide-react';
-
-// --- إعدادات Firebase ---
-const firebaseConfig = {
-  apiKey: "AIzaSyD1g5o98oLq-e3TM2td8w_MqD0-gmBjkeM",
-  authDomain: "videosystempro.firebaseapp.com",
-  databaseURL: "https://videosystempro-default-rtdb.firebaseio.com",
-  projectId: "videosystempro",
-  storageBucket: "videosystempro.firebasestorage.app",
-  messagingSenderId: "548170451809",
-  appId: "1:548170451809:web:a95e3f1c35a3e4b4ce9320"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-halls-pro-v1';
+import React, { useState } from 'react';
+import { Calculator, DollarSign, Users, PlusCircle, Trash2, Receipt, Save, UserPlus, Settings, X, CalendarDays, Phone, ClipboardList, BookOpen, MapPin, CalendarPlus, MessageCircle, PackagePlus, Edit2 } from 'lucide-react';
 
 export default function App() {
   const today = new Date().toISOString().split('T')[0];
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // إعدادات الحالة
+  // إعدادات الفلاشات
   const [globalFlashPrice, setGlobalFlashPrice] = useState(50);
   const [availableFlashDrives, setAvailableFlashDrives] = useState(10); 
-  const [halls, setHalls] = useState([]);
-  const [equipmentTemplates, setEquipmentTemplates] = useState([]);
-  const [records, setRecords] = useState([]);
-  const [bookings, setBookings] = useState([]);
 
-  // الحالات المحلية للنوافذ والمدخلات
+  // إعدادات القاعات (لليوميات فقط)
+  const [halls, setHalls] = useState([
+    { id: 1, name: 'قاعة 1 (الملكية)' },
+    { id: 2, name: 'قاعة 2 (الماسة)' },
+    { id: 3, name: 'قاعة 3 (الفيروز)' }
+  ]);
   const [showHallManager, setShowHallManager] = useState(false);
   const [newHallName, setNewHallName] = useState('');
   const [editingHallId, setEditingHallId] = useState(null);
+
+  // قوالب المصورين
+  const [savedPhotographers, setSavedPhotographers] = useState([
+    { id: 1, name: 'أحمد', wage: 200 },
+    { id: 2, name: 'محمد', wage: 250 },
+    { id: 3, name: 'محمود', wage: 300 }
+  ]);
+
+  // إعدادات قوالب معدات التصوير
+  const [equipmentTemplates, setEquipmentTemplates] = useState([
+    { id: 1, name: 'تصوير فيديو', price: 1000, description: 'تصوير طوال الحفل بكاميرا 4K' },
+    { id: 2, name: 'فوتوسيشن', price: 1500, description: 'جلسة تصوير خارجية لمدة 3 ساعات' },
+    { id: 3, name: 'ألبوم ديجيتال', price: 800, description: 'ألبوم 20 صفحة مقاس 20x30 سم' },
+    { id: 4, name: 'كاميرا كرين', price: 2000, description: 'رافعة لتصوير الفيديو لتغطية شاملة' },
+    { id: 5, name: 'طباعة فورية', price: 500, description: 'طباعة 100 صورة للضيوف أثناء الحفل' },
+  ]);
   const [showEqManager, setShowEqManager] = useState(false);
   const [newEqName, setNewEqName] = useState('');
   const [newEqPrice, setNewEqPrice] = useState('');
   const [newEqDesc, setNewEqDesc] = useState('');
   const [editingEqId, setEditingEqId] = useState(null);
+
+  // النوافذ المنبثقة
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
 
+  // حالة اليوميات
+  const [records, setRecords] = useState([]);
   const [formData, setFormData] = useState({
-    date: today, hall: '', income: '', photographers: [], useFlashDrive: false, transportCost: '', otherExpenses: ''
+    date: today,
+    hall: halls[0]?.name || '',
+    income: '',
+    photographers: [],
+    useFlashDrive: false,
+    transportCost: '',
+    otherExpenses: ''
   });
 
+  // حالة الحجوزات
+  const [bookings, setBookings] = useState([]);
   const [bookingFormData, setBookingFormData] = useState({
-    clientName: '', date: today, phone: '', address: '', requirements: '', totalPrice: '', discount: '', paidAmount: ''
+    clientName: '',
+    date: today,
+    phone: '',
+    address: '',
+    requirements: '',
+    totalPrice: '',
+    discount: '', // حقل الخصم الجديد
+    paidAmount: ''
   });
 
-  // 1. المصادقة (إصلاح خطأ Auth)
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        // التحقق مما إذا كان هناك توكن أولي صالح، وإلا نستخدم الدخول المجهول مباشرة
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && __initial_auth_token !== "") {
-          try {
-            await signInWithCustomToken(auth, __initial_auth_token);
-          } catch (tokenErr) {
-            console.error("Custom token failed, falling back to anonymous:", tokenErr);
-            await signInAnonymously(auth);
-          }
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (error) {
-        console.error("Critical Auth error:", error);
-      }
-    };
+  // معالجة تغييرات المدخلات
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleBookingChange = (e) => setBookingFormData({ ...bookingFormData, [e.target.name]: e.target.value });
 
-    initAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      if (u) {
-        setUser(u);
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // 2. جلب البيانات (Firestore) - مع حماية البيانات بوجود المستخدم
-  useEffect(() => {
-    if (!user) return;
-
-    const publicPath = (coll) => collection(db, 'artifacts', appId, 'public', 'data', coll);
-
-    // متابعة الحجوزات
-    const unsubBookings = onSnapshot(publicPath('bookings'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setBookings(data.sort((a, b) => new Date(a.date) - new Date(b.date)));
-    }, (err) => console.error("Bookings sync error:", err));
-
-    // متابعة اليوميات
-    const unsubRecords = onSnapshot(publicPath('records'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRecords(data.sort((a, b) => new Date(b.date) - new Date(a.date)));
-    }, (err) => console.error("Records sync error:", err));
-
-    // متابعة القاعات
-    const unsubHalls = onSnapshot(publicPath('halls'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (data.length > 0) {
-        setHalls(data);
-        if (!formData.hall) setFormData(prev => ({ ...prev, hall: data[0].name }));
-      } else {
-        const defaults = [{ name: 'قاعة الملكية' }, { name: 'قاعة الماسة' }];
-        defaults.forEach(h => addDoc(publicPath('halls'), h));
-      }
-    });
-
-    // متابعة المعدات
-    const unsubEq = onSnapshot(publicPath('equipment'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setEquipmentTemplates(data);
-    });
-
-    // متابعة الإعدادات العامة
-    const unsubSettings = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setGlobalFlashPrice(data.flashPrice || 50);
-        setAvailableFlashDrives(data.flashInventory || 10);
-      } else {
-        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), { flashPrice: 50, flashInventory: 10 });
-      }
-    }, (err) => console.error("Settings sync error:", err));
-
-    return () => {
-      unsubBookings(); unsubRecords(); unsubHalls(); unsubEq(); unsubSettings();
-    };
-  }, [user]);
-
-  // تحديث الإعدادات في Firestore
-  const updateGlobalSettings = async (price, inventory) => {
-    if (!user) return;
-    try {
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), {
-        flashPrice: price,
-        flashInventory: inventory
-      }, { merge: true });
-    } catch (err) {
-      console.error("Update settings error:", err);
+  // ----------------------------------------------------------------
+  // إدارة قوالب المعدات
+  // ----------------------------------------------------------------
+  const handleSaveEquipment = () => {
+    if (!newEqName.trim() || !newEqPrice) return;
+    if (editingEqId) {
+      setEquipmentTemplates(prev => prev.map(eq => eq.id === editingEqId ? { ...eq, name: newEqName, price: parseFloat(newEqPrice), description: newEqDesc } : eq));
+      setEditingEqId(null);
+    } else {
+      setEquipmentTemplates(prev => [...prev, { id: Date.now(), name: newEqName, price: parseFloat(newEqPrice), description: newEqDesc }]);
     }
+    setNewEqName('');
+    setNewEqPrice('');
+    setNewEqDesc('');
   };
 
-  // معالجة القاعات
-  const handleAddOrUpdateHall = async () => {
-    if (!newHallName.trim() || !user) return;
-    try {
-      const path = collection(db, 'artifacts', appId, 'public', 'data', 'halls');
-      if (editingHallId) {
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'halls', editingHallId), { name: newHallName });
-        setEditingHallId(null);
-      } else {
-        await addDoc(path, { name: newHallName });
-      }
-      setNewHallName('');
-    } catch (err) { console.error(err); }
+  const handleEditEq = (eq) => {
+    setEditingEqId(eq.id);
+    setNewEqName(eq.name);
+    setNewEqPrice(eq.price);
+    setNewEqDesc(eq.description || '');
   };
 
-  const handleDeleteHall = async (id) => {
-    if (halls.length <= 1 || !user) return;
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'halls', id));
+  const handleDeleteEq = (id) => {
+    setEquipmentTemplates(prev => prev.filter(eq => eq.id !== id));
   };
 
-  // معالجة اليوميات
-  const handleSubmitRecord = async (e) => {
-    e.preventDefault();
-    if (!user) return;
-    
-    const incomeVal = parseFloat(formData.income) || 0;
-    const transportVal = parseFloat(formData.transportCost) || 0;
-    const otherExpVal = parseFloat(formData.otherExpenses) || 0;
-    const flashCountVal = formData.useFlashDrive ? 1 : 0;
-    const validPhotographers = formData.photographers.filter(p => p.wage !== '').map(p => ({ name: p.name || 'مصور', wage: parseFloat(p.wage) || 0 }));
-    const totalPhotographersCost = validPhotographers.reduce((sum, p) => sum + p.wage, 0);
-    const dailyFlashCost = flashCountVal * globalFlashPrice;
-    const totalExpenses = totalPhotographersCost + transportVal + otherExpVal + dailyFlashCost;
-    
-    const recordData = {
-      ...formData,
-      photographersList: validPhotographers,
-      totalPhotographersCost,
-      dailyFlashCost,
-      totalExpenses,
-      netProfit: incomeVal - totalExpenses,
-      incomeVal,
-      flashCountVal,
-      transportVal,
-      otherExpVal,
-      createdAt: Date.now()
-    };
-
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'records'), recordData);
-      if (formData.useFlashDrive) {
-        await updateGlobalSettings(globalFlashPrice, availableFlashDrives - 1);
-      }
-      setFormData({ ...formData, income: '', photographers: [], useFlashDrive: false, transportCost: '', otherExpenses: '' });
-      setShowRecordModal(false);
-    } catch (err) { console.error(err); }
+  // إضافة قالب معدات لنموذج الحجز
+  const handleAddEquipmentToBooking = (eq) => {
+    const itemString = `- ${eq.name} (${eq.price} ج.م)${eq.description ? `\n  * الوصف: ${eq.description}` : ''}`;
+    setBookingFormData(prev => ({
+      ...prev,
+      requirements: prev.requirements ? `${prev.requirements}\n${itemString}` : itemString,
+      totalPrice: (parseFloat(prev.totalPrice) || 0) + eq.price
+    }));
   };
 
-  const deleteRecord = async (id) => {
-    if (!user) return;
-    const recordToDelete = records.find(r => r.id === id);
-    if (recordToDelete && recordToDelete.flashCountVal > 0) {
-      await updateGlobalSettings(globalFlashPrice, availableFlashDrives + recordToDelete.flashCountVal);
-    }
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records', id));
-  };
-
-  // معالجة الحجوزات
-  const handleSubmitBooking = async (e) => {
-    e.preventDefault();
-    if (!user) return;
-    const total = parseFloat(bookingFormData.totalPrice) || 0;
-    const discount = parseFloat(bookingFormData.discount) || 0;
-    const paid = parseFloat(bookingFormData.paidAmount) || 0;
-    const remainingAmount = total - discount - paid;
-
-    const newBooking = { ...bookingFormData, totalPrice: total, discount, paidAmount: paid, remainingAmount, createdAt: Date.now() };
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), newBooking);
-      setBookingFormData({ clientName: '', date: today, phone: '', address: '', requirements: '', totalPrice: '', discount: '', paidAmount: '' });
-      setShowBookingModal(false);
-    } catch (err) { console.error(err); }
-  };
-
-  const deleteBooking = async (id) => {
-    if (!user) return;
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id));
-  };
-
-  // معالجة المعدات
-  const handleSaveEquipment = async () => {
-    if (!newEqName.trim() || !newEqPrice || !user) return;
-    const path = collection(db, 'artifacts', appId, 'public', 'data', 'equipment');
-    const eqData = { name: newEqName, price: parseFloat(newEqPrice), description: newEqDesc };
-    
-    try {
-      if (editingEqId) {
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipment', editingEqId), eqData);
-        setEditingEqId(null);
-      } else {
-        await addDoc(path, eqData);
-      }
-      setNewEqName(''); setNewEqPrice(''); setNewEqDesc('');
-    } catch (err) { console.error(err); }
-  };
-
-  // وظائف المساعدة
-  const handlePhotographerChange = (index, field, value) => {
-    const newPhotographers = [...formData.photographers];
-    newPhotographers[index][field] = value;
-    setFormData({ ...formData, photographers: newPhotographers });
-  };
-
+  // روابط المشاركة للحجوزات (واتساب وتقويم جوجل)
   const getWhatsAppLink = (booking) => {
     let phoneStr = booking.phone.replace(/\D/g, '');
     if (phoneStr.startsWith('01')) phoneStr = '2' + phoneStr;
@@ -276,63 +123,156 @@ export default function App() {
     const nextDate = new Date(booking.date);
     nextDate.setDate(nextDate.getDate() + 1);
     const nextDateStr = nextDate.toISOString().split('T')[0].replace(/-/g, '');
-    const details = `👤 العميل: ${booking.clientName}\n📋 المطلوب: ${booking.requirements}\n💰 الإجمالي: ${booking.totalPrice}\n💵 المدفوع: ${booking.paidAmount}`;
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('🎥 حجز: ' + booking.clientName)}&dates=${dateStr}/${nextDateStr}&details=${encodeURIComponent(details)}`;
+    const discountText = booking.discount > 0 ? `🎁 الخصم: ${booking.discount} ج.م\n` : '';
+    const details = `👤 العميل: ${booking.clientName}\n📞 الهاتف: ${booking.phone}\n\n📋 المطلوب:\n${booking.requirements}\n\n💰 الإجمالي: ${booking.totalPrice} ج.م\n${discountText}💵 المدفوع: ${booking.paidAmount} ج.م\n⏳ الباقي: ${booking.remainingAmount} ج.م`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('🎥 حجز: ' + booking.clientName)}&dates=${dateStr}/${nextDateStr}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(booking.address || '')}`;
   };
 
-  // إحصائيات الحسابات
+  // المصورين وإدارة القاعات (لليوميات)
+  const handlePhotographerChange = (index, field, value) => {
+    const newPhotographers = [...formData.photographers];
+    newPhotographers[index][field] = value;
+    setFormData({ ...formData, photographers: newPhotographers });
+  };
+  const addPhotographer = () => setFormData({ ...formData, photographers: [...formData.photographers, { name: '', wage: '' }] });
+  const addFromTemplate = (template) => setFormData({ ...formData, photographers: [...formData.photographers, { name: template.name, wage: template.wage }] });
+  const removePhotographer = (index) => setFormData({ ...formData, photographers: formData.photographers.filter((_, i) => i !== index) });
+
+  const handleAddOrUpdateHall = () => {
+    if (!newHallName.trim()) return;
+    if (editingHallId) {
+      const updatedHalls = halls.map(h => h.id === editingHallId ? { ...h, name: newHallName } : h);
+      setHalls(updatedHalls);
+      const editedHall = halls.find(h => h.id === editingHallId);
+      if (formData.hall === editedHall.name) setFormData({ ...formData, hall: newHallName });
+      setRecords(records.map(r => r.hall === editedHall.name ? { ...r, hall: newHallName } : r));
+      setEditingHallId(null);
+    } else {
+      setHalls([...halls, { id: Date.now(), name: newHallName }]);
+      // اختيار القاعة الجديدة تلقائياً عند إضافتها
+      setFormData({ ...formData, hall: newHallName });
+    }
+    setNewHallName('');
+  };
+  const handleDeleteHall = (id) => {
+    if (halls.length <= 1) return;
+    const hallToDelete = halls.find(h => h.id === id);
+    const updatedHalls = halls.filter(h => h.id !== id);
+    setHalls(updatedHalls);
+    if (formData.hall === hallToDelete.name) setFormData({ ...formData, hall: updatedHalls[0].name });
+  };
+
+  // حفظ اليومية
+  const handleSubmitRecord = (e) => {
+    e.preventDefault();
+    const incomeVal = parseFloat(formData.income) || 0;
+    const transportVal = parseFloat(formData.transportCost) || 0;
+    const otherExpVal = parseFloat(formData.otherExpenses) || 0;
+    const flashCountVal = formData.useFlashDrive ? 1 : 0;
+    const validPhotographers = formData.photographers.filter(p => p.wage !== '').map(p => ({ name: p.name || 'مصور', wage: parseFloat(p.wage) || 0 }));
+    const totalPhotographersCost = validPhotographers.reduce((sum, p) => sum + p.wage, 0);
+    const dailyFlashCost = flashCountVal * globalFlashPrice;
+    const totalExpenses = totalPhotographersCost + transportVal + otherExpVal + dailyFlashCost;
+    
+    if (formData.useFlashDrive) setAvailableFlashDrives(prev => prev - 1);
+    
+    setRecords([{
+      id: Date.now(), ...formData, photographersList: validPhotographers, totalPhotographersCost, dailyFlashCost, totalExpenses,
+      netProfit: incomeVal - totalExpenses, incomeVal, flashCountVal, transportVal, otherExpVal
+    }, ...records]);
+    setFormData({ ...formData, income: '', photographers: [], useFlashDrive: false, transportCost: '', otherExpenses: '' });
+    setShowRecordModal(false);
+  };
+
+  const deleteRecord = (id) => {
+    const recordToDelete = records.find(r => r.id === id);
+    if (recordToDelete && recordToDelete.flashCountVal > 0) setAvailableFlashDrives(prev => prev + recordToDelete.flashCountVal);
+    setRecords(records.filter(record => record.id !== id));
+  };
+
+  // حفظ الحجز
+  const handleSubmitBooking = (e) => {
+    e.preventDefault();
+    const total = parseFloat(bookingFormData.totalPrice) || 0;
+    const discount = parseFloat(bookingFormData.discount) || 0;
+    const paid = parseFloat(bookingFormData.paidAmount) || 0;
+    const remainingAmount = total - discount - paid;
+
+    const newBooking = { id: Date.now(), ...bookingFormData, totalPrice: total, discount, paidAmount: paid, remainingAmount };
+    setBookings([...bookings, newBooking].sort((a, b) => new Date(a.date) - new Date(b.date)));
+    setBookingFormData({ clientName: '', date: today, phone: '', address: '', requirements: '', totalPrice: '', discount: '', paidAmount: '' });
+    setShowBookingModal(false);
+  };
+  const deleteBooking = (id) => setBookings(bookings.filter(b => b.id !== id));
+
+  // إحصائيات
   const totalRecordIncome = records.reduce((acc, curr) => acc + curr.incomeVal, 0);
+  const totalRecordProfit = records.reduce((acc, curr) => acc + curr.netProfit, 0);
+  
   const totalBookingsPaid = bookings.reduce((acc, curr) => acc + curr.paidAmount, 0);
-  const totalOverallIncome = totalRecordIncome + totalBookingsPaid;
+  const totalOverallIncome = totalRecordIncome + totalBookingsPaid; // المقبوضات = يوميات + عربون الحجوزات
+  
   const totalOverallExpenses = records.reduce((acc, curr) => acc + curr.totalExpenses, 0);
   const totalOverallProfit = totalOverallIncome - totalOverallExpenses;
+  
   const totalFlashFund = records.reduce((acc, curr) => acc + curr.flashCountVal, 0) * globalFlashPrice;
 
-  if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-indigo-600">
-      <Loader2 className="w-12 h-12 animate-spin mb-4" />
-      <p className="font-bold">جاري تحميل النظام السحابي...</p>
-    </div>
-  );
+  // إحصائيات جدول الحجوزات
+  const totalBookingsValue = bookings.reduce((acc, b) => acc + (b.totalPrice - b.discount), 0);
+  const totalBookingsRemaining = bookings.reduce((acc, b) => acc + b.remainingAmount, 0);
+
+  const colorPalette = [
+    { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-800' },
+    { bg: 'bg-purple-50', border: 'border-purple-500', text: 'text-purple-800' },
+    { bg: 'bg-emerald-50', border: 'border-emerald-500', text: 'text-emerald-800' },
+    { bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-800' },
+    { bg: 'bg-rose-50', border: 'border-rose-500', text: 'text-rose-800' },
+    { bg: 'bg-cyan-50', border: 'border-cyan-500', text: 'text-cyan-800' },
+  ];
+  const getHallColor = (hallName) => {
+    const safeIndex = halls.findIndex(h => h.name === hallName) !== -1 ? halls.findIndex(h => h.name === hallName) : 0;
+    return colorPalette[safeIndex % colorPalette.length];
+  };
 
   return (
     <div dir="rtl" className="min-h-screen bg-gray-100 font-sans text-gray-800 pb-12">
-      {/* الترويسة */}
+      
+      {/* الترويسة العلوية */}
       <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between">
-          <h1 className="text-2xl font-bold text-indigo-900 flex items-center gap-2">
-            <Calculator className="w-7 h-7 text-indigo-600" /> نظام حسابات الأفراح برو
-          </h1>
-          <div className="mt-4 md:mt-0 flex gap-4">
-             <div className="bg-gray-50 p-2 rounded-lg border flex gap-3">
-                <div className="flex gap-2 items-center">
-                  <Settings className="w-4 h-4 text-gray-400" />
-                  <div>
-                    <label className="block text-[10px] text-gray-500">سعر الفلاشة</label>
-                    <input type="number" value={globalFlashPrice} onChange={(e) => updateGlobalSettings(parseFloat(e.target.value)||0, availableFlashDrives)} className="w-14 bg-transparent text-sm font-bold text-indigo-600 outline-none" />
-                  </div>
-                </div>
-                <div className="border-r pr-3">
-                  <label className="block text-[10px] text-gray-500">المخزون</label>
-                  <input type="number" value={availableFlashDrives} onChange={(e) => updateGlobalSettings(globalFlashPrice, parseInt(e.target.value)||0)} className="w-14 bg-transparent text-sm font-bold text-green-600 text-center outline-none" />
-                </div>
-             </div>
-             {user && <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-gray-50 px-2 rounded border font-bold">✅ سحابي متصل</div>}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-indigo-900 flex items-center gap-2">
+              <Calculator className="w-7 h-7 text-indigo-600" /> نظام حسابات الأفراح
+            </h1>
+          </div>
+          <div className="mt-4 md:mt-0 bg-gray-50 p-2 rounded-lg border flex gap-3">
+            <div className="flex gap-2 items-center">
+              <Settings className="w-4 h-4 text-gray-400" />
+              <div>
+                <label className="block text-[10px] text-gray-500">سعر الفلاشة</label>
+                <input type="number" value={globalFlashPrice} onChange={(e) => setGlobalFlashPrice(parseFloat(e.target.value) || 0)} className="w-14 bg-transparent text-sm font-bold text-indigo-600 outline-none" />
+              </div>
+            </div>
+            <div className="border-r border-gray-300 pr-3">
+              <label className="block text-[10px] text-gray-500">مخزون الفلاشات</label>
+              <input type="number" value={availableFlashDrives} onChange={(e) => setAvailableFlashDrives(parseInt(e.target.value) || 0)} className="w-14 bg-transparent text-sm font-bold text-green-600 text-center outline-none" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
         {/* أزرار الإجراءات */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <button onClick={() => setShowBookingModal(true)} className="flex-1 bg-gradient-to-l from-emerald-500 to-emerald-600 text-white shadow-md rounded-xl p-4 flex items-center justify-center gap-3 transition-transform hover:scale-[1.01]">
+          <button onClick={() => setShowBookingModal(true)} className="flex-1 bg-gradient-to-l from-emerald-500 to-emerald-600 hover:to-emerald-700 text-white shadow-md rounded-xl p-4 flex items-center justify-center gap-3 transition-transform hover:scale-[1.01]">
             <CalendarDays className="w-7 h-7" />
             <div className="text-right">
               <span className="block font-bold text-lg">حجز موعد جديد</span>
               <span className="block text-emerald-100 text-xs">إضافة عميل ومناسبة قادمة</span>
             </div>
           </button>
-          <button onClick={() => setShowRecordModal(true)} className="flex-1 bg-gradient-to-l from-indigo-600 to-indigo-700 text-white shadow-md rounded-xl p-4 flex items-center justify-center gap-3 transition-transform hover:scale-[1.01]">
+          <button onClick={() => setShowRecordModal(true)} className="flex-1 bg-gradient-to-l from-indigo-600 to-indigo-700 hover:to-indigo-800 text-white shadow-md rounded-xl p-4 flex items-center justify-center gap-3 transition-transform hover:scale-[1.01]">
             <PlusCircle className="w-7 h-7" />
             <div className="text-right">
               <span className="block font-bold text-lg">تسجيل يومية مالية</span>
@@ -341,67 +281,110 @@ export default function App() {
           </button>
         </div>
 
-        {/* الإحصائيات */}
+        {/* بطاقات الإحصائيات والقاعات... (كما هي بدون تغيير يذكر للمساحة) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow-sm p-4 border-r-4 border-r-green-500">
-            <p className="text-xs text-gray-500 mb-1 font-bold">إجمالي المقبوضات</p>
+            <p className="text-xs text-gray-500 mb-1">إجمالي المقبوضات</p>
             <p className="text-xl font-bold">{totalOverallIncome.toLocaleString()} ج</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-4 border-r-4 border-r-red-500">
-            <p className="text-xs text-gray-500 mb-1 font-bold">إجمالي المنصرف</p>
+            <p className="text-xs text-gray-500 mb-1">إجمالي المنصرف</p>
             <p className="text-xl font-bold">{totalOverallExpenses.toLocaleString()} ج</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-4 border-r-4 border-r-indigo-500">
-            <p className="text-xs text-gray-500 mb-1 font-bold">صافي الربح</p>
+            <p className="text-xs text-gray-500 mb-1">صافي الربح</p>
             <p className="text-xl font-bold text-indigo-600">{totalOverallProfit.toLocaleString()} ج</p>
           </div>
-          <div className="bg-gray-900 rounded-xl shadow-sm p-4 text-white">
-            <p className="text-xs text-gray-300 mb-1 font-bold">صندوق الفلاشات</p>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-sm p-4 border border-gray-700 text-white">
+            <p className="text-xs text-gray-300 mb-1">صندوق الفلاشات</p>
             <p className="text-xl font-bold text-yellow-400">{totalFlashFund.toLocaleString()} ج</p>
+          </div>
+        </div>
+
+        {/* إحصائيات أيام العمل بالقاعات */}
+        <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-indigo-600"/> عدد أيام العمل لكل قاعة
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {halls.map(hall => {
+              const hallRecords = records.filter(r => r.hall === hall.name);
+              const daysCount = hallRecords.length; // عدد أيام العمل هو عدد اليوميات المسجلة لهذه القاعة
+              const hallIncome = hallRecords.reduce((sum, r) => sum + r.incomeVal, 0);
+              const hallColors = getHallColor(hall.name);
+              
+              return (
+                <div key={hall.id} className={`${hallColors.bg} border ${hallColors.border} p-3 rounded-lg flex justify-between items-center`}>
+                  <div>
+                    <p className={`font-bold text-sm ${hallColors.text}`}>{hall.name}</p>
+                    <p className="text-xs text-gray-600 mt-1 font-bold">إيراد: {hallIncome.toLocaleString()} ج</p>
+                  </div>
+                  <div className="bg-white px-3 py-1.5 rounded-lg text-center shadow-sm border border-gray-100">
+                    <span className={`block text-xl font-black ${hallColors.text}`}>{daysCount}</span>
+                    <span className="block text-[10px] text-gray-500 font-bold">يوم عمل</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* الجداول */}
         <div className="space-y-8">
+          
           {/* جدول الحجوزات */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-4 bg-emerald-50 border-b flex flex-col md:flex-row justify-between items-center gap-3">
+            <div className="p-4 bg-emerald-50 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
               <h2 className="text-lg font-bold text-emerald-800 flex items-center gap-2"><BookOpen className="w-5 h-5"/> الحجوزات القادمة</h2>
-              <div className="flex gap-2">
-                <span className="bg-white text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 shadow-sm">{bookings.length} حجز</span>
-                <span className="bg-white text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 shadow-sm">باقي للتحصيل: {bookings.reduce((a,b)=>a+b.remainingAmount,0).toLocaleString()} ج</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 shadow-sm">
+                  {bookings.length} حجز
+                </span>
+                <span className="bg-white text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 shadow-sm">
+                  إجمالي المطلوب: <span className="text-emerald-600">{totalBookingsValue.toLocaleString()} ج</span>
+                </span>
+                <span className="bg-white text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-200 shadow-sm">
+                  المتبقي: <span className="text-red-500">{totalBookingsRemaining.toLocaleString()} ج</span>
+                </span>
               </div>
             </div>
             <div className="overflow-x-auto p-4">
-              {bookings.length === 0 ? <p className="text-center py-6 text-gray-400">لا توجد حجوزات مسجلة</p> : (
+              {bookings.length === 0 ? (
+                <p className="text-center text-gray-400 py-6 text-sm">لا توجد حجوزات. اضغط على "حجز موعد جديد"</p>
+              ) : (
                 <table className="w-full text-right text-sm">
-                  <thead className="bg-gray-50 text-xs">
+                  <thead className="bg-gray-50 text-gray-600 text-xs">
                     <tr>
-                      <th className="p-3">التاريخ والعميل</th>
-                      <th className="p-3">التفاصيل</th>
-                      <th className="p-3 font-bold">الحساب</th>
+                      <th className="p-3 w-1/5">التاريخ والعميل</th>
+                      <th className="p-3 w-1/5">التواصل والعنوان</th>
+                      <th className="p-3 w-1/3">المطلوب</th>
+                      <th className="p-3 w-1/6">الحسابات</th>
                       <th className="p-3 text-center">إجراءات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
-                    {bookings.map(b => (
+                  <tbody className="divide-y divide-gray-100">
+                    {bookings.map((b) => (
                       <tr key={b.id} className="hover:bg-gray-50">
-                        <td className="p-3">
-                          <div className="font-bold text-emerald-700">{b.date}</div>
-                          <div className="text-gray-800 font-bold">{b.clientName}</div>
-                          <div className="text-[10px] text-gray-400">{b.phone}</div>
-                        </td>
-                        <td className="p-3 text-xs text-gray-600 whitespace-pre-wrap">{b.requirements}</td>
-                        <td className="p-3">
-                          <div className="text-xs font-bold">الإجمالي: {b.totalPrice}</div>
-                          <div className="text-blue-600 font-bold">المدفوع: {b.paidAmount}</div>
-                          <div className="text-red-500 font-black">الباقي: {b.remainingAmount}</div>
+                        <td className="p-3 border-r-4 border-emerald-400 bg-emerald-50/20">
+                          <div className="font-bold text-emerald-700 mb-1">{b.date}</div>
+                          <div className="font-bold text-gray-800">{b.clientName}</div>
                         </td>
                         <td className="p-3">
-                          <div className="flex justify-center gap-2">
-                            <a href={getWhatsAppLink(b)} target="_blank" rel="noreferrer" className="text-green-500 bg-green-50 p-2 rounded-lg hover:bg-green-100"><MessageCircle className="w-4 h-4"/></a>
-                            <a href={getCalendarLink(b)} target="_blank" rel="noreferrer" className="text-blue-500 bg-blue-50 p-2 rounded-lg hover:bg-blue-100"><CalendarPlus className="w-4 h-4"/></a>
-                            <button onClick={() => deleteBooking(b.id)} className="text-red-400 bg-red-50 p-2 rounded-lg hover:bg-red-100"><Trash2 className="w-4 h-4"/></button>
+                          <div className="text-xs text-gray-600 flex items-center gap-1 mb-1" dir="ltr"><Phone className="w-3 h-3"/> {b.phone}</div>
+                          <div className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3 text-red-400"/> {b.address || 'بدون عنوان'}</div>
+                        </td>
+                        <td className="p-3 text-gray-600 text-xs leading-relaxed whitespace-pre-wrap">{b.requirements || '-'}</td>
+                        <td className="p-3">
+                          <div className="text-xs font-bold text-gray-700">الإجمالي: {b.totalPrice.toLocaleString()}</div>
+                          {b.discount > 0 && <div className="text-xs font-bold text-orange-500">الخصم: {b.discount.toLocaleString()}</div>}
+                          <div className="text-xs text-blue-600 font-bold">المدفوع: {b.paidAmount.toLocaleString()}</div>
+                          <div className="text-sm font-black text-red-500 mt-1 border-t pt-1">الباقي: {b.remainingAmount.toLocaleString()}</div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <a href={getWhatsAppLink(b)} target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-700 bg-green-50 p-1.5 rounded-md" title="إرسال واتساب"><MessageCircle className="w-4 h-4"/></a>
+                            <a href={getCalendarLink(b)} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-md" title="إضافة للتقويم"><CalendarPlus className="w-4 h-4"/></a>
+                            <button onClick={() => deleteBooking(b.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded-md" title="حذف"><Trash2 className="w-4 h-4"/></button>
                           </div>
                         </td>
                       </tr>
@@ -412,188 +395,324 @@ export default function App() {
             </div>
           </div>
 
-          {/* سجل اليوميات */}
+          {/* جدول اليوميات */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-             <div className="p-4 bg-indigo-50 border-b flex justify-between items-center">
-                <h2 className="text-lg font-bold text-indigo-800 flex items-center gap-2"><Receipt className="w-5 h-5"/> سجل اليوميات</h2>
-                <div className="flex gap-2">
-                  <span className="bg-white text-green-700 px-3 py-1 rounded-lg text-xs font-bold border border-indigo-100">المحصل: {records.reduce((a,b)=>a+b.incomeVal,0).toLocaleString()}</span>
-                  <span className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-bold">الصافي: {records.reduce((a,b)=>a+b.netProfit,0).toLocaleString()}</span>
-                </div>
-             </div>
-             <div className="overflow-x-auto p-4">
-              {records.length === 0 ? <p className="text-center py-6 text-gray-400">لا توجد يوميات مسجلة</p> : (
+            <div className="p-4 bg-indigo-50 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <h2 className="text-lg font-bold text-indigo-800 flex items-center gap-2"><Receipt className="w-5 h-5"/> سجل اليوميات</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-200 shadow-sm">
+                  {records.length} يومية
+                </span>
+                <span className="bg-white text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-200 shadow-sm">
+                  إجمالي الإيراد: <span className="text-green-600">{totalRecordIncome.toLocaleString()} ج</span>
+                </span>
+                <span className="bg-white text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-200 shadow-sm">
+                  إجمالي الصافي: <span className="text-indigo-600">{totalRecordProfit.toLocaleString()} ج</span>
+                </span>
+              </div>
+            </div>
+            <div className="overflow-x-auto p-4">
+              {records.length === 0 ? (
+                <p className="text-center text-gray-400 py-6 text-sm">لا توجد سجلات. اضغط على "تسجيل يومية مالية"</p>
+              ) : (
                 <table className="w-full text-right text-sm">
-                  <thead className="bg-gray-50 text-xs">
+                  <thead className="bg-gray-50 text-gray-600 text-xs">
                     <tr>
                       <th className="p-3">التاريخ والقاعة</th>
-                      <th className="p-3">المقبوض</th>
-                      <th className="p-3">المنصرف</th>
+                      <th className="p-3">الإيراد</th>
+                      <th className="p-3">المصورين</th>
+                      <th className="p-3">مصروفات إضافية</th>
                       <th className="p-3 font-bold text-indigo-600">الصافي</th>
                       <th className="p-3 text-center">إجراء</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
-                    {records.map(r => (
-                      <tr key={r.id} className="hover:bg-indigo-50/30">
-                        <td className="p-3">
-                          <div className="font-bold text-xs text-indigo-700">{r.hall}</div>
-                          <div className="text-gray-600 text-[10px]">{r.date}</div>
+                  <tbody className="divide-y divide-white">
+                    {records.map((record) => {
+                      const hallColors = getHallColor(record.hall);
+                      return (
+                      <tr key={record.id} className={`${hallColors.bg} border-b-4 border-white`}>
+                        <td className={`p-3 border-r-4 ${hallColors.border}`}>
+                          <div className={`font-bold text-xs ${hallColors.text}`}>{record.hall}</div>
+                          <div className="text-sm mt-1">{record.date}</div>
                         </td>
-                        <td className="p-3 font-bold text-green-700">{r.incomeVal}</td>
+                        <td className="p-3 text-green-700 font-bold">{record.incomeVal.toLocaleString()}</td>
                         <td className="p-3 text-red-500 text-xs">
-                          {r.totalExpenses}
-                          <span className="block text-[10px] text-gray-400">{r.photographersList?.map(p=>p.name).join(', ')}</span>
+                          {record.totalPhotographersCost.toLocaleString()} 
+                          <span className="text-gray-500 block">{record.photographersList.map(p => p.name).join('، ')}</span>
                         </td>
-                        <td className="p-3 font-black text-indigo-700">{r.netProfit}</td>
+                        <td className="p-3 text-red-500 text-xs">
+                          {(record.otherExpVal + record.dailyFlashCost + record.transportVal).toLocaleString()}
+                        </td>
+                        <td className="p-3 font-black text-indigo-700 text-lg">{record.netProfit.toLocaleString()}</td>
                         <td className="p-3 text-center">
-                          <button onClick={() => deleteRecord(r.id)} className="text-red-400 p-1.5 rounded hover:bg-red-100"><Trash2 className="w-4 h-4 mx-auto"/></button>
+                          <button onClick={() => deleteRecord(record.id)} className="text-red-400 hover:text-red-600 bg-white p-1.5 rounded-md"><Trash2 className="w-4 h-4 mx-auto" /></button>
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               )}
-             </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* مودالات (المحتوى نفسه) */}
+      {/* ---------------------------------------------------------------- */}
+      {/* نافذة الحجز الجديدة */}
+      {/* ---------------------------------------------------------------- */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="bg-emerald-600 text-white p-4 flex justify-between items-center sticky top-0 shadow-sm">
-              <h2 className="font-bold">حجز موعد جديد</h2>
-              <button onClick={() => setShowBookingModal(false)}><X className="w-6 h-6"/></button>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[95vh] flex flex-col relative">
+            
+            <div className="bg-emerald-600 text-white p-4 flex justify-between items-center shrink-0 rounded-t-xl">
+              <h2 className="text-xl font-bold flex items-center gap-2"><CalendarDays className="w-5 h-5"/> تسجيل حجز موعد جديد</h2>
+              <button onClick={() => setShowBookingModal(false)} className="bg-emerald-700 hover:bg-red-500 p-1.5 rounded transition-colors"><X className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleSubmitBooking} className="p-6 space-y-6">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
+              <form id="bookingForm" onSubmit={handleSubmitBooking} className="space-y-5">
+                
+                <div className="bg-white p-4 rounded-lg border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">اسم العميل</label>
-                    <input type="text" placeholder="مثال: محمد أحمد" required value={bookingFormData.clientName} onChange={(e)=>setBookingFormData({...bookingFormData, clientName: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">تاريخ الحجز</label>
-                    <input type="date" required value={bookingFormData.date} onChange={(e)=>setBookingFormData({...bookingFormData, date: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">رقم الهاتف</label>
-                    <input type="tel" placeholder="01xxxxxxxxx" required value={bookingFormData.phone} onChange={(e)=>setBookingFormData({...bookingFormData, phone: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" />
+                    <label className="block text-xs font-bold text-gray-700 mb-1">اسم العميل</label>
+                    <input type="text" name="clientName" value={bookingFormData.clientName} onChange={handleBookingChange} required className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">العنوان / القاعة</label>
-                    <input type="text" placeholder="اختياري" value={bookingFormData.address} onChange={(e)=>setBookingFormData({...bookingFormData, address: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" />
+                    <label className="block text-xs font-bold text-gray-700 mb-1">تاريخ المناسبة</label>
+                    <input type="date" name="date" value={bookingFormData.date} onChange={handleBookingChange} required className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-800" />
                   </div>
-               </div>
-               <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="text-xs font-bold text-emerald-800 flex items-center gap-2"><PackagePlus className="w-4 h-4"/> الخدمات والمعدات المطلوبة</label>
-                    <button type="button" onClick={()=>setShowEqManager(!showEqManager)} className="text-[10px] text-emerald-600 font-bold bg-white px-2 py-1 rounded shadow-sm hover:bg-emerald-100 border border-emerald-200 transition-all">إدارة الخدمات</button>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">رقم الهاتف</label>
+                    <input type="tel" name="phone" value={bookingFormData.phone} onChange={handleBookingChange} required className="w-full px-3 py-2 text-sm border border-gray-300 rounded outline-none" dir="ltr" />
                   </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">العنوان (القاعة / المكان)</label>
+                    <input type="text" name="address" value={bookingFormData.address} onChange={handleBookingChange} className="w-full px-3 py-2 text-sm border border-gray-300 rounded outline-none" placeholder="مكان التصوير..." />
+                  </div>
+                </div>
+
+                {/* قسم المطلوب والقوالب */}
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="text-xs font-bold text-gray-700">المطلوب (تفاصيل الاتفاق)</label>
+                    <button type="button" onClick={() => setShowEqManager(!showEqManager)} className="text-[10px] text-emerald-700 underline flex items-center gap-1">
+                      <Settings className="w-3 h-3"/> إدارة قوالب المعدات
+                    </button>
+                  </div>
+                  
+                  {/* إدارة القوالب السريعة */}
                   {showEqManager && (
-                    <div className="mb-4 bg-white p-3 border border-emerald-200 rounded-xl shadow-inner space-y-3">
-                      <div className="flex gap-2">
-                        <input type="text" placeholder="اسم الخدمة" value={newEqName} onChange={e=>setNewEqName(e.target.value)} className="flex-1 text-xs p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500/20" />
-                        <input type="number" placeholder="السعر" value={newEqPrice} onChange={e=>setNewEqPrice(e.target.value)} className="w-24 text-xs p-2 border rounded-lg focus:ring-2 focus:ring-emerald-500/20" />
-                        <button type="button" onClick={handleSaveEquipment} className="bg-emerald-600 text-white text-xs px-4 rounded-lg font-bold hover:bg-emerald-700">حفظ</button>
+                    <div className="mb-3 bg-gray-100 p-3 rounded-lg border border-gray-200 space-y-3">
+                      <p className="text-[10px] font-bold text-gray-700">إضافة/تعديل قالب جديد:</p>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <input type="text" placeholder="اسم المعدة (مثال: ألبوم)" value={newEqName} onChange={(e) => setNewEqName(e.target.value)} className="flex-1 px-2 py-1.5 text-xs rounded border outline-none" />
+                          <input type="number" placeholder="السعر" value={newEqPrice} onChange={(e) => setNewEqPrice(e.target.value)} className="w-24 px-2 py-1.5 text-xs rounded border outline-none" />
+                        </div>
+                        <div className="flex gap-2">
+                          <input type="text" placeholder="الوصف (اختياري)" value={newEqDesc} onChange={(e) => setNewEqDesc(e.target.value)} className="flex-1 px-2 py-1.5 text-xs rounded border outline-none" />
+                          <button type="button" onClick={handleSaveEquipment} className="bg-gray-700 text-white px-3 py-1.5 rounded text-xs w-20">حفظ</button>
+                          {editingEqId && <button type="button" onClick={() => {setEditingEqId(null); setNewEqName(''); setNewEqPrice(''); setNewEqDesc('');}} className="bg-gray-400 text-white px-2 py-1.5 rounded text-xs">إلغاء</button>}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-1 mt-2 max-h-32 overflow-y-auto pr-1">
                         {equipmentTemplates.map(eq => (
-                          <div key={eq.id} className="text-[10px] bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full flex items-center gap-2 border border-emerald-100">
-                            {eq.name} ({eq.price}ج)
-                            <button type="button" onClick={()=>deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'equipment', eq.id))} className="text-red-500 font-bold text-sm">×</button>
+                          <div key={eq.id} className="bg-white border text-[10px] p-2 rounded flex items-center justify-between gap-2">
+                            <div className="flex flex-col flex-1">
+                              <span className="font-bold text-gray-800 text-xs">{eq.name} <span className="text-emerald-600">({eq.price}ج)</span></span>
+                              {eq.description && <span className="text-gray-500 mt-0.5">{eq.description}</span>}
+                            </div>
+                            <div className="flex gap-1 border-r pr-2 shrink-0">
+                              <button type="button" onClick={() => handleEditEq(eq)} className="text-blue-500 hover:bg-blue-50 p-1 rounded"><Edit2 className="w-4 h-4"/></button>
+                              <button type="button" onClick={() => handleDeleteEq(eq.id)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 className="w-4 h-4"/></button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
-                  <textarea rows="3" placeholder="مثال: تصوير فوتوغراف + فيديو 4K + دريم لايت..." value={bookingFormData.requirements} onChange={e=>setBookingFormData({...bookingFormData, requirements: e.target.value})} className="w-full p-3 border border-emerald-200 rounded-xl text-sm mb-3 focus:ring-2 focus:ring-emerald-500/20 outline-none" />
-                  <div className="flex flex-wrap gap-2">
-                    {equipmentTemplates.map(eq => (
-                      <button key={eq.id} type="button" onClick={() => {
-                         const req = bookingFormData.requirements ? `${bookingFormData.requirements}\n- ${eq.name}` : `- ${eq.name}`;
-                         const total = (parseFloat(bookingFormData.totalPrice)||0) + eq.price;
-                         setBookingFormData({...bookingFormData, requirements: req, totalPrice: total});
-                      }} className="bg-white border border-emerald-200 text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">+{eq.name}</button>
-                    ))}
+
+                  <textarea name="requirements" value={bookingFormData.requirements} onChange={handleBookingChange} rows="3" className="w-full px-3 py-2 text-sm border border-gray-300 rounded outline-none resize-none bg-gray-50 leading-relaxed"></textarea>
+                  
+                  {/* القوالب للإضافة السريعة */}
+                  <div className="mt-3 bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                    <p className="text-[10px] font-bold text-emerald-800 mb-2 flex items-center gap-1"><PackagePlus className="w-3 h-3"/> إضافة سريعة للمطلوب (تضيف الاسم، السعر، والوصف تلقائياً)</p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {equipmentTemplates.map(eq => (
+                        <button key={eq.id} type="button" onClick={() => handleAddEquipmentToBooking(eq)} className="bg-white border border-emerald-200 hover:bg-emerald-100 text-emerald-700 p-2 rounded shadow-sm transition-colors flex flex-col items-start text-right w-full">
+                          <div className="flex justify-between w-full items-center mb-1 gap-1">
+                            <span className="text-xs font-bold truncate">{eq.name}</span>
+                            <span className="bg-emerald-50 px-1 rounded text-[10px] font-bold text-emerald-600 shrink-0">{eq.price} ج</span>
+                          </div>
+                          {eq.description && <span className="text-[9px] text-gray-500 leading-tight w-full truncate whitespace-normal" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'}}>{eq.description}</span>}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-               </div>
-               <div className="grid grid-cols-3 gap-4">
+                </div>
+
+                {/* الحسابات */}
+                <div className="bg-white p-4 rounded-lg border border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">الإجمالي</label>
-                    <input type="number" required value={bookingFormData.totalPrice} onChange={e=>setBookingFormData({...bookingFormData, totalPrice: e.target.value})} className="w-full p-2.5 border rounded-xl font-bold bg-gray-50" />
+                    <label className="block text-xs font-bold text-gray-700 mb-1">السعر الإجمالي</label>
+                    <input type="number" name="totalPrice" value={bookingFormData.totalPrice} onChange={handleBookingChange} required className="w-full px-3 py-2 text-lg font-bold border border-gray-300 rounded text-gray-800 outline-none bg-gray-50" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">الخصم</label>
-                    <input type="number" value={bookingFormData.discount} onChange={e=>setBookingFormData({...bookingFormData, discount: e.target.value})} className="w-full p-2.5 border rounded-xl text-orange-600 font-bold" />
+                    <label className="block text-xs font-bold text-orange-700 mb-1">خصم (مبلغ مالي)</label>
+                    <input type="number" name="discount" value={bookingFormData.discount} onChange={handleBookingChange} placeholder="0" className="w-full px-3 py-2 text-lg font-bold border border-orange-200 rounded text-orange-600 outline-none focus:ring-2 focus:ring-orange-400" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-400 mb-1">العربون</label>
-                    <input type="number" required value={bookingFormData.paidAmount} onChange={e=>setBookingFormData({...bookingFormData, paidAmount: e.target.value})} className="w-full p-2.5 border rounded-xl text-blue-600 font-bold" />
+                    <label className="block text-xs font-bold text-blue-700 mb-1">المدفوع (عربون)</label>
+                    <input type="number" name="paidAmount" value={bookingFormData.paidAmount} onChange={handleBookingChange} required className="w-full px-3 py-2 text-lg font-bold border border-blue-200 rounded text-blue-700 outline-none focus:ring-2 focus:ring-blue-400 bg-blue-50/30" />
                   </div>
-               </div>
-               <button type="submit" className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-3 shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all"><Save className="w-5 h-5"/> تأكيد وحفظ الحجز سحابياً</button>
-            </form>
+                  <div className="bg-red-50 p-2 rounded border border-red-100 flex flex-col justify-center items-center">
+                    <label className="block text-xs font-bold text-red-800 mb-1">المبلغ المتبقي</label>
+                    <span className="text-xl font-black text-red-600">
+                      {((parseFloat(bookingFormData.totalPrice)||0) - (parseFloat(bookingFormData.discount)||0) - (parseFloat(bookingFormData.paidAmount)||0)).toLocaleString()} ج
+                    </span>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div className="p-4 bg-white border-t border-gray-200 shrink-0 flex gap-3 rounded-b-xl">
+              <button form="bookingForm" type="submit" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+                <Save className="w-5 h-5" /> تأكيد وحفظ الحجز
+              </button>
+              <button type="button" onClick={() => setShowBookingModal(false)} className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition-colors">
+                إلغاء
+              </button>
+            </div>
+            
           </div>
         </div>
       )}
 
-      {/* مودال اليومية */}
+      {/* ---------------------------------------------------------------- */}
+      {/* نافذة تسجيل يومية */}
+      {/* ---------------------------------------------------------------- */}
       {showRecordModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="bg-indigo-600 text-white p-4 flex justify-between items-center sticky top-0 shadow-sm">
-              <h2 className="font-bold">تسجيل يومية مناسبة تمت</h2>
-              <button onClick={() => setShowRecordModal(false)}><X className="w-6 h-6"/></button>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[95vh] flex flex-col relative">
+            <div className="bg-indigo-600 text-white p-4 flex justify-between items-center shrink-0 rounded-t-xl">
+              <h2 className="text-xl font-bold flex items-center gap-2"><PlusCircle className="w-5 h-5" /> تسجيل يومية مالية</h2>
+              <button onClick={() => setShowRecordModal(false)} className="bg-indigo-700 hover:bg-red-500 p-1.5 rounded transition-colors"><X className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleSubmitRecord} className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <div className="p-6 overflow-y-auto bg-gray-50 flex-1">
+              <form id="recordForm" onSubmit={handleSubmitRecord} className="space-y-4">
+                <div className="bg-white p-4 rounded-lg border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">تاريخ اليومية</label>
-                    <input type="date" value={formData.date} onChange={e=>setFormData({...formData, date: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20" />
+                    <label className="block text-xs font-bold text-gray-700 mb-1">التاريخ</label>
+                    <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full px-3 py-2 text-sm border border-gray-300 rounded outline-none" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">القاعة</label>
-                    <select value={formData.hall} onChange={e=>setFormData({...formData, hall: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20">
-                      {halls.map(h => <option key={h.id} value={h.name}>{h.name}</option>)}
+                  <div className="relative">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-xs font-bold text-gray-700">القاعة</label>
+                      <button type="button" onClick={() => setShowHallManager(!showHallManager)} className="text-[10px] text-indigo-700 underline flex items-center gap-1">
+                        <Settings className="w-3 h-3"/> إدارة القاعات
+                      </button>
+                    </div>
+                    <select name="hall" value={formData.hall} onChange={handleChange} className="w-full px-3 py-2 text-sm border border-gray-300 rounded outline-none cursor-pointer">
+                      {halls.map(hall => <option key={hall.id} value={hall.name}>{hall.name}</option>)}
                     </select>
+
+                    {/* قائمة إدارة القاعات العائمة */}
+                    {showHallManager && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white p-3 rounded-lg border border-indigo-200 shadow-xl z-20 space-y-3">
+                        <p className="text-[10px] font-bold text-gray-700">إضافة/تعديل قاعة:</p>
+                        <div className="flex gap-2">
+                          <input type="text" placeholder="اسم القاعة" value={newHallName} onChange={(e) => setNewHallName(e.target.value)} className="flex-1 px-2 py-1.5 text-xs rounded border outline-none" />
+                          <button type="button" onClick={handleAddOrUpdateHall} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs transition-colors">حفظ</button>
+                          {editingHallId && <button type="button" onClick={() => {setEditingHallId(null); setNewHallName('');}} className="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1.5 rounded text-xs transition-colors">إلغاء</button>}
+                        </div>
+                        <div className="flex flex-col gap-1 max-h-32 overflow-y-auto pr-1">
+                          {halls.map(hall => (
+                            <div key={hall.id} className="bg-gray-50 border text-[10px] p-2 rounded flex items-center justify-between">
+                              <span className="font-bold text-gray-800">{hall.name}</span>
+                              <div className="flex gap-1 shrink-0">
+                                <button type="button" onClick={() => {setEditingHallId(hall.id); setNewHallName(hall.name);}} className="text-blue-500 hover:bg-blue-100 p-1.5 rounded"><Edit2 className="w-3 h-3"/></button>
+                                <button type="button" onClick={() => handleDeleteHall(hall.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded"><Trash2 className="w-3 h-3"/></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">المبلغ المحصل</label>
-                    <input type="number" placeholder="مثال: 5000" required value={formData.income} onChange={e=>setFormData({...formData, income: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 font-bold text-green-700" />
+                    <label className="block text-xs font-bold text-gray-700 mb-1">المقبوض (الإيراد)</label>
+                    <input type="number" name="income" value={formData.income} onChange={handleChange} required className="w-full px-3 py-2 text-sm font-bold text-green-700 border border-gray-300 rounded outline-none bg-gray-50" />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-4 border border-indigo-100 rounded-2xl bg-indigo-50/30">
-                    <p className="text-xs font-bold text-indigo-800 mb-4 flex items-center gap-2"><Users className="w-4 h-4"/> حساب المصورين</p>
-                    <div className="space-y-3">
-                      {formData.photographers.map((p, i) => (
-                        <div key={i} className="flex gap-2">
-                          <input type="text" placeholder="الاسم" value={p.name} onChange={e=>handlePhotographerChange(i,'name',e.target.value)} className="flex-1 p-2 border rounded-lg text-xs" />
-                          <input type="number" placeholder="الأجرة" value={p.wage} onChange={e=>handlePhotographerChange(i,'wage',e.target.value)} className="w-20 p-2 border rounded-lg text-xs font-bold" />
-                          <button type="button" onClick={()=>setFormData({...formData, photographers: formData.photographers.filter((_,idx)=>idx!==i)})} className="text-red-400 hover:text-red-600 transition-colors">×</button>
-                        </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* قسم المصورين */}
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 space-y-3">
+                    <p className="text-sm font-bold text-gray-700 border-b pb-2 flex items-center gap-2"><Users className="w-4 h-4" /> المصورين</p>
+                    <div className="flex flex-wrap gap-2">
+                      {savedPhotographers.map(p => (
+                        <button key={p.id} type="button" onClick={() => addFromTemplate(p)} className="bg-gray-50 border border-indigo-200 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-bold">
+                          {p.name} <span className="text-gray-500 bg-white px-1 rounded">{p.wage}</span>
+                        </button>
                       ))}
-                      <button type="button" onClick={()=>setFormData({...formData, photographers: [...formData.photographers, {name:'', wage:''}]})} className="w-full bg-white text-indigo-600 text-xs py-2 rounded-xl border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all font-bold shadow-sm">+ إضافة مصور جديد</button>
                     </div>
+                    {formData.photographers.map((p, i) => (
+                      <div key={i} className="flex gap-2 items-center bg-gray-50 p-1.5 rounded border">
+                        <input type="text" placeholder="الاسم" value={p.name} onChange={(e) => handlePhotographerChange(i, 'name', e.target.value)} className="flex-1 px-2 py-1 text-xs outline-none" />
+                        <input type="number" placeholder="الأجرة" value={p.wage} onChange={(e) => handlePhotographerChange(i, 'wage', e.target.value)} className="w-20 px-2 py-1 text-xs text-red-600 font-bold outline-none" />
+                        <button type="button" onClick={() => removePhotographer(i)} className="text-red-500 p-1"><Trash2 className="w-4 h-4"/></button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={addPhotographer} className="text-xs bg-indigo-50 text-indigo-700 w-full py-2 rounded flex justify-center items-center gap-1 font-bold"><UserPlus className="w-3 h-3"/> إضافة مصور</button>
                   </div>
-                  <div className="p-4 border border-gray-100 rounded-2xl bg-gray-50">
-                    <p className="text-xs font-bold text-gray-600 mb-4">مصروفات وتجهيزات</p>
-                    <button type="button" onClick={()=>setFormData({...formData, useFlashDrive: !formData.useFlashDrive})} className={`w-full text-xs py-3 rounded-xl font-bold border transition-all shadow-sm flex items-center justify-center gap-2 mb-4 ${formData.useFlashDrive ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:bg-indigo-50 hover:border-indigo-200'}`}>
-                      {formData.useFlashDrive ? `تم استخدام فلاشة (-${globalFlashPrice}ج)` : 'لم يتم استخدام فلاشة'}
-                    </button>
-                    <div className="space-y-3">
-                      <input type="number" placeholder="بنزين / انتقالات" value={formData.transportCost} onChange={e=>setFormData({...formData, transportCost:e.target.value})} className="w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20" />
-                      <input type="number" placeholder="مصروفات أخرى" value={formData.otherExpenses} onChange={e=>setFormData({...formData, otherExpenses:e.target.value})} className="w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20" />
+
+                  {/* قسم مصروفات أخرى (فلاشة، سيارة، أخرى) */}
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col gap-4">
+                    <p className="text-sm font-bold text-gray-700 border-b pb-2 flex items-center gap-2"><DollarSign className="w-4 h-4" /> مصروفات أخرى</p>
+                    
+                    <div className="flex flex-col gap-3 mt-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-700">فلاشة ({availableFlashDrives} متوفر)</label>
+                        <button type="button" onClick={() => setFormData({ ...formData, useFlashDrive: !formData.useFlashDrive })} disabled={availableFlashDrives <= 0 && !formData.useFlashDrive} className={`w-32 text-xs py-2.5 rounded font-bold border transition-colors ${formData.useFlashDrive ? 'bg-indigo-100 border-indigo-400 text-indigo-800' : 'bg-gray-50 border-gray-300'}`}>
+                          {formData.useFlashDrive ? `تم (${globalFlashPrice}ج)` : 'بدون فلاشة'}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-700">سيارة (انتقالات)</label>
+                        <input type="number" name="transportCost" value={formData.transportCost} onChange={handleChange} className="w-32 px-3 py-2 text-sm border border-gray-300 rounded outline-none text-red-600 font-bold bg-gray-50 text-center" placeholder="0" />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-700">مصروفات أخرى</label>
+                        <input type="number" name="otherExpenses" value={formData.otherExpenses} onChange={handleChange} className="w-32 px-3 py-2 text-sm border border-gray-300 rounded outline-none text-red-600 font-bold bg-gray-50 text-center" placeholder="0" />
+                      </div>
                     </div>
                   </div>
                 </div>
-                <button type="submit" className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-3 shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition-all"><Save className="w-5 h-5"/> حفظ وإغلاق اليومية</button>
-            </form>
+
+                <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200 text-center">
+                  <span className="text-sm text-indigo-800 ml-2">الصافي:</span>
+                  <span className="text-2xl font-black text-indigo-700">
+                    {((parseFloat(formData.income)||0) - formData.photographers.reduce((sum, p) => sum + (parseFloat(p.wage)||0), 0) - (formData.useFlashDrive ? globalFlashPrice : 0) - (parseFloat(formData.transportCost)||0) - (parseFloat(formData.otherExpenses)||0)).toLocaleString()} ج
+                  </span>
+                </div>
+              </form>
+            </div>
+
+            <div className="p-4 bg-white border-t border-gray-200 shrink-0 flex gap-3 rounded-b-xl">
+              <button form="recordForm" type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+                <Save className="w-5 h-5" /> حفظ اليومية
+              </button>
+              <button type="button" onClick={() => setShowRecordModal(false)} className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg transition-colors">
+                إلغاء
+              </button>
+            </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }
