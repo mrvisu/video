@@ -48,8 +48,8 @@
 
     <!-- شاشة التحميل -->
     <div id="loadingScreen" class="fixed inset-0 bg-white z-[100] flex-col items-center justify-center">
-        <i class="fa-solid fa-camera-retro text-6xl text-indigo-600 animate-bounce mb-4"></i>
-        <h2 class="text-xl font-bold text-gray-700 mt-4">جاري تحميل النظام...</h2>
+        <i class="fa-solid fa-cloud-arrow-up text-6xl text-indigo-600 animate-bounce mb-4"></i>
+        <h2 class="text-xl font-bold text-gray-700 mt-4">جاري الاتصال بقاعدة البيانات...</h2>
     </div>
 
     <div id="appContainer">
@@ -64,6 +64,9 @@
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-camera-retro text-2xl text-yellow-400"></i>
                             <h1 class="font-bold text-xl md:text-2xl">إدارة الاستوديو والقاعات</h1>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm bg-indigo-900 px-3 py-1 rounded-full text-green-300">
+                            <i class="fa-solid fa-wifi"></i> متصل
                         </div>
                     </div>
                 </div>
@@ -170,18 +173,16 @@
                             <div><label class="block text-sm font-bold mb-1">إجمالي القبض (الإيراد)</label><input type="number" id="d_income" value="1000" class="w-full border rounded-lg px-3 py-2" oninput="calculateDaily()"></div>
                         </div>
                         
-                        <!-- قسم إسناد المصورين (تم تصغيره وتعديله) -->
+                        <!-- قسم إسناد المصورين -->
                         <div class="mb-4 border border-indigo-100 rounded-xl p-3 bg-white shadow-sm">
                             <label class="block text-sm font-bold text-indigo-800 mb-2 border-b border-indigo-50 pb-1">
                                 <i class="fa-solid fa-camera-retro"></i> إسناد المصورين (اضغط للإضافة)
                             </label>
                             
-                            <!-- أزرار المصورين المتاحة (صغيرة) -->
                             <div class="flex flex-wrap gap-1.5 mb-3" id="photographersTemplates"></div>
                             
                             <label class="block text-xs font-bold mb-1.5 text-gray-500">المصورين المضافين لليومية:</label>
                             
-                            <!-- المصورين المضافين (مدمج وصغير) -->
                             <div class="min-h-[40px] bg-gray-50/50 border border-dashed border-gray-300 rounded-lg p-1.5 flex flex-wrap gap-1.5 items-center" id="selectedPhotographersContainer"></div>
                         </div>
 
@@ -271,9 +272,7 @@
                                 <input type="text" id="newPkgDetails" placeholder="تفاصيل الخدمة ومكونات الباكيدج..." class="border rounded-lg px-3 py-2 md:col-span-5">
                                 <button onclick="addPackage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg md:col-span-2 font-bold shadow-sm">+ إضافة</button>
                             </div>
-                            <div id="settingsPackagesList" class="space-y-2 max-h-48 overflow-y-auto pr-2">
-                                <!-- قائمة القوالب -->
-                            </div>
+                            <div id="settingsPackagesList" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
                         </div>
 
                         <!-- إعدادات القاعات -->
@@ -392,22 +391,34 @@
     <!-- Firebase Script & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, doc, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4",
+            authDomain: "video-c59af.firebaseapp.com",
+            databaseURL: "https://video-c59af-default-rtdb.firebaseio.com",
+            projectId: "video-c59af",
+            storageBucket: "video-c59af.firebasestorage.app",
+            messagingSenderId: "418823882244",
+            appId: "1:418823882244:web:a3b858a11bc191032a5751"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-wedding-app';
+        
+        // مسار قاعدة البيانات الرئيسي
+        const mainAppId = 'my-wedding-app'; 
 
         const paths = {
-            halls: collection(db, 'artifacts', appId, 'public', 'data', 'halls'),
-            photographers: collection(db, 'artifacts', appId, 'public', 'data', 'photographers'),
-            records: collection(db, 'artifacts', appId, 'public', 'data', 'records'),
-            bookings: collection(db, 'artifacts', appId, 'public', 'data', 'bookings'),
-            withdrawals: collection(db, 'artifacts', appId, 'public', 'data', 'withdrawals'),
-            packages: collection(db, 'artifacts', appId, 'public', 'data', 'packages') 
+            halls: collection(db, 'artifacts', mainAppId, 'public', 'data', 'halls'),
+            photographers: collection(db, 'artifacts', mainAppId, 'public', 'data', 'photographers'),
+            records: collection(db, 'artifacts', mainAppId, 'public', 'data', 'records'),
+            bookings: collection(db, 'artifacts', mainAppId, 'public', 'data', 'bookings'),
+            withdrawals: collection(db, 'artifacts', mainAppId, 'public', 'data', 'withdrawals'),
+            packages: collection(db, 'artifacts', mainAppId, 'public', 'data', 'packages') 
         };
 
         // الـ State الشاملة للبيانات
@@ -432,7 +443,6 @@
                 currentBookingPhotos = [];
                 currentSelectedPackageId = null; 
                 
-                // مسح الحقول السابقة
                 document.getElementById('b_name').value = '';
                 document.getElementById('b_phone').value = '';
                 document.getElementById('b_address').value = '';
@@ -491,14 +501,11 @@
         // Auth Flow
         const initAuth = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // تسجيل الدخول كمجهول للحصول على إذن قراءة وكتابة البيانات
+                await signInAnonymously(auth);
             } catch (error) {
                 console.error("Auth Error", error);
-                showToast("خطأ في الاتصال", true);
+                showToast("يرجى تفعيل (Anonymous) من إعدادات Authentication في Firebase", true);
             }
         };
 
@@ -514,7 +521,10 @@
                 state[key] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 updateUI();
             };
-            const onError = (err) => console.error(`Error listening to ${err}`);
+            const onError = (err) => {
+                console.error(`Error listening:`, err);
+                showToast("يرجى تفعيل القراءة والكتابة من قواعد أمان Firestore", true);
+            };
 
             onSnapshot(paths.halls, onData('halls'), onError);
             onSnapshot(paths.photographers, onData('photographers'), onError);
@@ -639,14 +649,10 @@
             sel.innerHTML = '<option value="">اختر القاعة...</option>' + state.halls.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
         };
 
-        // -------------------------------------------------------------
-        // قسم إسناد المصورين بعد التعديل والتصغير
-        // -------------------------------------------------------------
         window.renderDailyPhotographersSelector = () => {
             const templates = document.getElementById('photographersTemplates');
             const container = document.getElementById('selectedPhotographersContainer');
             
-            // تصغير أزرار الإضافة (px-2.5 py-1 text-xs)
             templates.innerHTML = state.photographers.filter(p => !currentDailyForm.selectedPhotos.find(s => s.id === p.id)).map(p => `
                 <button onclick="addToDailyPhotos('${p.id}', '${p.name}', ${p.rate})" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-bold transition shadow-sm flex items-center gap-1">
                     <i class="fa-solid fa-plus text-[10px]"></i> ${p.name}
@@ -656,7 +662,6 @@
             if(currentDailyForm.selectedPhotos.length === 0) {
                  container.innerHTML = `<span class="text-gray-400 text-xs w-full text-center py-1">لم يتم إضافة مصورين لهذه اليومية بعد</span>`;
             } else {
-                // تصغير كروت المصورين المضافين ومربع الإدخال (text-xs, w-14)
                 container.innerHTML = currentDailyForm.selectedPhotos.map((p, index) => `
                     <div class="bg-white border border-indigo-100 shadow-sm px-2 py-1 rounded-md text-xs flex items-center gap-1.5 w-full sm:w-auto">
                         <span class="font-bold text-indigo-900">${p.name}</span>
@@ -681,7 +686,6 @@
             currentDailyForm.selectedPhotos[index].rate = Number(val) || 0;
             window.calculateDaily();
         };
-        // -------------------------------------------------------------
 
         window.calculateDaily = () => {
             const income = Number(document.getElementById('d_income').value) || 0;
@@ -892,7 +896,7 @@
         };
 
         window.photographerWithdraw = async () => {
-            if(!state.user) return;
+            if(!state.user) { showToast('يجب تسجيل الدخول', true); return; }
             const amountInput = document.getElementById('pv_withdrawAmount');
             const amount = Number(amountInput.value);
             
@@ -913,7 +917,7 @@
         };
 
         window.addPackage = async () => {
-            if(!state.user) return;
+            if(!state.user) { showToast('يجب تسجيل الدخول', true); return; }
             const name = document.getElementById('newPkgName').value;
             const price = document.getElementById('newPkgPrice').value;
             const details = document.getElementById('newPkgDetails').value;
@@ -934,7 +938,7 @@
         };
 
         window.addHall = async () => {
-            if(!state.user) return;
+            if(!state.user) { showToast('يجب تسجيل الدخول', true); return; }
             const name = document.getElementById('newHallName').value;
             const color = document.getElementById('newHallColor').value;
             if(!name) { showToast('ادخل اسم القاعة', true); return; }
@@ -944,7 +948,7 @@
         };
 
         window.addPhotographer = async () => {
-             if(!state.user) return;
+             if(!state.user) { showToast('يجب تسجيل الدخول', true); return; }
              const name = document.getElementById('newPhotoName').value;
              const rate = document.getElementById('newPhotoRate').value || 0;
              if(!name) { showToast('ادخل اسم المصور', true); return; }
@@ -955,7 +959,7 @@
         };
 
         window.saveBooking = async () => {
-            if(!state.user) return;
+            if(!state.user) { showToast('يجب تسجيل الدخول', true); return; }
             const name = document.getElementById('b_name').value;
             const phone = document.getElementById('b_phone').value;
             const date = document.getElementById('b_date').value;
@@ -978,7 +982,7 @@
         };
 
         window.saveDailyRecord = async () => {
-            if(!state.user) return;
+            if(!state.user) { showToast('يجب تسجيل الدخول', true); return; }
             const date = document.getElementById('d_date').value;
             const hallId = document.getElementById('d_hall').value;
             const income = Number(document.getElementById('d_income').value) || 0;
@@ -1003,7 +1007,7 @@
             if(!state.user) return;
             if(confirm('هل أنت متأكد من الحذف؟')) {
                 try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', collectionName, docId));
+                    await deleteDoc(doc(db, 'artifacts', mainAppId, 'public', 'data', collectionName, docId));
                     showToast('تم الحذف بنجاح');
                 } catch(e) { showToast('خطأ أثناء الحذف', true); }
             }
