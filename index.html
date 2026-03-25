@@ -5,19 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة قاعات الأفراح والمصورين</title>
     
-    <!-- إعدادات Firebase -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-const firebaseConfig = {
-  apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4",
-  authDomain: "video-c59af.firebaseapp.com",
-  projectId: "video-c59af",
-  storageBucket: "video-c59af.firebasestorage.app",
-  messagingSenderId: "418823882244",
-  appId: "1:418823882244:web:a3b858a11bc191032a5751"
-};        const app = initializeApp(firebaseConfig);
-    </script>
-
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -45,7 +32,6 @@ const firebaseConfig = {
         }
         #toast.show { visibility: visible; opacity: 1; }
 
-        /* تنسيقات خاصة بواجهة المصور (الموبايل) */
         .mobile-view {
             max-width: 480px;
             margin: 0 auto;
@@ -53,421 +39,800 @@ const firebaseConfig = {
             min-height: 100vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
+        
+        #appContainer { display: none; }
+        #loadingScreen { display: flex; }
     </style>
 </head>
 <body class="text-gray-800">
 
-    <!-- ========================================== -->
-    <!-- واجهة مدير النظام (تختفي إذا كان الرابط للمصور) -->
-    <!-- ========================================== -->
-    <div id="adminApp" style="display: none;">
-        <!-- شريط التنقل العلوي -->
-        <nav class="bg-indigo-800 text-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16 items-center">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-camera-retro text-2xl text-yellow-400"></i>
-                        <h1 class="font-bold text-xl md:text-2xl">إدارة الاستوديو والقاعات</h1>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <!-- المحتوى الرئيسي -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="globalFinancials"></div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="topStatsContainer"></div>
-
-            <!-- أزرار الإجراءات الرئيسية -->
-            <div class="flex flex-wrap gap-4 mb-8">
-                <button onclick="openModal('dailyModal')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-blue-800">
-                    <i class="fa-solid fa-file-invoice-dollar text-2xl"></i> تسجيل يومية
-                </button>
-                <button onclick="openModal('bookingModal')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-emerald-800">
-                    <i class="fa-regular fa-calendar-check text-2xl"></i> حجز ميعاد
-                </button>
-                <button onclick="openModal('photographersModal')" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-purple-800">
-                    <i class="fa-solid fa-users text-2xl"></i> حسابات المصورين
-                </button>
-                <button onclick="openSettings()" class="flex-1 bg-gray-700 hover:bg-gray-800 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-gray-900">
-                    <i class="fa-solid fa-gear text-2xl"></i> الإعدادات
-                </button>
-            </div>
-
-            <!-- الأقسام السفلية -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- قسم الحجوزات القادمة -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 border-b pb-4">
-                        <h2 class="text-xl font-bold text-emerald-700 flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-days"></i> الحجوزات القادمة
-                        </h2>
-                        <div class="flex gap-2 text-xs font-bold" id="bookingsSummaryHeader"></div>
-                    </div>
-                    <div class="space-y-4 flex-1 overflow-y-auto pr-2" id="bookingsList" style="max-height: 500px;"></div>
-                </div>
-
-                <!-- قسم سجل الحسابات اليومية -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 border-b pb-4">
-                        <h2 class="text-xl font-bold text-blue-700 flex items-center gap-2">
-                            <i class="fa-solid fa-clipboard-list"></i> سجل الحسابات اليومية
-                        </h2>
-                        <div class="flex gap-2 text-xs font-bold" id="recordsSummaryHeader"></div>
-                    </div>
-                    <div class="space-y-4 flex-1 overflow-y-auto pr-2" id="recordsList" style="max-height: 500px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- نافذة المصورين (جديدة للحصول على الروابط) -->
-        <div id="photographersModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto modal-content">
-                <div class="bg-purple-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
-                    <h3 class="font-bold text-xl">إدارة حسابات المصورين وروابط التتبع</h3>
-                    <button onclick="closeModal('photographersModal')" class="text-white hover:text-red-200 text-2xl">&times;</button>
-                </div>
-                <div class="p-6">
-                    <p class="text-sm text-gray-500 mb-4">انسخ الرابط الخاص بكل مصور وقم بإرساله له ليتابع مواعيده وحساباته من هاتفه.</p>
-                    <div id="adminPhotographersList" class="space-y-3">
-                        <!-- تملأ برمجياً -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- نوافذ الإدارة (اليومية، الحجز، الإعدادات) - كما كانت في كودك مع تعديلات بسيطة -->
-        <!-- نافذة تسجيل يومية -->
-        <div id="dailyModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto modal-content">
-                <div class="bg-blue-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
-                    <h3 class="font-bold text-xl">تسجيل يومية حسابات</h3>
-                    <button onclick="closeModal('dailyModal')" class="text-white hover:text-red-200 text-2xl">&times;</button>
-                </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                        <div><label class="block text-sm font-bold mb-1">تاريخ المناسبة</label><input type="date" id="d_date" class="w-full border rounded-lg px-3 py-2"></div>
-                        <div><label class="block text-sm font-bold mb-1">اسم القاعة</label><select id="d_hall" class="w-full border rounded-lg px-3 py-2"></select></div>
-                        <div><label class="block text-sm font-bold mb-1">إجمالي القبض</label><input type="number" id="d_income" value="1000" class="w-full border rounded-lg px-3 py-2" oninput="calculateDaily()"></div>
-                    </div>
-                    <div class="mb-6 border border-indigo-100 rounded-xl p-4 bg-white">
-                        <label class="block text-sm font-bold text-indigo-800 mb-3 border-b pb-2"><i class="fa-solid fa-camera-retro"></i> قوالب المصورين (اضغط للإضافة)</label>
-                        <div class="flex flex-wrap gap-2 mb-4" id="photographersTemplates"></div>
-                        <label class="block text-sm font-bold mb-2">المصورين المضافين لليومية:</label>
-                        <div class="min-h-[50px] bg-gray-50 border border-dashed rounded-lg p-2 flex flex-wrap gap-2 items-center" id="selectedPhotographersContainer"></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-orange-50 p-4 rounded-xl border border-orange-100 items-end">
-                        <div>
-                            <button id="d_flashToggle" onclick="toggleFlashDrive()" class="w-full bg-white border-2 border-gray-300 text-gray-600 font-bold py-2 px-4 rounded-lg flex justify-between items-center transition-colors">
-                                <span><i class="fa-brands fa-usb"></i> استخدام فلاشة؟</span><span id="d_flashStatus" class="text-xs bg-gray-200 px-2 py-1 rounded">لا</span>
-                            </button>
-                        </div>
-                        <div><label class="block text-sm font-bold mb-1">سيارة نقل</label><input type="number" id="d_carCost" value="0" class="w-full border rounded-lg px-3 py-2" oninput="calculateDaily()"></div>
-                        <div><label class="block text-sm font-bold mb-1">مصروفات أخرى</label><input type="number" id="d_otherCost" value="0" class="w-full border rounded-lg px-3 py-2" oninput="calculateDaily()"></div>
-                    </div>
-                    <div class="bg-gray-800 text-white rounded-xl p-4 flex flex-wrap justify-between items-center">
-                        <div class="text-sm">أجور: <span id="summary_photos" class="text-yellow-300 font-bold">0</span> | فلاشة: <span id="summary_flash" class="text-yellow-300 font-bold">0</span> | أخرى: <span id="summary_others" class="text-yellow-300 font-bold">0</span></div>
-                        <div class="text-xl font-bold mt-2 md:mt-0">الصافي: <span id="summary_net" class="text-green-400 text-2xl">0</span></div>
-                    </div>
-                </div>
-                <div class="bg-gray-100 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
-                    <button onclick="closeModal('dailyModal')" class="bg-white border px-6 py-2 rounded-lg font-bold">إلغاء</button>
-                    <button onclick="saveDailyRecord()" class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold shadow-md">حفظ</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- نافذة حجز ميعاد -->
-        <div id="bookingModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-content">
-                <div class="bg-emerald-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
-                    <h3 class="font-bold text-xl">حجز ميعاد مناسبة</h3>
-                    <button onclick="closeModal('bookingModal')" class="text-white hover:text-red-200 text-2xl">&times;</button>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-bold mb-1">اسم العميل</label><input type="text" id="b_name" class="w-full border rounded-lg px-3 py-2"></div>
-                        <div><label class="block text-sm font-bold mb-1">التليفون</label><input type="tel" id="b_phone" class="w-full border rounded-lg px-3 py-2"></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-bold mb-1">تاريخ المناسبة</label><input type="date" id="b_date" class="w-full border rounded-lg px-3 py-2"></div>
-                        <div><label class="block text-sm font-bold mb-1">العنوان / القاعة</label><input type="text" id="b_address" class="w-full border rounded-lg px-3 py-2"></div>
-                    </div>
-                    
-                    <!-- إسناد مصورين للحجز -->
-                    <div class="border border-purple-200 p-4 rounded-xl bg-purple-50/50 mt-4">
-                        <label class="block text-sm font-bold mb-2 text-purple-800"><i class="fa-solid fa-camera"></i> إسناد العمل لمصورين (اختياري)</label>
-                        <div id="bookingPhotographers" class="flex flex-wrap gap-2"></div>
-                    </div>
-
-                    <div class="mt-4 border border-emerald-200 p-4 rounded-xl bg-emerald-50/50">
-                        <label class="block text-sm font-bold mb-1 mt-3">الخدمة المطلوبة (التفاصيل)</label>
-                        <textarea id="b_details" placeholder="اكتب تفاصيل الخدمة المتفق عليها..." class="w-full border rounded-lg px-3 py-2" rows="2"></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-emerald-50 p-4 rounded-xl border border-emerald-100 mt-4">
-                        <div><label class="block text-sm font-bold mb-1">الإجمالي</label><input type="number" id="b_total" value="0" class="w-full border rounded-lg px-3 py-2" oninput="calculateBooking()"></div>
-                        <div><label class="block text-sm font-bold mb-1">المدفوع (عربون)</label><input type="number" id="b_paid" value="0" class="w-full border rounded-lg px-3 py-2" oninput="calculateBooking()"></div>
-                        <div><label class="block text-sm font-bold mb-1">الباقي</label><input type="number" id="b_rem" value="0" readonly class="w-full bg-gray-200 border rounded-lg px-3 py-2 font-bold text-red-600"></div>
-                    </div>
-                </div>
-                <div class="bg-gray-100 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
-                    <button onclick="closeModal('bookingModal')" class="bg-white border px-6 py-2 rounded-lg font-bold">إلغاء</button>
-                    <button onclick="saveBooking()" class="bg-emerald-600 text-white px-8 py-2 rounded-lg font-bold shadow-md">حفظ الحجز</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- الإعدادات -->
-        <div id="settingsModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto modal-content">
-                <div class="bg-gray-800 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
-                    <h3 class="font-bold text-xl">الإعدادات</h3>
-                    <button onclick="closeModal('settingsModal')" class="text-white text-2xl">&times;</button>
-                </div>
-                <div class="p-6 space-y-6">
-                    <div class="border rounded-xl p-4">
-                        <h4 class="font-bold mb-3"><i class="fa-solid fa-usb text-gray-500"></i> إعدادات الفلاشات</h4>
-                        <div class="flex gap-2 mb-3">
-                            <div class="flex-1">
-                                <label class="block text-xs text-gray-500 mb-1">الرصيد المتاح</label>
-                                <input type="number" id="settingFlashCount" class="w-full border rounded-lg px-3 py-2">
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-xs text-gray-500 mb-1">تكلفة الفلاشة (ج.م)</label>
-                                <input type="number" id="settingFlashCost" class="w-full border rounded-lg px-3 py-2">
-                            </div>
-                        </div>
-                        <button onclick="saveInventorySettings()" class="w-full bg-gray-800 text-white px-4 py-2 rounded-lg mt-2 hover:bg-gray-700 transition">حفظ إعدادات الفلاشات</button>
-                    </div>
-                    <div class="border rounded-xl p-4">
-                        <h4 class="font-bold mb-3"><i class="fa-solid fa-building text-blue-500"></i> إدارة القاعات</h4>
-                        <div class="flex gap-2 mb-3">
-                            <input type="text" id="newHallName" placeholder="اسم القاعة" class="flex-1 border rounded-lg px-3 py-2">
-                            <input type="color" id="newHallColor" value="#3b82f6" class="h-10 w-12 border rounded-lg cursor-pointer">
-                            <button onclick="addHall()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">إضافة</button>
-                        </div>
-                        <div id="settingsHallsList" class="flex flex-wrap gap-2"></div>
-                    </div>
-                    <div class="border rounded-xl p-4">
-                        <h4 class="font-bold mb-3"><i class="fa-solid fa-camera text-purple-500"></i> فريق المصورين</h4>
-                        <div class="flex gap-2 mb-3">
-                            <input type="text" id="newPhotoName" placeholder="الاسم" class="flex-1 border rounded-lg px-3 py-2">
-                            <input type="number" id="newPhotoRate" placeholder="الأجر الافتراضي" class="w-32 border rounded-lg px-3 py-2">
-                            <button onclick="addPhotographer()" class="bg-purple-600 text-white px-4 py-2 rounded-lg">إضافة</button>
-                        </div>
-                        <div id="settingsPhotosList" class="flex flex-wrap gap-2"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- شاشة التحميل -->
+    <div id="loadingScreen" class="fixed inset-0 bg-white z-[100] flex-col items-center justify-center">
+        <i class="fa-solid fa-camera-retro text-6xl text-indigo-600 animate-bounce mb-4"></i>
+        <h2 class="text-xl font-bold text-gray-700 mt-4">جاري تحميل النظام...</h2>
     </div>
 
-
-    <!-- ========================================== -->
-    <!-- واجهة المصور (الموبايل فقط) تظهر حسب الرابط -->
-    <!-- ========================================== -->
-    <div id="photographerView" class="mobile-view" style="display: none;">
-        
-        <!-- الهيدر -->
-        <div class="bg-purple-800 text-white p-4 shadow-md rounded-b-3xl relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10"></div>
-            <div class="flex justify-between items-center relative z-10">
-                <div>
-                    <h2 class="text-sm font-normal opacity-80">مرحباً بك،</h2>
-                    <h1 class="text-2xl font-bold" id="pv_name">اسم المصور</h1>
+    <div id="appContainer">
+        <!-- ========================================== -->
+        <!-- واجهة مدير النظام -->
+        <!-- ========================================== -->
+        <div id="adminApp" style="display: none;">
+            <!-- شريط التنقل العلوي -->
+            <nav class="bg-indigo-800 text-white shadow-lg">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16 items-center">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-camera-retro text-2xl text-yellow-400"></i>
+                            <h1 class="font-bold text-xl md:text-2xl">إدارة الاستوديو والقاعات</h1>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white text-purple-800 p-3 rounded-full shadow-lg">
-                    <i class="fa-solid fa-camera-retro text-xl"></i>
+            </nav>
+
+            <!-- المحتوى الرئيسي -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-indigo-500 text-center">
+                        <p class="text-gray-500 text-sm font-bold">إجمالي الإيرادات</p>
+                        <h3 class="text-2xl font-black text-indigo-700" id="stat_income">0 <span class="text-sm">ج.م</span></h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-emerald-500 text-center">
+                        <p class="text-gray-500 text-sm font-bold">صافي الأرباح</p>
+                        <h3 class="text-2xl font-black text-emerald-700" id="stat_net">0 <span class="text-sm">ج.م</span></h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-purple-500 text-center">
+                        <p class="text-gray-500 text-sm font-bold">أجور المصورين</p>
+                        <h3 class="text-2xl font-black text-purple-700" id="stat_photos">0 <span class="text-sm">ج.م</span></h3>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-orange-500 text-center">
+                        <p class="text-gray-500 text-sm font-bold">الحجوزات القادمة</p>
+                        <h3 class="text-2xl font-black text-orange-700" id="stat_bookings">0</h3>
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات الرئيسية -->
+                <div class="flex flex-wrap gap-4 mb-8">
+                    <button onclick="openModal('dailyModal')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-blue-800">
+                        <i class="fa-solid fa-file-invoice-dollar text-2xl"></i> تسجيل يومية
+                    </button>
+                    <button onclick="openModal('bookingModal')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-emerald-800">
+                        <i class="fa-regular fa-calendar-check text-2xl"></i> حجز ميعاد
+                    </button>
+                    <button onclick="openModal('photographersModal')" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-purple-800">
+                        <i class="fa-solid fa-users text-2xl"></i> حسابات المصورين
+                    </button>
+                    <button onclick="openModal('settingsModal')" class="flex-1 bg-gray-700 hover:bg-gray-800 text-white py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 font-bold text-lg border-b-4 border-gray-900">
+                        <i class="fa-solid fa-gear text-2xl"></i> الإعدادات
+                    </button>
+                </div>
+
+                <!-- الأقسام السفلية -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- قسم الحجوزات القادمة -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 border-b pb-4">
+                            <h2 class="text-xl font-bold text-emerald-700 flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-days"></i> الحجوزات القادمة
+                            </h2>
+                        </div>
+                        <div class="space-y-4 flex-1 overflow-y-auto pr-2" id="bookingsList" style="max-height: 500px;">
+                            <p class="text-center text-gray-400 py-4">لا توجد حجوزات مسجلة.</p>
+                        </div>
+                    </div>
+
+                    <!-- قسم سجل الحسابات اليومية -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2 border-b pb-4">
+                            <h2 class="text-xl font-bold text-blue-700 flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-list"></i> سجل الحسابات اليومية
+                            </h2>
+                        </div>
+                        <div class="space-y-4 flex-1 overflow-y-auto pr-2" id="recordsList" style="max-height: 500px;">
+                            <p class="text-center text-gray-400 py-4">لم يتم تسجيل يوميات بعد.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نوافذ الإدارة المنبثقة (Modals) -->
+            
+            <!-- نافذة حسابات المصورين -->
+            <div id="photographersModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto modal-content">
+                    <div class="bg-purple-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
+                        <h3 class="font-bold text-xl">إدارة حسابات المصورين وروابط التتبع</h3>
+                        <button onclick="closeModal('photographersModal')" class="text-white hover:text-red-200 text-2xl">&times;</button>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-500 mb-4">انسخ الرابط الخاص بكل مصور وقم بإرساله له ليتابع مواعيده وحساباته من هاتفه.</p>
+                        <div id="adminPhotographersList" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نافذة تسجيل يومية -->
+            <div id="dailyModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto modal-content">
+                    <div class="bg-blue-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
+                        <h3 class="font-bold text-xl">تسجيل يومية حسابات</h3>
+                        <button onclick="closeModal('dailyModal')" class="text-white hover:text-red-200 text-2xl">&times;</button>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div><label class="block text-sm font-bold mb-1">تاريخ المناسبة</label><input type="date" id="d_date" class="w-full border rounded-lg px-3 py-2"></div>
+                            <div>
+                                <label class="block text-sm font-bold mb-1">اسم القاعة</label>
+                                <select id="d_hall" class="w-full border rounded-lg px-3 py-2">
+                                    <option value="">اختر القاعة...</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-sm font-bold mb-1">إجمالي القبض (الإيراد)</label><input type="number" id="d_income" value="1000" class="w-full border rounded-lg px-3 py-2" oninput="calculateDaily()"></div>
+                        </div>
+                        
+                        <!-- قسم إسناد المصورين (تم تصغيره وتعديله) -->
+                        <div class="mb-4 border border-indigo-100 rounded-xl p-3 bg-white shadow-sm">
+                            <label class="block text-sm font-bold text-indigo-800 mb-2 border-b border-indigo-50 pb-1">
+                                <i class="fa-solid fa-camera-retro"></i> إسناد المصورين (اضغط للإضافة)
+                            </label>
+                            
+                            <!-- أزرار المصورين المتاحة (صغيرة) -->
+                            <div class="flex flex-wrap gap-1.5 mb-3" id="photographersTemplates"></div>
+                            
+                            <label class="block text-xs font-bold mb-1.5 text-gray-500">المصورين المضافين لليومية:</label>
+                            
+                            <!-- المصورين المضافين (مدمج وصغير) -->
+                            <div class="min-h-[40px] bg-gray-50/50 border border-dashed border-gray-300 rounded-lg p-1.5 flex flex-wrap gap-1.5 items-center" id="selectedPhotographersContainer"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-orange-50 p-4 rounded-xl border border-orange-100 items-end">
+                            <div><label class="block text-sm font-bold mb-1">سيارة نقل</label><input type="number" id="d_carCost" value="0" class="w-full border rounded-lg px-3 py-2" oninput="calculateDaily()"></div>
+                            <div><label class="block text-sm font-bold mb-1">مصروفات أخرى</label><input type="number" id="d_otherCost" value="0" class="w-full border rounded-lg px-3 py-2" oninput="calculateDaily()"></div>
+                        </div>
+                        <div class="bg-gray-800 text-white rounded-xl p-4 flex flex-wrap justify-between items-center">
+                            <div class="text-sm">أجور المصورين: <span id="summary_photos" class="text-yellow-300 font-bold">0</span> | إجمالي المصروفات: <span id="summary_expenses" class="text-yellow-300 font-bold">0</span></div>
+                            <div class="text-xl font-bold mt-2 md:mt-0">صافي الربح: <span id="summary_net" class="text-green-400 text-2xl">1000</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+                        <button onclick="closeModal('dailyModal')" class="bg-white border px-6 py-2 rounded-lg font-bold hover:bg-gray-50">إلغاء</button>
+                        <button onclick="saveDailyRecord()" class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold shadow-md hover:bg-blue-700">حفظ اليومية</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نافذة حجز ميعاد -->
+            <div id="bookingModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto modal-content">
+                    <div class="bg-emerald-600 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
+                        <h3 class="font-bold text-xl">حجز ميعاد مناسبة</h3>
+                        <button onclick="closeModal('bookingModal')" class="text-white hover:text-red-200 text-2xl">&times;</button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <!-- بيانات العميل -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-bold mb-1">اسم العميل</label><input type="text" id="b_name" class="w-full border rounded-lg px-3 py-2"></div>
+                            <div><label class="block text-sm font-bold mb-1">التليفون</label><input type="tel" id="b_phone" class="w-full border rounded-lg px-3 py-2"></div>
+                            <div><label class="block text-sm font-bold mb-1">تاريخ المناسبة</label><input type="date" id="b_date" class="w-full border rounded-lg px-3 py-2"></div>
+                            <div><label class="block text-sm font-bold mb-1">العنوان / القاعة</label><input type="text" id="b_address" class="w-full border rounded-lg px-3 py-2"></div>
+                        </div>
+                        
+                        <!-- إسناد المصورين -->
+                        <div class="border border-purple-200 p-4 rounded-xl bg-purple-50/50 mt-4">
+                            <label class="block text-sm font-bold mb-2 text-purple-800"><i class="fa-solid fa-camera"></i> إسناد العمل لمصورين (اضغط للاختيار)</label>
+                            <div id="bookingPhotographers" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <!-- قوالب الخدمات السريعة (تأتي من الإعدادات) -->
+                        <div class="mt-6">
+                            <label class="block text-lg font-bold mb-3 text-indigo-800 border-b pb-2 flex justify-between items-center">
+                                <span><i class="fa-solid fa-tags"></i> قوالب الخدمات السريعة (اختر الباكيدج):</span>
+                                <span class="text-xs text-gray-500 font-normal">يمكنك تعديلها من شاشة الإعدادات</span>
+                            </label>
+                            <div id="packagesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- سيتم تعبئتها بواسطة الجافاسكريبت -->
+                            </div>
+                        </div>
+
+                        <!-- التفاصيل المالية -->
+                        <div class="mt-4 border border-emerald-200 p-4 rounded-xl bg-emerald-50/50">
+                            <label class="block text-sm font-bold mb-1 mt-1">الخدمة المطلوبة (التفاصيل)</label>
+                            <textarea id="b_details" placeholder="اكتب تفاصيل الخدمة المتفق عليها أو اختر من القوالب أعلاه..." class="w-full border rounded-lg px-3 py-2" rows="3"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-emerald-50 p-4 rounded-xl border border-emerald-100 mt-4">
+                            <div><label class="block text-sm font-bold mb-1">الإجمالي</label><input type="number" id="b_total" value="0" class="w-full border rounded-lg px-3 py-2 text-lg font-bold text-indigo-700" oninput="calculateBooking()"></div>
+                            <div><label class="block text-sm font-bold mb-1">المدفوع (عربون)</label><input type="number" id="b_paid" value="0" class="w-full border rounded-lg px-3 py-2 text-lg font-bold text-emerald-700" oninput="calculateBooking()"></div>
+                            <div><label class="block text-sm font-bold mb-1">الباقي</label><input type="number" id="b_rem" value="0" readonly class="w-full bg-gray-200 border rounded-lg px-3 py-2 text-lg font-bold text-red-600"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+                        <button onclick="closeModal('bookingModal')" class="bg-white border px-6 py-2 rounded-lg font-bold hover:bg-gray-50">إلغاء</button>
+                        <button onclick="saveBooking()" class="bg-emerald-600 text-white px-8 py-2 rounded-lg font-bold shadow-md hover:bg-emerald-700">حفظ الحجز</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الإعدادات -->
+            <div id="settingsModal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 items-center justify-center p-4">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto modal-content">
+                    <div class="bg-gray-800 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center sticky top-0 z-10">
+                        <h3 class="font-bold text-xl">الإعدادات العامة</h3>
+                        <button onclick="closeModal('settingsModal')" class="text-white text-2xl hover:text-red-400">&times;</button>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        
+                        <!-- إعدادات قوالب الخدمات -->
+                        <div class="border rounded-xl p-4 bg-indigo-50/30 border-indigo-100 shadow-sm">
+                            <h4 class="font-bold mb-4 text-indigo-800"><i class="fa-solid fa-tags text-indigo-500"></i> إدارة قوالب الخدمات (الباكيدجات)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-4">
+                                <input type="text" id="newPkgName" placeholder="اسم الباكيدج (مثال: الباكيدج الذهبي)" class="border rounded-lg px-3 py-2 md:col-span-3">
+                                <input type="number" id="newPkgPrice" placeholder="السعر (ج.م)" class="border rounded-lg px-3 py-2 md:col-span-2">
+                                <input type="text" id="newPkgDetails" placeholder="تفاصيل الخدمة ومكونات الباكيدج..." class="border rounded-lg px-3 py-2 md:col-span-5">
+                                <button onclick="addPackage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg md:col-span-2 font-bold shadow-sm">+ إضافة</button>
+                            </div>
+                            <div id="settingsPackagesList" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                                <!-- قائمة القوالب -->
+                            </div>
+                        </div>
+
+                        <!-- إعدادات القاعات -->
+                        <div class="border rounded-xl p-4 bg-blue-50/30 border-blue-100 shadow-sm">
+                            <h4 class="font-bold mb-3 text-blue-800"><i class="fa-solid fa-building text-blue-500"></i> إدارة القاعات</h4>
+                            <div class="flex gap-2 mb-3">
+                                <input type="text" id="newHallName" placeholder="اسم القاعة" class="flex-1 border rounded-lg px-3 py-2">
+                                <input type="color" id="newHallColor" value="#3b82f6" class="h-10 w-12 border rounded-lg cursor-pointer">
+                                <button onclick="addHall()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-sm">إضافة</button>
+                            </div>
+                            <div id="settingsHallsList" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <!-- إعدادات المصورين -->
+                        <div class="border rounded-xl p-4 bg-purple-50/30 border-purple-100 shadow-sm">
+                            <h4 class="font-bold mb-3 text-purple-800"><i class="fa-solid fa-camera text-purple-500"></i> فريق المصورين</h4>
+                            <div class="flex gap-2 mb-3">
+                                <input type="text" id="newPhotoName" placeholder="اسم المصور" class="flex-1 border rounded-lg px-3 py-2">
+                                <input type="number" id="newPhotoRate" placeholder="الأجر الافتراضي" class="w-32 border rounded-lg px-3 py-2">
+                                <button onclick="addPhotographer()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg shadow-sm">إضافة</button>
+                            </div>
+                            <div id="settingsPhotosList" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- إشعار عمل الغد (يظهر فقط إذا كان هناك عمل غداً) -->
-        <div id="pv_tomorrowAlert" class="mx-4 mt-4 hidden">
-            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded shadow-sm flex items-start gap-3">
-                <i class="fa-solid fa-bell text-2xl text-yellow-600 animate-pulse"></i>
-                <div>
-                    <h4 class="font-bold text-lg">تذكير هام!</h4>
-                    <p class="text-sm">لديك شغل غداً بتاريخ <span id="pv_tomorrowDate" class="font-bold"></span>.</p>
-                    <p class="text-xs mt-1 text-gray-600" id="pv_tomorrowDetails"></p>
+        <!-- ========================================== -->
+        <!-- واجهة المصور (الموبايل فقط) -->
+        <!-- ========================================== -->
+        <div id="photographerView" class="mobile-view" style="display: none;">
+            
+            <!-- الهيدر -->
+            <div class="bg-purple-800 text-white p-4 shadow-md rounded-b-3xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10"></div>
+                <div class="flex justify-between items-center relative z-10">
+                    <div>
+                        <h2 class="text-sm font-normal opacity-80">مرحباً بك،</h2>
+                        <h1 class="text-2xl font-bold" id="pv_name">جاري التحميل...</h1>
+                    </div>
+                    <div class="bg-white text-purple-800 p-3 rounded-full shadow-lg">
+                        <i class="fa-solid fa-camera-retro text-xl"></i>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ملخص الحسابات -->
-        <div class="grid grid-cols-2 gap-4 p-4 mt-2">
-            <div class="bg-white p-4 rounded-2xl shadow-sm text-center border-t-4 border-green-500">
-                <span class="block text-gray-500 text-xs font-bold mb-1">الرصيد المتاح لك</span>
-                <span class="block text-2xl font-black text-gray-800" id="pv_balance">0 <span class="text-sm font-normal text-gray-400">ج.م</span></span>
-            </div>
-            <div class="bg-white p-4 rounded-2xl shadow-sm text-center border-t-4 border-purple-500">
-                <span class="block text-gray-500 text-xs font-bold mb-1">أيام العمل</span>
-                <span class="block text-2xl font-black text-gray-800" id="pv_daysCount">0 <span class="text-sm font-normal text-gray-400">يوم</span></span>
-            </div>
-            <div class="bg-gray-100 p-3 rounded-xl text-center col-span-2 flex justify-between px-6">
-                <div>
-                    <span class="block text-gray-500 text-xs mb-1">إجمالي ما عملته</span>
-                    <span class="font-bold text-gray-700" id="pv_totalEarned">0 ج.م</span>
-                </div>
-                <div>
-                    <span class="block text-gray-500 text-xs mb-1">ما تم سحبه</span>
-                    <span class="font-bold text-red-500" id="pv_totalWithdrawn">0 ج.م</span>
+            <!-- إشعار عمل الغد -->
+            <div id="pv_tomorrowAlert" class="mx-4 mt-4 hidden">
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded shadow-sm flex items-start gap-3">
+                    <i class="fa-solid fa-bell text-2xl text-yellow-600 animate-pulse"></i>
+                    <div>
+                        <h4 class="font-bold text-lg">تذكير هام!</h4>
+                        <p class="text-sm">لديك شغل غداً بتاريخ <span id="pv_tomorrowDate" class="font-bold"></span>.</p>
+                        <p class="text-xs mt-1 text-gray-600 font-bold" id="pv_tomorrowDetails"></p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- نموذج سحب مبلغ -->
-        <div class="px-4 mb-6">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-money-bill-transfer text-blue-500"></i> تسجيل سحب نقدية</h3>
-                <div class="flex gap-2">
-                    <input type="number" id="pv_withdrawAmount" placeholder="المبلغ (ج.م)" class="flex-1 border rounded-xl px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <button onclick="photographerWithdraw()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold transition">سحب</button>
+            <!-- ملخص الحسابات -->
+            <div class="grid grid-cols-2 gap-4 p-4 mt-2">
+                <div class="bg-white p-4 rounded-2xl shadow-sm text-center border-t-4 border-green-500">
+                    <span class="block text-gray-500 text-xs font-bold mb-1">الرصيد المتاح لك</span>
+                    <span class="block text-2xl font-black text-gray-800" id="pv_balance">0 <span class="text-sm font-normal text-gray-400">ج.م</span></span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm text-center border-t-4 border-purple-500">
+                    <span class="block text-gray-500 text-xs font-bold mb-1">أيام العمل المسجلة</span>
+                    <span class="block text-2xl font-black text-gray-800" id="pv_daysCount">0 <span class="text-sm font-normal text-gray-400">يوم</span></span>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-xl text-center col-span-2 flex justify-between px-6">
+                    <div>
+                        <span class="block text-gray-500 text-xs mb-1">إجمالي ما عملته</span>
+                        <span class="font-bold text-gray-700" id="pv_totalEarned">0 ج.م</span>
+                    </div>
+                    <div>
+                        <span class="block text-gray-500 text-xs mb-1">ما تم سحبه</span>
+                        <span class="font-bold text-red-500" id="pv_totalWithdrawn">0 ج.م</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- المواعيد القادمة -->
-        <div class="px-4 mb-6">
-            <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-alt text-emerald-500"></i> مواعيدك القادمة</h3>
-            <div id="pv_upcomingList" class="space-y-3">
-                <!-- تملأ برمجياً -->
+            <!-- نموذج سحب مبلغ -->
+            <div class="px-4 mb-6">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-money-bill-transfer text-blue-500"></i> تسجيل سحب نقدية</h3>
+                    <div class="flex gap-2">
+                        <input type="number" id="pv_withdrawAmount" placeholder="المبلغ (ج.م)" class="flex-1 border rounded-xl px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <button onclick="photographerWithdraw()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold transition">سحب</button>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- سجل العمل السابق -->
-        <div class="px-4 pb-10">
-            <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-history text-gray-500"></i> سجل العمل والأجور</h3>
-            <div id="pv_historyList" class="space-y-3">
-                <!-- تملأ برمجياً -->
+            <!-- المواعيد القادمة -->
+            <div class="px-4 mb-6">
+                <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-alt text-emerald-500"></i> مواعيدك القادمة</h3>
+                <div id="pv_upcomingList" class="space-y-3"></div>
             </div>
-        </div>
 
+            <!-- سجل العمل السابق -->
+            <div class="px-4 pb-10">
+                <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-history text-gray-500"></i> سجل العمل والأجور</h3>
+                <div id="pv_historyList" class="space-y-3"></div>
+            </div>
+            
+             <!-- زر العودة للإدارة -->
+             <div class="px-4 pb-10 text-center">
+                <a href="?" class="text-blue-500 underline text-sm font-bold">العودة لشاشة المدير</a>
+             </div>
+        </div>
     </div>
 
     <!-- إشعار عام -->
     <div id="toast">تم بنجاح</div>
 
-    <script>
-        // -----------------------------------------------------
-        // 1. إدارة الحالة وقاعدة البيانات المحلية
-        // -----------------------------------------------------
-        let state = {
-            halls: [{ id: 1, name: 'القاعة الأولى', color: '#3b82f6' }],
-            photographers: [{ id: 1, name: 'أحمد', rate: 200 }],
-            inventory: { flashCount: 10, flashCost: 50 },
-            records: [], // اليوميات السابقة
-            bookings: [], // الحجوزات القادمة
-            withdrawals: [] // سحوبات المصورين المالية
+    <!-- Firebase Script & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-wedding-app';
+
+        const paths = {
+            halls: collection(db, 'artifacts', appId, 'public', 'data', 'halls'),
+            photographers: collection(db, 'artifacts', appId, 'public', 'data', 'photographers'),
+            records: collection(db, 'artifacts', appId, 'public', 'data', 'records'),
+            bookings: collection(db, 'artifacts', appId, 'public', 'data', 'bookings'),
+            withdrawals: collection(db, 'artifacts', appId, 'public', 'data', 'withdrawals'),
+            packages: collection(db, 'artifacts', appId, 'public', 'data', 'packages') 
         };
-        
-        let currentDailyForm = { selectedPhotos: [], useFlash: false };
+
+        // الـ State الشاملة للبيانات
+        let state = { halls: [], photographers: [], records: [], bookings: [], withdrawals: [], packages: [], user: null };
+        let currentDailyForm = { selectedPhotos: [] };
         let currentBookingPhotos = [];
-        
+        let currentSelectedPackageId = null;
         let isPhotographerView = false;
         let currentPhotographerId = null;
 
-        // تهيئة التطبيق
-        window.onload = () => {
-            loadData();
-            
-            // التحقق من الرابط: هل هو للمدير أم للمصور؟
-            const urlParams = new URLSearchParams(window.location.search);
-            const pid = urlParams.get('pid');
-            
-            if (pid) {
-                // وضع المصور
-                isPhotographerView = true;
-                currentPhotographerId = parseInt(pid);
-                document.getElementById('adminApp').style.display = 'none';
-                document.getElementById('photographerView').style.display = 'block';
-                initPhotographerView();
-            } else {
-                // وضع المدير
-                document.getElementById('adminApp').style.display = 'block';
-                document.getElementById('photographerView').style.display = 'none';
-                updateUI();
-                
-                // تجهيز التواريخ لليوم الحالي
-                document.getElementById('d_date').valueAsDate = new Date();
+        // UI Helpers
+        window.openModal = (id) => {
+            document.getElementById(id).classList.add('active');
+            if(id === 'dailyModal') {
+                 document.getElementById('d_date').valueAsDate = new Date();
+                 currentDailyForm.selectedPhotos = [];
+                 renderDailyPhotographersSelector();
+                 calculateDaily();
+            }
+            if(id === 'bookingModal') {
                 document.getElementById('b_date').valueAsDate = new Date();
+                currentBookingPhotos = [];
+                currentSelectedPackageId = null; 
+                
+                // مسح الحقول السابقة
+                document.getElementById('b_name').value = '';
+                document.getElementById('b_phone').value = '';
+                document.getElementById('b_address').value = '';
+                document.getElementById('b_details').value = '';
+                document.getElementById('b_total').value = 0;
+                document.getElementById('b_paid').value = 0;
+                
+                renderBookingPhotographersSelector();
+                window.renderPackages();
+                calculateBooking();
             }
         };
-
-        function loadData() {
-            const savedData = localStorage.getItem('weddingAppDataV3');
-            if (savedData) {
-                state = { ...state, ...JSON.parse(savedData) };
-                if(!state.withdrawals) state.withdrawals = [];
-            }
-        }
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
         
-        function saveData() { 
-            localStorage.setItem('weddingAppDataV3', JSON.stringify(state)); 
-            if(isPhotographerView) {
-                initPhotographerView();
-            } else {
-                updateUI(); 
-            }
-        }
-
-        // -----------------------------------------------------
-        // وظائف عامة (Nails & Utilities)
-        // -----------------------------------------------------
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-        function showToast(msg, isError = false) {
+        window.showToast = (msg, isError = false) => {
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.style.backgroundColor = isError ? '#ef4444' : '#10b981';
             t.className = "show";
             setTimeout(() => t.className = t.className.replace("show", ""), 3000);
-        }
+        };
 
-        // -----------------------------------------------------
-        // 2. وظائف واجهة المصور (الموبايل)
-        // -----------------------------------------------------
-        function initPhotographerView() {
+        window.renderPackages = () => {
+            const container = document.getElementById('packagesContainer');
+            if(state.packages.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-400 bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300">لم يتم إضافة قوالب خدمات بعد. يمكنك إضافتها من شاشة الإعدادات.</div>';
+                return;
+            }
+            container.innerHTML = state.packages.map((pkg) => {
+                const isSelected = currentSelectedPackageId === pkg.id;
+                return `
+                <div onclick="selectPackage('${pkg.id}')" class="border-2 ${isSelected ? 'border-indigo-500 bg-indigo-50 scale-105' : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-gray-50'} p-4 rounded-xl cursor-pointer transition-all duration-200 relative shadow-sm">
+                    ${isSelected ? '<div class="absolute top-2 left-2 text-indigo-600 text-xl"><i class="fa-solid fa-circle-check"></i></div>' : ''}
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-sm truncate" title="${pkg.name}">${pkg.name}</h4>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-3 h-10 overflow-hidden leading-relaxed" title="${pkg.details}">${pkg.details}</div>
+                    <div class="text-sm font-black text-indigo-700 bg-indigo-100 inline-block px-3 py-1 rounded-lg w-full text-center">${pkg.price} ج.م</div>
+                </div>
+            `}).join('');
+        };
+
+        window.selectPackage = (id) => {
+            currentSelectedPackageId = id;
+            const pkg = state.packages.find(p => p.id === id);
+            if(!pkg) return;
+            document.getElementById('b_total').value = pkg.price;
+            document.getElementById('b_details').value = `تم اختيار باكيدج (${pkg.name}):\n- ${pkg.details}`;
+            window.calculateBooking();
+            window.renderPackages();
+        };
+
+        // Auth Flow
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth Error", error);
+                showToast("خطأ في الاتصال", true);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            state.user = user;
+            if (user) setupRealtimeListeners();
+        });
+
+        // Data Listeners
+        const setupRealtimeListeners = () => {
+            if (!state.user) return;
+            const onData = (key) => (snapshot) => {
+                state[key] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateUI();
+            };
+            const onError = (err) => console.error(`Error listening to ${err}`);
+
+            onSnapshot(paths.halls, onData('halls'), onError);
+            onSnapshot(paths.photographers, onData('photographers'), onError);
+            onSnapshot(paths.records, onData('records'), onError);
+            onSnapshot(paths.bookings, onData('bookings'), onError);
+            onSnapshot(paths.withdrawals, onData('withdrawals'), onError);
+            onSnapshot(paths.packages, onData('packages'), onError);
+            
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+        };
+
+        const updateUI = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pid = urlParams.get('pid');
+
+            if (pid) {
+                isPhotographerView = true;
+                currentPhotographerId = pid;
+                document.getElementById('adminApp').style.display = 'none';
+                document.getElementById('photographerView').style.display = 'block';
+                renderPhotographerView();
+            } else {
+                isPhotographerView = false;
+                document.getElementById('adminApp').style.display = 'block';
+                document.getElementById('photographerView').style.display = 'none';
+                renderAdminView();
+            }
+        };
+
+        const renderAdminView = () => {
+            let totalIncome = 0; let totalPhotos = 0;
+            state.records.forEach(r => {
+                totalIncome += Number(r.income || 0);
+                totalPhotos += Number(r.photoCost || 0);
+            });
+            let net = totalIncome - totalPhotos - state.records.reduce((acc, r) => acc + Number(r.carCost || 0) + Number(r.otherCost || 0), 0);
+            
+            document.getElementById('stat_income').innerText = `${totalIncome} ج.م`;
+            document.getElementById('stat_net').innerText = `${net} ج.م`;
+            document.getElementById('stat_photos').innerText = `${totalPhotos} ج.م`;
+            
+            const upcomingBookings = state.bookings.filter(b => new Date(b.date) >= new Date().setHours(0,0,0,0));
+            document.getElementById('stat_bookings').innerText = upcomingBookings.length;
+
+            renderSettingsHalls();
+            renderSettingsPhotographers();
+            renderSettingsPackages();
+            populateHallSelect();
+            renderBookingsList();
+            renderRecordsList();
+            
+            if(document.getElementById('bookingModal').classList.contains('active')) {
+                renderPackages();
+            }
+        };
+
+        const renderSettingsPackages = () => {
+            const list = document.getElementById('settingsPackagesList');
+            if(state.packages.length === 0) {
+                list.innerHTML = '<div class="text-sm text-gray-500 text-center py-2">لم يتم إضافة قوالب بعد.</div>';
+                return;
+            }
+            list.innerHTML = state.packages.map(p => `
+                <div class="flex justify-between items-center bg-white border border-gray-200 shadow-sm px-4 py-3 rounded-lg hover:border-indigo-300 transition">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-800 text-sm">${p.name}</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded">${p.price} ج.م</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">${p.details}</div>
+                    </div>
+                    <button onclick="deleteDocItem('packages', '${p.id}')" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition ml-2">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        };
+
+        const renderSettingsHalls = () => {
+            const list = document.getElementById('settingsHallsList');
+            list.innerHTML = state.halls.map(h => `
+                <div class="flex items-center gap-2 bg-white border shadow-sm px-3 py-1 rounded-full text-sm">
+                    <span class="w-3 h-3 rounded-full inline-block" style="background-color: ${h.color}"></span>
+                    <span class="font-bold">${h.name}</span>
+                    <button onclick="deleteDocItem('halls', '${h.id}')" class="text-red-500 hover:text-red-700 ml-2"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        };
+
+        const renderSettingsPhotographers = () => {
+            const list = document.getElementById('settingsPhotosList');
+            const adminList = document.getElementById('adminPhotographersList');
+            
+            list.innerHTML = state.photographers.map(p => `
+                <div class="flex items-center gap-2 bg-white border shadow-sm px-3 py-1 rounded-full text-sm">
+                    <i class="fa-solid fa-camera text-gray-400"></i>
+                    <span class="font-bold">${p.name}</span>
+                    <span class="text-xs bg-gray-100 px-2 rounded text-gray-600">${p.rate} ج</span>
+                    <button onclick="deleteDocItem('photographers', '${p.id}')" class="text-red-500 hover:text-red-700 ml-2"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+
+            const currentUrl = window.location.href.split('?')[0];
+            adminList.innerHTML = state.photographers.map(p => {
+                const link = `${currentUrl}?pid=${p.id}`;
+                return `
+                <div class="bg-gray-50 border p-3 rounded-xl flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-gray-800">${p.name}</div>
+                        <div class="text-xs text-blue-500 truncate max-w-[200px] sm:max-w-[400px] mt-1" dir="ltr">${link}</div>
+                    </div>
+                    <button onclick="copyToClipboard('${link}')" class="bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition">
+                        <i class="fa-regular fa-copy"></i> نسخ
+                    </button>
+                </div>
+            `}).join('');
+        };
+
+        const populateHallSelect = () => {
+            const sel = document.getElementById('d_hall');
+            sel.innerHTML = '<option value="">اختر القاعة...</option>' + state.halls.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+        };
+
+        // -------------------------------------------------------------
+        // قسم إسناد المصورين بعد التعديل والتصغير
+        // -------------------------------------------------------------
+        window.renderDailyPhotographersSelector = () => {
+            const templates = document.getElementById('photographersTemplates');
+            const container = document.getElementById('selectedPhotographersContainer');
+            
+            // تصغير أزرار الإضافة (px-2.5 py-1 text-xs)
+            templates.innerHTML = state.photographers.filter(p => !currentDailyForm.selectedPhotos.find(s => s.id === p.id)).map(p => `
+                <button onclick="addToDailyPhotos('${p.id}', '${p.name}', ${p.rate})" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-bold transition shadow-sm flex items-center gap-1">
+                    <i class="fa-solid fa-plus text-[10px]"></i> ${p.name}
+                </button>
+            `).join('');
+
+            if(currentDailyForm.selectedPhotos.length === 0) {
+                 container.innerHTML = `<span class="text-gray-400 text-xs w-full text-center py-1">لم يتم إضافة مصورين لهذه اليومية بعد</span>`;
+            } else {
+                // تصغير كروت المصورين المضافين ومربع الإدخال (text-xs, w-14)
+                container.innerHTML = currentDailyForm.selectedPhotos.map((p, index) => `
+                    <div class="bg-white border border-indigo-100 shadow-sm px-2 py-1 rounded-md text-xs flex items-center gap-1.5 w-full sm:w-auto">
+                        <span class="font-bold text-indigo-900">${p.name}</span>
+                        <input type="number" value="${p.rate}" oninput="updateDailyPhotoRate(${index}, this.value)" class="w-14 border border-gray-300 rounded px-1 py-0.5 text-center bg-gray-50 font-bold focus:outline-none focus:border-indigo-500" title="تعديل الأجر لهذا اليوم">
+                        <span class="text-[10px] text-gray-500">ج</span>
+                        <button onclick="removeFromDailyPhotos('${p.id}')" class="text-red-500 hover:bg-red-50 rounded-full w-5 h-5 flex items-center justify-center transition"><i class="fa-solid fa-times text-[10px]"></i></button>
+                    </div>
+                `).join('');
+            }
+            window.calculateDaily();
+        };
+
+        window.addToDailyPhotos = (id, name, rate) => {
+            currentDailyForm.selectedPhotos.push({ id, name, rate: Number(rate) });
+            window.renderDailyPhotographersSelector();
+        };
+        window.removeFromDailyPhotos = (id) => {
+            currentDailyForm.selectedPhotos = currentDailyForm.selectedPhotos.filter(p => p.id !== id);
+            window.renderDailyPhotographersSelector();
+        };
+        window.updateDailyPhotoRate = (index, val) => {
+            currentDailyForm.selectedPhotos[index].rate = Number(val) || 0;
+            window.calculateDaily();
+        };
+        // -------------------------------------------------------------
+
+        window.calculateDaily = () => {
+            const income = Number(document.getElementById('d_income').value) || 0;
+            const car = Number(document.getElementById('d_carCost').value) || 0;
+            const other = Number(document.getElementById('d_otherCost').value) || 0;
+            
+            const photosCost = currentDailyForm.selectedPhotos.reduce((acc, p) => acc + Number(p.rate), 0);
+            const expenses = car + other;
+            const net = income - photosCost - expenses;
+
+            document.getElementById('summary_photos').innerText = photosCost;
+            document.getElementById('summary_expenses').innerText = expenses;
+            document.getElementById('summary_net').innerText = net;
+        };
+
+        window.renderBookingPhotographersSelector = () => {
+            const container = document.getElementById('bookingPhotographers');
+            container.innerHTML = state.photographers.map(p => {
+                const isSelected = currentBookingPhotos.includes(p.id);
+                return `
+                <button onclick="toggleBookingPhoto('${p.id}')" class="px-3 py-1.5 rounded-full text-sm font-bold transition border ${isSelected ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}">
+                    ${isSelected ? '<i class="fa-solid fa-check mr-1"></i> ' : ''}${p.name}
+                </button>
+            `}).join('');
+        };
+
+        window.toggleBookingPhoto = (id) => {
+            if(currentBookingPhotos.includes(id)) {
+                currentBookingPhotos = currentBookingPhotos.filter(pid => pid !== id);
+            } else {
+                currentBookingPhotos.push(id);
+            }
+            window.renderBookingPhotographersSelector();
+        };
+
+        window.calculateBooking = () => {
+            const total = Number(document.getElementById('b_total').value) || 0;
+            const paid = Number(document.getElementById('b_paid').value) || 0;
+            document.getElementById('b_rem').value = total - paid;
+        };
+
+        const renderBookingsList = () => {
+            const list = document.getElementById('bookingsList');
+            const sorted = [...state.bookings].sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            if(sorted.length === 0) { list.innerHTML = '<p class="text-center text-gray-400 py-4">لا توجد حجوزات.</p>'; return; }
+
+            list.innerHTML = sorted.map(b => {
+                const assignedPhotos = b.photographers && b.photographers.length > 0 ? b.photographers.map(pid => {
+                    const p = state.photographers.find(x => x.id === pid);
+                    return p ? p.name : 'مجهول';
+                }).join('، ') : 'لم يحدد';
+
+                const isUpcoming = new Date(b.date) >= new Date().setHours(0,0,0,0);
+                
+                return `
+                <div class="bg-white p-4 rounded-xl border ${isUpcoming ? 'border-emerald-200 shadow-sm' : 'border-gray-200 opacity-60'} flex flex-col md:flex-row gap-4 relative">
+                    <button onclick="deleteDocItem('bookings', '${b.id}')" class="absolute top-2 left-2 text-gray-300 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                    <div class="bg-emerald-50 text-emerald-700 p-3 rounded-xl flex flex-col items-center justify-center min-w-[80px]">
+                        <span class="text-sm font-bold">${new Date(b.date).toLocaleDateString('ar-EG', {month:'short'})}</span>
+                        <span class="text-2xl font-black">${new Date(b.date).getDate()}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-800">${b.name} <span class="text-sm font-normal text-gray-500 mx-2"><i class="fa-solid fa-phone"></i> ${b.phone}</span></h4>
+                                <p class="text-sm text-gray-600 mt-1"><i class="fa-solid fa-location-dot"></i> ${b.address}</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded"><strong>التفاصيل:</strong> ${b.details || 'لا توجد'}</p>
+                        <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                            <span class="bg-purple-50 text-purple-700 px-2 py-1 rounded-lg border border-purple-100"><i class="fa-solid fa-camera"></i> ${assignedPhotos}</span>
+                            <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-lg border border-gray-200">الإجمالي: ${b.total}</span>
+                            <span class="bg-green-50 text-green-700 px-2 py-1 rounded-lg border border-green-200">مدفوع: ${b.paid}</span>
+                            <span class="bg-red-50 text-red-700 px-2 py-1 rounded-lg border border-red-200 font-bold">باقي: ${b.rem}</span>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        };
+
+        const renderRecordsList = () => {
+            const list = document.getElementById('recordsList');
+            const sorted = [...state.records].sort((a,b) => new Date(b.date) - new Date(a.date));
+            
+            if(sorted.length === 0) { list.innerHTML = '<p class="text-center text-gray-400 py-4">لا توجد يوميات مسجلة.</p>'; return; }
+
+            list.innerHTML = sorted.map(r => {
+                const hall = state.halls.find(h => h.id === r.hallId) || { name: 'قاعة محذوفة', color: '#ccc' };
+                const photosHtml = r.photographers && r.photographers.length > 0 ? r.photographers.map(p => `<span class="bg-gray-100 px-2 py-0.5 rounded text-xs border">${p.name} (${p.rate})</span>`).join(' ') : '<span class="text-gray-400 text-xs">لا يوجد</span>';
+                let net = r.income - r.photoCost - r.carCost - r.otherCost;
+
+                return `
+                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm relative">
+                    <button onclick="deleteDocItem('records', '${r.id}')" class="absolute top-2 left-2 text-gray-300 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full inline-block" style="background-color: ${hall.color}"></span>
+                            <span class="font-bold text-gray-800">${hall.name}</span>
+                            <span class="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">${r.date}</span>
+                        </div>
+                        <div class="text-green-600 font-black text-lg">صافي: ${net} ج</div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm text-gray-600 mt-2">
+                        <div class="bg-gray-50 p-2 rounded text-center">إيراد<br><strong class="text-gray-800">${r.income}</strong></div>
+                        <div class="bg-gray-50 p-2 rounded text-center">أجور<br><strong class="text-gray-800">${r.photoCost}</strong></div>
+                        <div class="bg-gray-50 p-2 rounded text-center">عربية<br><strong class="text-gray-800">${r.carCost}</strong></div>
+                        <div class="bg-gray-50 p-2 rounded text-center">أخرى<br><strong class="text-gray-800">${r.otherCost}</strong></div>
+                    </div>
+                    <div class="mt-2 text-sm">
+                        <strong class="text-gray-500 text-xs">المصورين:</strong> ${photosHtml}
+                    </div>
+                </div>
+            `}).join('');
+        };
+
+        const renderPhotographerView = () => {
             const p = state.photographers.find(x => x.id === currentPhotographerId);
             if(!p) {
-                document.getElementById('photographerView').innerHTML = '<div class="p-10 text-center text-xl text-red-500">رابط غير صحيح أو المصور غير موجود.</div>';
+                document.getElementById('photographerView').innerHTML = '<div class="p-10 text-center text-xl text-red-500 font-bold mt-20"><i class="fa-solid fa-triangle-exclamation block text-4xl mb-4"></i>رابط غير صحيح أو تم حذف المصور من النظام.</div>';
                 return;
             }
 
             document.getElementById('pv_name').innerText = p.name;
 
-            // حساب المبالغ
             let earned = 0;
             let workedDays = [];
             
             state.records.forEach(r => {
-                let pRecord = r.photographers.find(x => String(x.id) === String(p.id));
+                let pRecord = r.photographers && r.photographers.find(x => x.id === p.id);
                 if(pRecord) {
-                    earned += parseFloat(pRecord.rate);
+                    earned += Number(pRecord.rate);
                     workedDays.push({...r, myRate: pRecord.rate});
                 }
             });
 
             let withdrawn = 0;
             state.withdrawals.forEach(w => {
-                if(String(w.pid) === String(p.id)) withdrawn += parseFloat(w.amount);
+                if(w.pid === p.id) withdrawn += Number(w.amount);
             });
 
             let balance = earned - withdrawn;
 
             document.getElementById('pv_balance').innerText = balance;
             document.getElementById('pv_daysCount').innerText = workedDays.length;
-            document.getElementById('pv_totalEarned').innerText = earned + ' ج.م';
-            document.getElementById('pv_totalWithdrawn').innerText = withdrawn + ' ج.م';
+            document.getElementById('pv_totalEarned').innerText = `${earned} ج.م`;
+            document.getElementById('pv_totalWithdrawn').innerText = `${withdrawn} ج.م`;
 
-            // المواعيد القادمة (حجوزات مسندة له)
-            let upcoming = state.bookings.filter(b => b.photographers && b.photographers.includes(String(p.id)));
-            // ترتيب تصاعدي حسب التاريخ
+            let upcoming = state.bookings.filter(b => b.photographers && b.photographers.includes(p.id));
             upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-            // هل يوجد شغل غداً؟
             let tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             let tomorrowStr = tomorrow.toISOString().split('T')[0];
@@ -476,476 +841,185 @@ const firebaseConfig = {
             if(tomorrowWork) {
                 document.getElementById('pv_tomorrowAlert').classList.remove('hidden');
                 document.getElementById('pv_tomorrowDate').innerText = tomorrowStr;
-                document.getElementById('pv_tomorrowDetails').innerText = `قاعة: ${tomorrowWork.address} | عميل: ${tomorrowWork.name}`;
+                document.getElementById('pv_tomorrowDetails').innerText = `المكان: ${tomorrowWork.address || 'غير محدد'} | العميل: ${tomorrowWork.name}`;
             } else {
                 document.getElementById('pv_tomorrowAlert').classList.add('hidden');
             }
 
-            // عرض المواعيد القادمة
             const upList = document.getElementById('pv_upcomingList');
             if(upcoming.length === 0) {
-                upList.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">لا توجد مواعيد قادمة مسجلة لك حالياً.</div>';
+                upList.innerHTML = '<div class="text-center bg-white rounded-xl p-4 text-gray-400 text-sm shadow-sm border border-gray-100">لا توجد مواعيد قادمة مسجلة لك حالياً.</div>';
             } else {
                 upList.innerHTML = upcoming.map(b => `
-                    <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm flex items-center gap-3">
-                        <div class="bg-emerald-50 text-emerald-700 p-3 rounded-lg flex flex-col items-center justify-center min-w-[60px]">
+                    <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm flex items-center gap-3 relative overflow-hidden">
+                        <div class="absolute right-0 top-0 bottom-0 w-1 bg-emerald-400"></div>
+                        <div class="bg-emerald-50 text-emerald-700 p-2 rounded-lg flex flex-col items-center justify-center min-w-[55px]">
                             <span class="text-xs">${new Date(b.date).toLocaleDateString('ar-EG', {month:'short'})}</span>
                             <span class="text-xl font-bold">${new Date(b.date).getDate()}</span>
                         </div>
                         <div>
                             <div class="font-bold text-gray-800 text-sm">${b.address || 'قاعة غير محددة'}</div>
-                            <div class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-user"></i> ${b.name}</div>
+                            <div class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-user text-emerald-600/50"></i> ${b.name}</div>
                         </div>
                     </div>
                 `).join('');
             }
 
-            // عرض سجل العمل (الأيام السابقة)
             const histList = document.getElementById('pv_historyList');
-            workedDays.sort((a,b) => new Date(b.date) - new Date(a.date)); // الأحدث أولاً
+            workedDays.sort((a,b) => new Date(b.date) - new Date(a.date));
             if(workedDays.length === 0) {
-                histList.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">لم يتم تسجيل أيام عمل سابقة لك.</div>';
+                histList.innerHTML = '<div class="text-center bg-white rounded-xl p-4 text-gray-400 text-sm shadow-sm border border-gray-100">لم يتم تسجيل أيام عمل سابقة لك.</div>';
             } else {
                 histList.innerHTML = workedDays.map(r => {
-                    const hall = state.halls.find(h => String(h.id) === String(r.hallId)) || { name: 'غير معروف' };
+                    const hall = state.halls.find(h => h.id === r.hallId) || { name: 'غير معروف', color: '#ccc' };
                     return `
                     <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
-                        <div>
-                            <div class="font-bold text-gray-800 text-sm">${hall.name}</div>
-                            <div class="text-xs text-gray-500 mt-1"><i class="fa-regular fa-calendar"></i> ${r.date}</div>
-                        </div>
-                        <div class="text-left">
-                            <span class="block text-green-600 font-bold text-lg">+${r.myRate}</span>
-                            <span class="text-xs text-gray-400">ج.م</span>
-                        </div>
-                    </div>
-                    `;
-                }).join('');
-            }
-        }
-
-        function photographerWithdraw() {
-            const amount = parseFloat(document.getElementById('pv_withdrawAmount').value);
-            if(!amount || amount <= 0) { showToast('أدخل مبلغ صحيح', true); return; }
-            
-            state.withdrawals.push({
-                id: Date.now(),
-                pid: currentPhotographerId,
-                amount: amount,
-                date: new Date().toISOString().split('T')[0]
-            });
-            
-            document.getElementById('pv_withdrawAmount').value = '';
-            saveData();
-            showToast('تم تسجيل السحب بنجاح وخصمه من رصيدك');
-        }
-
-        // -----------------------------------------------------
-        // 3. وظائف واجهة الإدارة
-        // -----------------------------------------------------
-        function updateUI() {
-            calculateGlobalFinancials();
-            renderHallsStats();
-            renderBookings();
-            renderRecords();
-            renderSettingsLists();
-            renderAdminPhotographersList();
-            
-            // تحديث القوائم المنسدلة
-            const hallsHtml = state.halls.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
-            document.getElementById('d_hall').innerHTML = hallsHtml;
-            
-            // قوالب المصورين في اليومية
-            document.getElementById('photographersTemplates').innerHTML = state.photographers.map(p => `
-                <button onclick="addPhotoToDaily(${p.id}, '${p.name}', ${p.rate})" class="bg-gray-100 hover:bg-purple-100 border border-gray-300 px-3 py-1 rounded-full text-sm font-bold transition">
-                    + ${p.name}
-                </button>
-            `).join('');
-
-            // قوالب المصورين في الحجز (جديدة)
-            document.getElementById('bookingPhotographers').innerHTML = state.photographers.map(p => `
-                <label class="cursor-pointer bg-white px-3 py-1 rounded-full border border-gray-300 flex items-center gap-2 hover:bg-purple-50 transition">
-                    <input type="checkbox" value="${p.id}" class="booking-photo-cb w-4 h-4 text-purple-600">
-                    <span class="text-sm font-bold">${p.name}</span>
-                </label>
-            `).join('');
-        }
-
-        // --- الحسابات المالية للمدير ---
-        function calculateGlobalFinancials() {
-            let totalIncome = 0; let totalExpenses = 0; let totalNet = 0;
-            state.records.forEach(r => {
-                totalIncome += parseFloat(r.income);
-                totalNet += parseFloat(r.netProfit);
-                totalExpenses += (parseFloat(r.income) - parseFloat(r.netProfit));
-            });
-            state.bookings.forEach(b => {
-                totalIncome += parseFloat(b.paid);
-                totalNet += parseFloat(b.paid);
-            });
-
-            document.getElementById('globalFinancials').innerHTML = `
-                <div class="bg-white rounded-xl p-5 shadow-sm border-r-4 border-blue-500 flex items-center justify-between">
-                    <div>
-                        <div class="text-sm font-bold text-gray-500 mb-1">إجمالي المقبوضات</div>
-                        <div class="text-2xl font-black text-blue-700">${totalIncome.toLocaleString()} <span class="text-sm font-normal">ج.م</span></div>
-                    </div>
-                    <div class="bg-blue-100 p-3 rounded-full"><i class="fa-solid fa-arrow-down-up-across-line text-blue-500 text-xl"></i></div>
-                </div>
-                <div class="bg-white rounded-xl p-5 shadow-sm border-r-4 border-red-500 flex items-center justify-between">
-                    <div>
-                        <div class="text-sm font-bold text-gray-500 mb-1">إجمالي المنصرف</div>
-                        <div class="text-2xl font-black text-red-600">${totalExpenses.toLocaleString()} <span class="text-sm font-normal">ج.م</span></div>
-                    </div>
-                    <div class="bg-red-100 p-3 rounded-full"><i class="fa-solid fa-arrow-up-right-dots text-red-500 text-xl"></i></div>
-                </div>
-                <div class="bg-gray-800 rounded-xl p-5 shadow-sm flex items-center justify-between">
-                    <div>
-                        <div class="text-sm font-bold text-gray-300 mb-1">صافي الربح الكلي</div>
-                        <div class="text-2xl font-black text-green-400">${totalNet.toLocaleString()} <span class="text-sm font-normal">ج.م</span></div>
-                    </div>
-                    <div class="bg-gray-700 p-3 rounded-full"><i class="fa-solid fa-sack-dollar text-green-400 text-xl"></i></div>
-                </div>
-            `;
-        }
-
-        function renderHallsStats() {
-            const container = document.getElementById('topStatsContainer');
-            container.innerHTML = state.halls.map(hall => {
-                const count = state.records.filter(r => String(r.hallId) === String(hall.id)).length;
-                return `
-                    <div class="bg-white rounded-xl p-4 shadow-sm border-b-4" style="border-color: ${hall.color}">
-                        <div class="text-gray-500 text-xs font-bold truncate">${hall.name}</div>
-                        <div class="text-xl font-black mt-1" style="color: ${hall.color}">${count} <span class="text-xs font-normal text-gray-500">يوم</span></div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // --- إدارة المصورين للمدير (نسخ الروابط) ---
-        function renderAdminPhotographersList() {
-            const list = document.getElementById('adminPhotographersList');
-            if(state.photographers.length === 0) {
-                list.innerHTML = '<div class="text-center text-gray-400 py-4">لم يتم إضافة مصورين. أضفهم من الإعدادات.</div>';
-                return;
-            }
-
-            list.innerHTML = state.photographers.map(p => {
-                // حساب ماله وما عليه للعرض للمدير
-                let earned = 0;
-                state.records.forEach(r => {
-                    let pRecord = r.photographers.find(x => String(x.id) === String(p.id));
-                    if(pRecord) earned += parseFloat(pRecord.rate);
-                });
-                let withdrawn = 0;
-                state.withdrawals.forEach(w => { if(String(w.pid) === String(p.id)) withdrawn += parseFloat(w.amount); });
-                let balance = earned - withdrawn;
-
-                const trackingLink = `${window.location.origin}${window.location.pathname}?pid=${p.id}`;
-
-                return `
-                    <div class="border border-purple-100 bg-white p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div class="flex items-center gap-3 w-full md:w-auto">
-                            <div class="bg-purple-100 text-purple-700 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-user"></i></div>
+                        <div class="flex items-center gap-3">
+                             <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-gray-400 border"><i class="fa-solid fa-camera"></i></div>
                             <div>
-                                <h4 class="font-bold text-gray-800">${p.name}</h4>
-                                <div class="text-xs text-gray-500">الرصيد المتبقي له: <span class="${balance < 0 ? 'text-red-500' : 'text-green-600'} font-bold">${balance} ج.م</span></div>
+                                <div class="font-bold text-gray-800 text-sm flex items-center gap-1">
+                                    <span class="w-2 h-2 rounded-full inline-block" style="background-color: ${hall.color}"></span> ${hall.name}
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1"><i class="fa-regular fa-calendar"></i> ${r.date}</div>
                             </div>
                         </div>
-                        <div class="w-full md:w-auto flex gap-2">
-                            <button onclick="copyLink('${trackingLink}')" class="flex-1 md:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition">
-                                <i class="fa-solid fa-copy"></i> نسخ الرابط
-                            </button>
-                            <a href="https://wa.me/?text=${encodeURIComponent('رابط متابعة الشغل والحسابات الخاص بك:\n' + trackingLink)}" target="_blank" class="flex-1 md:flex-none bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition">
-                                <i class="fa-brands fa-whatsapp"></i> إرسال
-                            </a>
+                        <div class="text-left bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
+                            <span class="block text-green-700 font-black text-lg">+${r.myRate}</span>
                         </div>
                     </div>
-                `;
-            }).join('');
-        }
+                `}).join('');
+            }
+        };
 
-        function copyLink(link) {
-            navigator.clipboard.writeText(link).then(() => {
-                showToast('تم نسخ الرابط بنجاح');
+        window.photographerWithdraw = async () => {
+            if(!state.user) return;
+            const amountInput = document.getElementById('pv_withdrawAmount');
+            const amount = Number(amountInput.value);
+            
+            if(!amount || amount <= 0) { showToast('الرجاء إدخال مبلغ صحيح', true); return; }
+
+            try {
+                await addDoc(paths.withdrawals, {
+                    pid: currentPhotographerId,
+                    amount: amount,
+                    date: new Date().toISOString(),
+                    timestamp: serverTimestamp()
+                });
+                amountInput.value = '';
+                showToast('تم تسجيل السحب بنجاح');
+            } catch(e) {
+                showToast('حدث خطأ', true);
+            }
+        };
+
+        window.addPackage = async () => {
+            if(!state.user) return;
+            const name = document.getElementById('newPkgName').value;
+            const price = document.getElementById('newPkgPrice').value;
+            const details = document.getElementById('newPkgDetails').value;
+            
+            if(!name || !price) { showToast('اسم الباكيدج والسعر مطلوبان', true); return; }
+            
+            await addDoc(paths.packages, { 
+                name, 
+                price: Number(price), 
+                details: details || 'بدون تفاصيل إضافية',
+                timestamp: serverTimestamp() 
             });
-        }
-
-        // --- منطق اليومية ---
-        function addPhotoToDaily(id, name, defaultRate) {
-            if(currentDailyForm.selectedPhotos.find(x => x.id === id)) return;
-            currentDailyForm.selectedPhotos.push({id, name, rate: defaultRate});
-            renderSelectedDailyPhotos();
-            calculateDaily();
-        }
-
-        function removePhotoFromDaily(id) {
-            currentDailyForm.selectedPhotos = currentDailyForm.selectedPhotos.filter(x => x.id !== id);
-            renderSelectedDailyPhotos();
-            calculateDaily();
-        }
-
-        function updatePhotoRate(id, newRate) {
-            let p = currentDailyForm.selectedPhotos.find(x => x.id === id);
-            if(p) { p.rate = parseFloat(newRate) || 0; calculateDaily(); }
-        }
-
-        function renderSelectedDailyPhotos() {
-            document.getElementById('selectedPhotographersContainer').innerHTML = currentDailyForm.selectedPhotos.map(p => `
-                <div class="bg-purple-100 border border-purple-200 rounded-lg px-2 py-1 flex items-center gap-2">
-                    <span class="text-sm font-bold text-purple-800">${p.name}</span>
-                    <input type="number" value="${p.rate}" onchange="updatePhotoRate(${p.id}, this.value)" class="w-16 h-6 text-xs text-center rounded border border-purple-300">
-                    <button onclick="removePhotoFromDaily(${p.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-times"></i></button>
-                </div>
-            `).join('');
-        }
-
-        function toggleFlashDrive() {
-            currentDailyForm.useFlash = !currentDailyForm.useFlash;
-            const status = document.getElementById('d_flashStatus');
-            const btn = document.getElementById('d_flashToggle');
-            if(currentDailyForm.useFlash) {
-                status.innerText = "نعم";
-                status.className = "text-xs bg-purple-500 text-white px-2 py-1 rounded";
-                btn.classList.add('border-purple-500', 'bg-purple-50');
-            } else {
-                status.innerText = "لا";
-                status.className = "text-xs bg-gray-200 px-2 py-1 rounded";
-                btn.classList.remove('border-purple-500', 'bg-purple-50');
-            }
-            calculateDaily();
-        }
-
-        function calculateDaily() {
-            const income = parseFloat(document.getElementById('d_income').value) || 0;
-            const car = parseFloat(document.getElementById('d_carCost').value) || 0;
-            const other = parseFloat(document.getElementById('d_otherCost').value) || 0;
             
-            let photosCost = 0;
-            currentDailyForm.selectedPhotos.forEach(p => photosCost += parseFloat(p.rate));
-            
-            let flashCost = currentDailyForm.useFlash ? parseFloat(state.inventory.flashCost) : 0;
-            
-            const net = income - (car + other + photosCost + flashCost);
-            
-            document.getElementById('summary_photos').innerText = photosCost;
-            document.getElementById('summary_flash').innerText = flashCost;
-            document.getElementById('summary_others').innerText = car + other;
-            document.getElementById('summary_net').innerText = net;
-        }
+            document.getElementById('newPkgName').value = '';
+            document.getElementById('newPkgPrice').value = '';
+            document.getElementById('newPkgDetails').value = '';
+            showToast('تمت إضافة القالب بنجاح');
+        };
 
-        function saveDailyRecord() {
-            const record = {
-                id: Date.now(),
-                date: document.getElementById('d_date').value,
-                hallId: document.getElementById('d_hall').value,
-                income: parseFloat(document.getElementById('d_income').value) || 0,
-                carCost: parseFloat(document.getElementById('d_carCost').value) || 0,
-                otherCost: parseFloat(document.getElementById('d_otherCost').value) || 0,
-                photographers: [...currentDailyForm.selectedPhotos],
-                flashUsed: currentDailyForm.useFlash,
-                netProfit: parseFloat(document.getElementById('summary_net').innerText)
-            };
-
-            if(currentDailyForm.useFlash) {
-                state.inventory.flashCount -= 1;
-            }
-
-            state.records.push(record);
-            saveData();
-            
-            // تصفير النموذج
-            currentDailyForm = { selectedPhotos: [], useFlash: false };
-            renderSelectedDailyPhotos();
-            document.getElementById('d_income').value = 1000;
-            document.getElementById('d_carCost').value = 0;
-            document.getElementById('d_otherCost').value = 0;
-            if(currentDailyForm.useFlash) toggleFlashDrive();
-            
-            closeModal('dailyModal');
-            showToast('تم حفظ اليومية بنجاح');
-        }
-
-        function renderRecords() {
-            const list = document.getElementById('recordsList');
-            if (state.records.length === 0) { list.innerHTML = `<div class="text-center text-gray-400 py-8">لم يتم تسجيل يوميات</div>`; return; }
-
-            const sorted = [...state.records].sort((a, b) => new Date(b.date) - new Date(a.date));
-            list.innerHTML = sorted.map(r => {
-                const hall = state.halls.find(h => String(h.id) === String(r.hallId)) || { name: 'غير معروف', color: '#ccc' };
-                const photosNames = r.photographers.map(p => p.name).join('، ');
-                return `
-                    <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-2" style="border-right: 5px solid ${hall.color}; background-color: ${hall.color}05">
-                        <div class="flex-1">
-                            <div class="flex justify-between w-full">
-                                <span class="font-bold text-gray-800 text-sm">${hall.name}</span>
-                                <span class="text-xs text-gray-500">${r.date}</span>
-                            </div>
-                            <div class="text-xs text-gray-600 mt-1 truncate">
-                                <i class="fa-solid fa-users text-blue-400"></i> ${photosNames || 'لا يوجد'}
-                                ${r.flashUsed ? ` | <i class="fa-brands fa-usb text-purple-500"></i> فلاشة` : ''}
-                            </div>
-                        </div>
-                        <div class="flex gap-2 items-center w-full md:w-auto mt-2 md:mt-0">
-                            <div class="text-center bg-gray-50 px-2 py-1 rounded border w-16 text-xs"><span class="text-gray-500 block">قبض</span><b>${r.income}</b></div>
-                            <div class="text-center bg-green-50 px-2 py-1 rounded border border-green-200 w-16 text-xs"><span class="text-green-700 block">صافي</span><b class="text-green-700">${r.netProfit}</b></div>
-                            <button onclick="deleteRecord(${r.id})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function deleteRecord(id) {
-            if(confirm('هل أنت متأكد من الحذف؟')) {
-                state.records = state.records.filter(r => r.id !== id);
-                saveData();
-                showToast('تم الحذف بنجاح');
-            }
-        }
-
-        // --- منطق الحجز ---
-        function calculateBooking() {
-            const total = parseFloat(document.getElementById('b_total').value) || 0;
-            const paid = parseFloat(document.getElementById('b_paid').value) || 0;
-            document.getElementById('b_rem').value = total - paid;
-        }
-
-        function saveBooking() {
-            // جلب المصورين المحددين (عبر الـ Checkboxes)
-            const cbs = document.querySelectorAll('.booking-photo-cb:checked');
-            let assignedPhotos = Array.from(cbs).map(cb => cb.value);
-
-            const booking = {
-                id: Date.now(),
-                name: document.getElementById('b_name').value,
-                phone: document.getElementById('b_phone').value,
-                date: document.getElementById('b_date').value,
-                address: document.getElementById('b_address').value,
-                details: document.getElementById('b_details').value,
-                total: parseFloat(document.getElementById('b_total').value) || 0,
-                paid: parseFloat(document.getElementById('b_paid').value) || 0,
-                rem: parseFloat(document.getElementById('b_rem').value) || 0,
-                photographers: assignedPhotos
-            };
-
-            if(!booking.name || !booking.date) { showToast('يرجى إدخال اسم العميل والتاريخ', true); return; }
-
-            state.bookings.push(booking);
-            saveData();
-            
-            // تصفير النموذج
-            document.getElementById('b_name').value = '';
-            document.getElementById('b_phone').value = '';
-            document.getElementById('b_address').value = '';
-            document.getElementById('b_details').value = '';
-            document.getElementById('b_total').value = 0;
-            document.getElementById('b_paid').value = 0;
-            document.getElementById('b_rem').value = 0;
-            document.querySelectorAll('.booking-photo-cb').forEach(cb => cb.checked = false);
-            
-            closeModal('bookingModal');
-            showToast('تم حفظ الحجز بنجاح');
-        }
-
-        function renderBookings() {
-            const list = document.getElementById('bookingsList');
-            if (state.bookings.length === 0) { list.innerHTML = `<div class="text-center text-gray-400 py-8">لا توجد حجوزات</div>`; return; }
-
-            const sorted = [...state.bookings].sort((a, b) => new Date(a.date) - new Date(b.date));
-            list.innerHTML = sorted.map(b => {
-                // أسماء المصورين المعينين
-                let pNames = '';
-                if(b.photographers && b.photographers.length > 0) {
-                    pNames = b.photographers.map(pid => {
-                        let p = state.photographers.find(x => String(x.id) === String(pid));
-                        return p ? p.name : '';
-                    }).filter(Boolean).join(', ');
-                }
-
-                return `
-                <div class="border border-emerald-100 bg-white p-4 rounded-xl flex flex-col hover:shadow-md transition">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">🎥 ${b.name}</h4>
-                            <div class="text-sm text-gray-600 mt-1 flex flex-wrap gap-2">
-                                <span class="bg-gray-100 px-2 py-0.5 rounded text-xs"><i class="fa-regular fa-calendar text-emerald-600"></i> ${b.date}</span>
-                                <span class="bg-gray-100 px-2 py-0.5 rounded text-xs"><i class="fa-solid fa-location-dot text-emerald-600"></i> ${b.address || '-'}</span>
-                                ${pNames ? `<span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs"><i class="fa-solid fa-camera"></i> ${pNames}</span>` : ''}
-                            </div>
-                        </div>
-                        <button onclick="deleteBooking(${b.id})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                    <div class="bg-emerald-50 p-2 rounded-lg text-sm flex justify-between border border-emerald-100 mb-3">
-                        <div class="flex-1"><span class="text-gray-500 text-xs block">الخدمة:</span><span class="font-bold block truncate" title="${b.details}">${b.details}</span></div>
-                        <div class="text-center border-r border-emerald-200 px-2"><span class="text-red-500 text-xs block">الباقي:</span><span class="font-bold text-red-600">${b.rem}</span></div>
-                    </div>
-                </div>
-            `}).join('');
-        }
-
-        function deleteBooking(id) {
-            if(confirm('هل أنت متأكد من حذف الحجز؟')) {
-                state.bookings = state.bookings.filter(b => b.id !== id);
-                saveData();
-                showToast('تم حذف الحجز بنجاح');
-            }
-        }
-
-        // --- الإعدادات ---
-        function openSettings() {
-            const countInput = document.getElementById('settingFlashCount');
-            const costInput = document.getElementById('settingFlashCost');
-            if (countInput) countInput.value = state.inventory.flashCount;
-            if (costInput) costInput.value = state.inventory.flashCost;
-            openModal('settingsModal');
-        }
-
-        function renderSettingsLists() {
-            document.getElementById('settingsHallsList').innerHTML = state.halls.map(h => `
-                <div class="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-2 border-l-4" style="border-color: ${h.color}">
-                    ${h.name} <button onclick="deleteHall(${h.id})" class="text-red-500 hover:text-red-700 ml-2">&times;</button>
-                </div>
-            `).join('');
-
-            document.getElementById('settingsPhotosList').innerHTML = state.photographers.map(p => `
-                <div class="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    ${p.name} (${p.rate}) <button onclick="deletePhoto(${p.id})" class="text-red-500 hover:text-red-700 ml-2">&times;</button>
-                </div>
-            `).join('');
-        }
-
-        function addHall() {
+        window.addHall = async () => {
+            if(!state.user) return;
             const name = document.getElementById('newHallName').value;
             const color = document.getElementById('newHallColor').value;
-            if(name) {
-                state.halls.push({ id: Date.now(), name, color });
-                document.getElementById('newHallName').value = '';
-                saveData();
+            if(!name) { showToast('ادخل اسم القاعة', true); return; }
+            await addDoc(paths.halls, { name, color, timestamp: serverTimestamp() });
+            document.getElementById('newHallName').value = '';
+            showToast('تمت إضافة القاعة');
+        };
+
+        window.addPhotographer = async () => {
+             if(!state.user) return;
+             const name = document.getElementById('newPhotoName').value;
+             const rate = document.getElementById('newPhotoRate').value || 0;
+             if(!name) { showToast('ادخل اسم المصور', true); return; }
+             await addDoc(paths.photographers, { name, rate: Number(rate), timestamp: serverTimestamp() });
+             document.getElementById('newPhotoName').value = '';
+             document.getElementById('newPhotoRate').value = '';
+             showToast('تمت الإضافة');
+        };
+
+        window.saveBooking = async () => {
+            if(!state.user) return;
+            const name = document.getElementById('b_name').value;
+            const phone = document.getElementById('b_phone').value;
+            const date = document.getElementById('b_date').value;
+            const address = document.getElementById('b_address').value;
+            const details = document.getElementById('b_details').value;
+            const total = Number(document.getElementById('b_total').value) || 0;
+            const paid = Number(document.getElementById('b_paid').value) || 0;
+            const rem = total - paid;
+
+            if(!name || !date) { showToast('الاسم والتاريخ مطلوبان', true); return; }
+
+            await addDoc(paths.bookings, {
+                name, phone, date, address, details, total, paid, rem,
+                photographers: currentBookingPhotos,
+                timestamp: serverTimestamp()
+            });
+
+            closeModal('bookingModal');
+            showToast('تم حفظ الحجز بنجاح');
+        };
+
+        window.saveDailyRecord = async () => {
+            if(!state.user) return;
+            const date = document.getElementById('d_date').value;
+            const hallId = document.getElementById('d_hall').value;
+            const income = Number(document.getElementById('d_income').value) || 0;
+            const carCost = Number(document.getElementById('d_carCost').value) || 0;
+            const otherCost = Number(document.getElementById('d_otherCost').value) || 0;
+
+            if(!date || !hallId) { showToast('التاريخ والقاعة مطلوبان', true); return; }
+
+            const photoCost = currentDailyForm.selectedPhotos.reduce((acc, p) => acc + Number(p.rate), 0);
+
+            await addDoc(paths.records, {
+                date, hallId, income, carCost, otherCost, photoCost,
+                photographers: currentDailyForm.selectedPhotos,
+                timestamp: serverTimestamp()
+            });
+
+            closeModal('dailyModal');
+            showToast('تم حفظ اليومية بنجاح');
+        };
+
+        window.deleteDocItem = async (collectionName, docId) => {
+            if(!state.user) return;
+            if(confirm('هل أنت متأكد من الحذف؟')) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', collectionName, docId));
+                    showToast('تم الحذف بنجاح');
+                } catch(e) { showToast('خطأ أثناء الحذف', true); }
             }
-        }
+        };
 
-        function deleteHall(id) { state.halls = state.halls.filter(h => h.id !== id); saveData(); }
+        window.copyToClipboard = (text) => {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast('تم نسخ الرابط!');
+        };
 
-        function addPhotographer() {
-            const name = document.getElementById('newPhotoName').value;
-            const rate = parseFloat(document.getElementById('newPhotoRate').value) || 0;
-            if(name) {
-                state.photographers.push({ id: Date.now(), name, rate });
-                document.getElementById('newPhotoName').value = '';
-                document.getElementById('newPhotoRate').value = '';
-                saveData();
-            }
-        }
-
-        function deletePhoto(id) { state.photographers = state.photographers.filter(p => p.id !== id); saveData(); }
-
-        function saveInventorySettings() {
-            state.inventory.flashCount = parseInt(document.getElementById('settingFlashCount').value) || 0;
-            state.inventory.flashCost = parseFloat(document.getElementById('settingFlashCost').value) || 0;
-            saveData();
-            showToast('تم تحديث الإعدادات');
-        }
+        initAuth();
 
     </script>
 </body>
