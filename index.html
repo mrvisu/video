@@ -311,6 +311,152 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-4 justify-center md:justify-end bg-slate-800 p-4 rounded-xl border border-slate-600">
+                            <button type="button" onclick="adjustFlashCount(-full md:w-1/2 relative">
+                    <i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i>
+                    <input type="text" id="log-filter-input" onkeyup="filterLogs()" placeholder="فلترة باسم القاعة، المصور، التاريخ، أو الملاحظات..." class="w-full bg-slate-800 border border-slate-600 rounded-xl pr-10 pl-4 py-3 focus:border-yellow-500 focus:outline-none text-sm transition-colors">
+                </div>
+            </div>
+            
+            <div class="space-y-4" id="full-logs-container">
+                <!-- Populated via JS -->
+            </div>
+            <div id="no-logs-message" class="hidden text-center text-gray-400 py-10">
+                <i class="fas fa-box-open text-4xl mb-3 opacity-50"></i>
+                <p>لا توجد سجلات مطابقة للبحث</p>
+            </div>
+        </section>
+
+        <!-- ADMIN: Settings Tab -->
+        <section id="tab-settings" class="tab-content hidden space-y-6">
+            
+            <!-- Flash Drives Settings -->
+            <div class="glass-panel p-5 rounded-xl border-t-2 border-purple-500">
+                <h3 class="text-lg font-bold mb-4 border-b border-slate-700 pb-2"><i class="fas fa-usb accent-text ml-2"></i>إعدادات ومخزون الفلاشات</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">العدد المتاح حالياً (المخزون)</label>
+                        <input type="number" id="setting-flash-inventory" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:border-yellow-500 focus:outline-none font-bold text-lg text-yellow-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">سعر بيع الفلاشة للعميل (ج.م)</label>
+                        <input type="number" id="setting-flash-price" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:border-yellow-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <button onclick="saveFlashSettings()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i> حفظ الإعدادات
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locations Settings -->
+            <div class="glass-panel p-5 rounded-xl border-t-2 border-blue-500">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                    <h3 class="text-lg font-bold"><i class="fas fa-map-marker-alt accent-text ml-2"></i>إدارة القاعات والأماكن</h3>
+                    <button onclick="openModal('add-location-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
+                        <i class="fas fa-plus"></i> إضافة قاعة
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-2" id="settings-locations-list">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Photographers Settings -->
+            <div class="glass-panel p-5 rounded-xl border-t-2 border-green-500">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                    <h3 class="text-lg font-bold"><i class="fas fa-users accent-text ml-2"></i>إدارة فريق العمل (المصورين)</h3>
+                    <button onclick="openModal('add-photographer-modal')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
+                        <i class="fas fa-plus"></i> إضافة مصور
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-800 text-gray-400">
+                            <tr>
+                                <th class="px-4 py-3">الاسم</th>
+                                <th class="px-4 py-3">الأجر الأساسي</th>
+                                <th class="px-4 py-3">الرصيد المستحق</th>
+                                <th class="px-4 py-3 text-center">سحب / مكافأة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="settings-photographers-list" class="divide-y divide-slate-700/50">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </section>
+
+    </main>
+
+    <!-- Floating Action Button (Mobile) - Hidden by default since we moved button to dashboard -->
+    <button id="fab-add-log" onclick="openModal('add-log-modal')" class="fixed bottom-6 right-6 w-14 h-14 rounded-full accent-gradient text-slate-900 flex items-center justify-center text-2xl shadow-xl shadow-yellow-500/20 z-40 hidden md:hidden">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- MODALS -->
+    <!-- Add Log Modal -->
+    <div id="add-log-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('add-log-modal')"></div>
+        <div class="absolute inset-0 md:top-4 md:bottom-4 md:left-4 md:right-4 bg-slate-800 md:rounded-2xl shadow-2xl overflow-y-auto hide-scrollbar flex flex-col">
+            <div class="p-5 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-slate-800 z-10 shadow-sm">
+                <h2 class="text-xl md:text-2xl font-bold"><i class="fas fa-file-invoice-dollar accent-text ml-2"></i>تسجيل عملية يومية جديدة</h2>
+                <button onclick="closeModal('add-log-modal')" class="text-gray-400 hover:text-white bg-slate-700 hover:bg-red-500 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 md:p-8 space-y-8 flex-grow">
+                <!-- Date, Location, and Revenue -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">تاريخ العملية</label>
+                        <input type="date" id="log-date" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:border-yellow-500 focus:outline-none text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">القاعة / المكان</label>
+                        <select id="log-location" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:border-yellow-500 focus:outline-none appearance-none text-lg">
+                            <option value="">اختر المكان...</option>
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">إجمالي الإيراد المحصل (ج.م)</label>
+                        <input type="number" id="log-revenue" placeholder="مثال: 5000" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-2xl font-bold focus:border-yellow-500 focus:outline-none text-green-400 placeholder-slate-600">
+                    </div>
+                </div>
+
+                <!-- Photographers Selection -->
+                <div class="bg-slate-700/20 p-5 rounded-xl border border-slate-700">
+                    <label class="block text-lg font-bold text-white mb-4"><i class="fas fa-camera ml-2 accent-text"></i>اختر المصورين المشاركين</label>
+                    <div class="flex flex-wrap gap-3" id="log-photographers-chips">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Selected Photographers Wages Adjustment -->
+                <div id="log-selected-wages-container" class="space-y-3 hidden">
+                    <label class="block text-md font-bold text-yellow-500"><i class="fas fa-edit ml-2"></i>تعديل أجور المصورين لهذه العملية (اختياري)</label>
+                    <div id="log-selected-wages-list" class="bg-slate-900/50 p-5 rounded-xl border border-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Flash Drives & Notes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Flash Drives -->
+                    <div class="bg-slate-700/30 p-5 rounded-xl border border-slate-700 flex flex-col justify-center">
+                        <div class="flex flex-col mb-4 gap-2">
+                            <p class="font-bold text-lg"><i class="fas fa-usb text-purple-400 ml-2 text-xl"></i>استهلاك الفلاشات</p>
+                            <!-- عرض المتبقي هنا بوضوح -->
+                            <div class="flex gap-2 text-sm">
+                                <span class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-600">المتبقي بالمخزن: <span id="log-flash-inventory-display" class="font-bold text-yellow-400">0</span></span>
+                                <span class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-600">سعر الفلاشة: <span id="log-flash-price-display" class="font-bold">0</span> ج</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 justify-center md:justify-end bg-slate-800 p-4 rounded-xl border border-slate-600">
                             <button type="button" onclick="adjustFlashCount(--b border-slate-700 pb-2">
                     <h3 class="text-lg font-bold"><i class="fas fa-map-marker-alt accent-text ml-2"></i>إدارة القاعات والأماكن</h3>
                     <button onclick="openModal('add-location-modal')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm transition-colors">
