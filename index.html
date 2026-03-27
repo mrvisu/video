@@ -34,7 +34,7 @@
 <body class="antialiased min-h-screen flex flex-col">
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center">
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center transition-opacity duration-500">
         <i class="fas fa-camera-retro text-6xl accent-text animate-bounce mb-4"></i>
         <h1 class="text-2xl font-bold tracking-widest">MRAKBY VISUALS</h1>
         <p class="text-gray-400 mt-2">جاري تحميل النظام...</p>
@@ -50,14 +50,14 @@
                 <h1 class="text-xl font-bold tracking-wider hidden sm:block">MRAKBY <span class="accent-text">VISUALS</span></h1>
             </div>
             
-            <nav id="admin-nav" class="flex gap-2 hidden">
-                <button onclick="switchTab('dashboard')" class="tab-btn active px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors" data-target="dashboard">
+            <nav id="admin-nav" class="flex gap-2">
+                <button onclick="switchTab('dashboard')" class="tab-btn active px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 bg-slate-700 transition-colors" data-target="dashboard">
                     <i class="fas fa-chart-pie ml-1"></i> الرئيسية
                 </button>
-                <button onclick="switchTab('logs')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors" data-target="logs">
+                <button onclick="switchTab('logs')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 text-gray-400 transition-colors" data-target="logs">
                     <i class="fas fa-list-alt ml-1"></i> السجلات
                 </button>
-                <button onclick="switchTab('settings')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors" data-target="settings">
+                <button onclick="switchTab('settings')" class="tab-btn px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 text-gray-400 transition-colors" data-target="settings">
                     <i class="fas fa-cog ml-1"></i> الإعدادات
                 </button>
             </nav>
@@ -73,29 +73,49 @@
     <main class="flex-grow w-full max-w-7xl mx-auto p-4 pb-24">
         
         <!-- ADMIN: Dashboard Tab -->
-        <section id="tab-dashboard" class="tab-content hidden space-y-6">
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            
+            <!-- Quick Action Header -->
+            <div class="flex flex-col sm:flex-row justify-between items-center bg-slate-800/80 p-5 rounded-2xl border border-slate-700 shadow-sm gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold"><i class="fas fa-home accent-text ml-2"></i>لوحة التحكم</h2>
+                    <p class="text-sm text-gray-400 mt-1">نظرة عامة على الإيرادات والمصروفات</p>
+                </div>
+                <!-- الزر تم نقله هنا حسب طلبك -->
+                <button onclick="openModal('add-log-modal')" class="w-full sm:w-auto accent-gradient text-slate-900 px-6 py-3 rounded-xl font-bold shadow-lg shadow-yellow-500/20 hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                    <i class="fas fa-plus"></i> تسجيل عملية جديدة
+                </button>
+            </div>
+
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-500">
-                    <p class="text-sm text-gray-400 mb-1">إجمالي الإيرادات (الشهر)</p>
+                <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-500 relative overflow-hidden">
+                    <i class="fas fa-wallet absolute left-[-10px] bottom-[-10px] text-6xl text-yellow-500/10"></i>
+                    <p class="text-sm text-gray-400 mb-1">إجمالي الإيرادات</p>
                     <h3 class="text-2xl font-bold" id="stat-total-revenue">0 ج.م</h3>
                 </div>
-                <div class="glass-panel p-5 rounded-xl border-l-4 border-green-500">
-                    <p class="text-sm text-gray-400 mb-1">صافي الربح (الشهر)</p>
+                <div class="glass-panel p-5 rounded-xl border-l-4 border-green-500 relative overflow-hidden">
+                    <i class="fas fa-chart-line absolute left-[-10px] bottom-[-10px] text-6xl text-green-500/10"></i>
+                    <p class="text-sm text-gray-400 mb-1">صافي أرباح الاستوديو</p>
                     <h3 class="text-2xl font-bold text-green-400" id="stat-net-profit">0 ج.م</h3>
                 </div>
-                <div class="glass-panel p-5 rounded-xl border-l-4 border-blue-500">
+                <div class="glass-panel p-5 rounded-xl border-l-4 border-blue-500 relative overflow-hidden">
+                    <i class="fas fa-users absolute left-[-10px] bottom-[-10px] text-6xl text-blue-500/10"></i>
                     <p class="text-sm text-gray-400 mb-1">إجمالي أجور المصورين</p>
                     <h3 class="text-2xl font-bold" id="stat-total-wages">0 ج.م</h3>
                 </div>
                 <div class="glass-panel p-5 rounded-xl border-l-4 border-purple-500">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm text-gray-400 mb-1">الفلاشات المستهلكة</p>
-                            <h3 class="text-2xl font-bold" id="stat-flash-used">0 فلاشة</h3>
+                            <p class="text-sm text-gray-400 mb-1">فلاشات مستهلكة</p>
+                            <h3 class="text-2xl font-bold" id="stat-flash-used">0</h3>
                         </div>
                         <div class="text-right">
-                            <p class="text-xs text-gray-400 mb-1">مبيعات الفلاشات</p>
+                            <!-- المتبقي من الفلاشات تم إضافته هنا -->
+                            <p class="text-xs text-gray-400 mb-1">المتبقي</p>
+                            <p class="text-sm font-bold text-yellow-400 bg-yellow-500/10 px-2 rounded" id="stat-flash-inventory">0</p>
+                            
+                            <p class="text-xs text-gray-400 mt-2 mb-1">مبيعات الفلاشات</p>
                             <p class="text-sm font-bold text-purple-400" id="stat-flash-revenue">0 ج.م</p>
                         </div>
                     </div>
@@ -105,7 +125,7 @@
             <!-- Photographers Quick Status -->
             <div>
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold"><i class="fas fa-users accent-text ml-2"></i>أرصدة المصورين</h2>
+                    <h2 class="text-lg font-bold"><i class="fas fa-users-cog accent-text ml-2"></i>أرصدة المصورين الحالية</h2>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3" id="dashboard-photographers-grid">
                     <!-- Populated via JS -->
@@ -114,17 +134,20 @@
             
             <!-- Recent Logs Preview -->
             <div>
-                <h2 class="text-lg font-bold mb-4"><i class="fas fa-clock accent-text ml-2"></i>أحدث السجلات</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold"><i class="fas fa-clock accent-text ml-2"></i>أحدث 5 سجلات</h2>
+                    <button onclick="switchTab('logs')" class="text-sm text-gray-400 hover:text-yellow-500">عرض الكل <i class="fas fa-chevron-left text-xs"></i></button>
+                </div>
                 <div class="glass-panel rounded-xl overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-sm">
-                            <thead class="bg-slate-800 text-gray-400">
+                            <thead class="bg-slate-800 text-gray-400 border-b border-slate-700">
                                 <tr>
                                     <th class="px-4 py-3">التاريخ</th>
-                                    <th class="px-4 py-3">القاعة/المكان</th>
+                                    <th class="px-4 py-3">المكان</th>
                                     <th class="px-4 py-3">الإيراد</th>
                                     <th class="px-4 py-3">المصورين</th>
-                                    <th class="px-4 py-3">الصافي</th>
+                                    <th class="px-4 py-3 text-green-400">الصافي</th>
                                 </tr>
                             </thead>
                             <tbody id="dashboard-recent-logs" class="divide-y divide-slate-700/50">
@@ -138,15 +161,22 @@
 
         <!-- ADMIN: Logs Tab -->
         <section id="tab-logs" class="tab-content hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold">سجل العمليات اليومية</h2>
-                <button onclick="openModal('add-log-modal')" class="accent-gradient text-slate-900 px-4 py-2 rounded-lg font-bold shadow-lg hover:opacity-90 transition-opacity">
-                    <i class="fas fa-plus ml-1"></i> تسجيل جديد
-                </button>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h2 class="text-xl font-bold">الأرشيف والسجلات</h2>
+                
+                <!-- إضافة فلتر السجلات هنا حسب طلبك -->
+                <div class="w-full md:w-1/2 relative">
+                    <i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i>
+                    <input type="text" id="log-filter-input" onkeyup="filterLogs()" placeholder="فلترة باسم القاعة، المصور، التاريخ، أو الملاحظات..." class="w-full bg-slate-800 border border-slate-600 rounded-xl pr-10 pl-4 py-3 focus:border-yellow-500 focus:outline-none text-sm transition-colors">
+                </div>
             </div>
             
             <div class="space-y-4" id="full-logs-container">
                 <!-- Populated via JS -->
+            </div>
+            <div id="no-logs-message" class="hidden text-center text-gray-400 py-10">
+                <i class="fas fa-box-open text-4xl mb-3 opacity-50"></i>
+                <p>لا توجد سجلات مطابقة للبحث</p>
             </div>
         </section>
 
@@ -154,30 +184,30 @@
         <section id="tab-settings" class="tab-content hidden space-y-6">
             
             <!-- Flash Drives Settings -->
-            <div class="glass-panel p-5 rounded-xl">
+            <div class="glass-panel p-5 rounded-xl border-t-2 border-purple-500">
                 <h3 class="text-lg font-bold mb-4 border-b border-slate-700 pb-2"><i class="fas fa-usb accent-text ml-2"></i>إعدادات ومخزون الفلاشات</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div>
                         <label class="block text-sm text-gray-400 mb-1">العدد المتاح حالياً (المخزون)</label>
-                        <input type="number" id="setting-flash-inventory" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:border-yellow-500 focus:outline-none">
+                        <input type="number" id="setting-flash-inventory" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:border-yellow-500 focus:outline-none font-bold text-lg text-yellow-500">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1">سعر بيع الفلاشة الواحدة (ج.م)</label>
+                        <label class="block text-sm text-gray-400 mb-1">سعر بيع الفلاشة للعميل (ج.م)</label>
                         <input type="number" id="setting-flash-price" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:border-yellow-500 focus:outline-none">
                     </div>
                     <div>
-                        <button onclick="saveFlashSettings()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                            حفظ إعدادات الفلاشات
+                        <button onclick="saveFlashSettings()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i> حفظ الإعدادات
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- Locations Settings -->
-            <div class="glass-panel p-5 rounded-xl">
+            <div class="glass-panel p-5 rounded-xl border-t-2 border-blue-500">
                 <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
                     <h3 class="text-lg font-bold"><i class="fas fa-map-marker-alt accent-text ml-2"></i>إدارة القاعات والأماكن</h3>
-                    <button onclick="openModal('add-location-modal')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm transition-colors">
+                    <button onclick="openModal('add-location-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
                         <i class="fas fa-plus"></i> إضافة قاعة
                     </button>
                 </div>
@@ -187,10 +217,10 @@
             </div>
 
             <!-- Photographers Settings -->
-            <div class="glass-panel p-5 rounded-xl">
+            <div class="glass-panel p-5 rounded-xl border-t-2 border-green-500">
                 <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                    <h3 class="text-lg font-bold"><i class="fas fa-users-cog accent-text ml-2"></i>إدارة المصورين</h3>
-                    <button onclick="openModal('add-photographer-modal')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm transition-colors">
+                    <h3 class="text-lg font-bold"><i class="fas fa-users accent-text ml-2"></i>إدارة فريق العمل (المصورين)</h3>
+                    <button onclick="openModal('add-photographer-modal')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
                         <i class="fas fa-plus"></i> إضافة مصور
                     </button>
                 </div>
@@ -198,11 +228,10 @@
                     <table class="w-full text-right text-sm">
                         <thead class="bg-slate-800 text-gray-400">
                             <tr>
-                                <th class="px-4 py-2">الاسم</th>
-                                <th class="px-4 py-2">الأجر الافتراضي</th>
-                                <th class="px-4 py-2">الرصيد الحالي</th>
-                                <th class="px-4 py-2 text-center">إجراءات مالية</th>
-                                <th class="px-4 py-2 text-center">رابط التتبع / إدارة</th>
+                                <th class="px-4 py-3">الاسم</th>
+                                <th class="px-4 py-3">الأجر الأساسي</th>
+                                <th class="px-4 py-3">الرصيد المستحق</th>
+                                <th class="px-4 py-3 text-center">سحب / مكافأة</th>
                             </tr>
                         </thead>
                         <tbody id="settings-photographers-list" class="divide-y divide-slate-700/50">
@@ -214,95 +243,30 @@
             
         </section>
 
-        <!-- PHOTOGRAPHER PORTAL VIEW -->
-        <section id="tab-photographer-portal" class="tab-content hidden space-y-6 pt-4">
-            
-            <!-- Portal Header -->
-            <div class="text-center mb-8">
-                <div class="inline-block p-4 rounded-full bg-slate-800 mb-4 border-2 border-yellow-500">
-                    <i class="fas fa-user-tie text-4xl accent-text"></i>
-                </div>
-                <h2 class="text-2xl font-bold" id="portal-name">اسم المصور</h2>
-                <p class="text-gray-400">كشف الحساب الشخصي ومتابعة الأعمال</p>
-            </div>
-
-            <!-- Portal Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="glass-panel p-5 rounded-xl border-t-4 border-yellow-500 text-center">
-                    <p class="text-sm text-gray-400 mb-1">الرصيد المستحق (المتبقي)</p>
-                    <h3 class="text-3xl font-bold accent-text" id="portal-balance">0</h3>
-                </div>
-                <div class="glass-panel p-5 rounded-xl border-t-4 border-green-500 text-center">
-                    <p class="text-sm text-gray-400 mb-1">إجمالي المكتسبات (أجور + مكافآت)</p>
-                    <h3 class="text-2xl font-bold text-green-400" id="portal-earned">0</h3>
-                </div>
-                <div class="glass-panel p-5 rounded-xl border-t-4 border-red-500 text-center">
-                    <p class="text-sm text-gray-400 mb-1">إجمالي المسحوبات</p>
-                    <h3 class="text-2xl font-bold text-red-400" id="portal-withdrawn">0</h3>
-                </div>
-            </div>
-
-            <!-- Portal Messages/Schedules -->
-            <div>
-                <h3 class="text-lg font-bold mb-3"><i class="fas fa-bell accent-text ml-2"></i>التنبيهات والمواعيد</h3>
-                <div id="portal-messages" class="space-y-3">
-                    <!-- Populated via JS -->
-                </div>
-            </div>
-
-            <!-- Portal History -->
-            <div>
-                <h3 class="text-lg font-bold mb-3"><i class="fas fa-history accent-text ml-2"></i>سجل العمليات المالي</h3>
-                <div class="glass-panel rounded-xl overflow-hidden">
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-slate-800 text-gray-400">
-                            <tr>
-                                <th class="px-4 py-3">التاريخ</th>
-                                <th class="px-4 py-3">النوع</th>
-                                <th class="px-4 py-3">البيان/المكان</th>
-                                <th class="px-4 py-3">المبلغ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="portal-transactions" class="divide-y divide-slate-700/50">
-                            <!-- Populated via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <div class="text-center mt-8">
-                <button onclick="window.location.href = window.location.pathname" class="text-gray-400 hover:text-white underline text-sm">
-                    العودة لصفحة الإدارة (يتطلب صلاحية)
-                </button>
-            </div>
-        </section>
-
     </main>
 
-    <!-- Floating Action Button (Mobile) -->
+    <!-- Floating Action Button (Mobile) - Hidden by default since we moved button to dashboard -->
     <button id="fab-add-log" onclick="openModal('add-log-modal')" class="fixed bottom-6 right-6 w-14 h-14 rounded-full accent-gradient text-slate-900 flex items-center justify-center text-2xl shadow-xl shadow-yellow-500/20 z-40 hidden md:hidden">
         <i class="fas fa-plus"></i>
     </button>
 
     <!-- MODALS -->
-    <!-- Add Log Modal (الآن تمتد على كامل الشاشة تقريباً) -->
+    <!-- Add Log Modal -->
     <div id="add-log-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('add-log-modal')"></div>
-        <!-- تم تغيير الأبعاد لتأخذ الشاشة بالكامل مع هوامش بسيطة على الكمبيوتر -->
         <div class="absolute inset-0 md:top-4 md:bottom-4 md:left-4 md:right-4 bg-slate-800 md:rounded-2xl shadow-2xl overflow-y-auto hide-scrollbar flex flex-col">
-            <div class="p-6 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-slate-800 z-10">
-                <h2 class="text-2xl font-bold"><i class="fas fa-file-invoice-dollar accent-text ml-2"></i>تسجيل عملية يومية جديدة</h2>
+            <div class="p-5 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-slate-800 z-10 shadow-sm">
+                <h2 class="text-xl md:text-2xl font-bold"><i class="fas fa-file-invoice-dollar accent-text ml-2"></i>تسجيل عملية يومية جديدة</h2>
                 <button onclick="closeModal('add-log-modal')" class="text-gray-400 hover:text-white bg-slate-700 hover:bg-red-500 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             
-            <!-- محتوى النافذة مستفيد من المساحة العريضة -->
-            <div class="p-6 md:p-8 space-y-8 flex-grow">
-                <!-- Date, Location, and Revenue in one row -->
+            <div class="p-5 md:p-8 space-y-8 flex-grow">
+                <!-- Date, Location, and Revenue -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-sm text-gray-400 mb-2">التاريخ</label>
+                        <label class="block text-sm text-gray-400 mb-2">تاريخ العملية</label>
                         <input type="date" id="log-date" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:border-yellow-500 focus:outline-none text-lg">
                     </div>
                     <div>
@@ -313,13 +277,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-2">إيراد تحصيل اليوم (ج.م)</label>
-                        <input type="number" id="log-revenue" placeholder="مثال: 5000" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-2xl font-bold focus:border-yellow-500 focus:outline-none text-yellow-500 placeholder-slate-600">
+                        <label class="block text-sm text-gray-400 mb-2">إجمالي الإيراد المحصل (ج.م)</label>
+                        <input type="number" id="log-revenue" placeholder="مثال: 5000" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-2xl font-bold focus:border-yellow-500 focus:outline-none text-green-400 placeholder-slate-600">
                     </div>
                 </div>
 
-                <!-- Photographers Selection (Chips) -->
-                <div class="bg-slate-700/20 p-6 rounded-xl border border-slate-700">
+                <!-- Photographers Selection -->
+                <div class="bg-slate-700/20 p-5 rounded-xl border border-slate-700">
                     <label class="block text-lg font-bold text-white mb-4"><i class="fas fa-camera ml-2 accent-text"></i>اختر المصورين المشاركين</label>
                     <div class="flex flex-wrap gap-3" id="log-photographers-chips">
                         <!-- Populated via JS -->
@@ -328,41 +292,45 @@
 
                 <!-- Selected Photographers Wages Adjustment -->
                 <div id="log-selected-wages-container" class="space-y-3 hidden">
-                    <label class="block text-lg font-bold text-yellow-500"><i class="fas fa-money-bill-wave ml-2"></i>تعديل أجور المصورين لهذه العملية (اختياري)</label>
-                    <div id="log-selected-wages-list" class="bg-slate-900/50 p-6 rounded-xl border border-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- Populated via JS when chips are selected -->
+                    <label class="block text-md font-bold text-yellow-500"><i class="fas fa-edit ml-2"></i>تعديل أجور المصورين لهذه العملية (اختياري)</label>
+                    <div id="log-selected-wages-list" class="bg-slate-900/50 p-5 rounded-xl border border-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Populated via JS -->
                     </div>
                 </div>
 
                 <!-- Flash Drives & Notes -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <!-- Flash Drives -->
-                    <div class="bg-slate-700/30 p-6 rounded-xl border border-slate-700 flex flex-col justify-center">
-                        <div class="flex items-center justify-between mb-4">
-                            <p class="font-bold text-lg"><i class="fas fa-usb text-purple-400 ml-2 text-xl"></i>استخدام فلاشات وتسليمات</p>
-                            <p class="text-sm bg-slate-800 px-3 py-1 rounded-full text-gray-300" id="log-flash-info">المخزون: 0 | السعر: 0 ج.م</p>
+                    <div class="bg-slate-700/30 p-5 rounded-xl border border-slate-700 flex flex-col justify-center">
+                        <div class="flex flex-col mb-4 gap-2">
+                            <p class="font-bold text-lg"><i class="fas fa-usb text-purple-400 ml-2 text-xl"></i>استهلاك الفلاشات</p>
+                            <!-- عرض المتبقي هنا بوضوح -->
+                            <div class="flex gap-2 text-sm">
+                                <span class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-600">المتبقي بالمخزن: <span id="log-flash-inventory-display" class="font-bold text-yellow-400">0</span></span>
+                                <span class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-600">سعر الفلاشة: <span id="log-flash-price-display" class="font-bold">0</span> ج</span>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-4 justify-end bg-slate-800 p-4 rounded-lg">
-                            <button type="button" onclick="adjustFlashCount(-1)" class="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center hover:bg-slate-500 text-2xl font-bold transition-colors">-</button>
-                            <input type="number" id="log-flash-used" value="0" min="0" class="w-24 bg-slate-900 border border-slate-600 rounded-lg text-center py-2 text-2xl font-bold no-spinners">
-                            <button type="button" onclick="adjustFlashCount(1)" class="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center hover:bg-slate-500 text-2xl font-bold transition-colors">+</button>
+                        <div class="flex items-center gap-4 justify-center md:justify-end bg-slate-800 p-4 rounded-xl border border-slate-600">
+                            <button type="button" onclick="adjustFlashCount(-1)" class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 text-2xl font-bold transition-colors">-</button>
+                            <input type="number" id="log-flash-used" value="0" min="0" readonly class="w-20 bg-transparent border-none text-center text-3xl font-bold text-purple-400 focus:outline-none">
+                            <button type="button" onclick="adjustFlashCount(1)" class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 text-2xl font-bold transition-colors">+</button>
                         </div>
                     </div>
 
                     <!-- Notes -->
                     <div>
-                        <label class="block text-lg font-bold text-white mb-2"><i class="fas fa-edit ml-2 text-gray-400"></i>تفاصيل وملاحظات (اختياري)</label>
-                        <textarea id="log-notes" rows="4" placeholder="أضف أي ملاحظات حول اليوميات، مشاكل، أو طلبات خاصة..." class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:border-yellow-500 focus:outline-none text-lg resize-none"></textarea>
+                        <label class="block text-lg font-bold text-white mb-2"><i class="fas fa-comment-alt ml-2 text-gray-400"></i>ملاحظات (اختياري)</label>
+                        <textarea id="log-notes" rows="4" placeholder="اكتب أي ملاحظات إضافية حول اليومية، طلبات العملاء، أو المشاكل..." class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 focus:border-yellow-500 focus:outline-none text-md resize-none"></textarea>
                     </div>
                 </div>
             </div>
             
-            <div class="p-6 border-t border-slate-700 bg-slate-800 sticky bottom-0 z-10 flex justify-end gap-4">
-                <button onclick="closeModal('add-log-modal')" class="px-8 py-4 rounded-xl font-bold text-lg border border-slate-600 hover:bg-slate-700 transition-colors">
+            <div class="p-5 border-t border-slate-700 bg-slate-800 sticky bottom-0 z-10 flex flex-col sm:flex-row justify-end gap-3 shadow-lg">
+                <button onclick="closeModal('add-log-modal')" class="px-6 py-3 rounded-xl font-bold text-lg border border-slate-600 hover:bg-slate-700 transition-colors order-2 sm:order-1">
                     إلغاء
                 </button>
-                <button onclick="saveDailyLog()" class="md:w-1/3 w-full accent-gradient text-slate-900 font-bold text-xl py-4 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
-                    حفظ وتسجيل العملية الآن
+                <button onclick="saveDailyLog()" class="sm:w-1/3 w-full accent-gradient text-slate-900 font-bold text-xl py-3 rounded-xl shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 order-1 sm:order-2">
+                    <i class="fas fa-check-circle"></i> حفظ وتسجيل الآن
                 </button>
             </div>
         </div>
@@ -371,55 +339,21 @@
     <!-- Add Photographer Modal -->
     <div id="add-photographer-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('add-photographer-modal')"></div>
-        <div class="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 z-10 m-4">
+        <div class="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 z-10 m-4 border border-slate-600">
             <h2 class="text-xl font-bold mb-4">إضافة مصور جديد</h2>
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm text-gray-400 mb-1">اسم المصور</label>
-                    <input type="text" id="new-photo-name" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 focus:border-yellow-500">
+                    <input type="text" id="new-photo-name" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:border-yellow-500">
                 </div>
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1">الأجر الافتراضي لليوم (ج.م)</label>
-                    <input type="number" id="new-photo-wage" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 focus:border-yellow-500">
+                    <label class="block text-sm text-gray-400 mb-1">الأجر الأساسي لليوم (ج.م)</label>
+                    <input type="number" id="new-photo-wage" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:border-yellow-500">
                 </div>
-                <button onclick="addPhotographer()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors mt-2">حفظ المصور</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Financial Action Modal (Bonus / Withdrawal) -->
-    <div id="financial-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('financial-modal')"></div>
-        <div class="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 z-10 m-4">
-            <h2 class="text-xl font-bold mb-4" id="fin-modal-title">إجراء مالي</h2>
-            <input type="hidden" id="fin-photo-id">
-            <input type="hidden" id="fin-type">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">المبلغ (ج.م)</label>
-                    <input type="number" id="fin-amount" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 focus:border-yellow-500">
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeModal('add-photographer-modal')" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg font-bold">إلغاء</button>
+                    <button onclick="addPhotographer()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition-colors">حفظ</button>
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">البيان / ملاحظة</label>
-                    <input type="text" id="fin-note" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 focus:border-yellow-500">
-                </div>
-                <button onclick="saveFinancialAction()" id="fin-btn" class="w-full font-bold py-2 rounded-lg transition-colors mt-2">حفظ</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Send Message Modal -->
-    <div id="message-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('message-modal')"></div>
-        <div class="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 z-10 m-4">
-            <h2 class="text-xl font-bold mb-4">إرسال تنبيه / موعد للمصور</h2>
-            <input type="hidden" id="msg-photo-id">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">نص الرسالة</label>
-                    <textarea id="msg-text" rows="3" placeholder="مثال: عندك شغل بكرا في قاعة الفيروز الساعة 7..." class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 focus:border-yellow-500"></textarea>
-                </div>
-                <button onclick="sendMessage()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg transition-colors mt-2">إرسال التنبيه</button>
             </div>
         </div>
     </div>
@@ -427,19 +361,45 @@
     <!-- Add Location Modal -->
     <div id="add-location-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('add-location-modal')"></div>
-        <div class="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 z-10 m-4">
-            <h2 class="text-xl font-bold mb-4">إضافة قاعة/مكان جديد</h2>
+        <div class="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 z-10 m-4 border border-slate-600">
+            <h2 class="text-xl font-bold mb-4">إضافة قاعة أو مكان</h2>
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm text-gray-400 mb-1">اسم المكان</label>
-                    <input type="text" id="new-loc-name" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 focus:border-yellow-500">
+                    <input type="text" id="new-loc-name" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:border-yellow-500">
                 </div>
-                <button onclick="addLocation()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors mt-2">حفظ المكان</button>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeModal('add-location-modal')" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg font-bold">إلغاء</button>
+                    <button onclick="addLocation()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors">حفظ</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="toast-container"></div>
+    <!-- Financial Action Modal (Bonus / Withdrawal) -->
+    <div id="financial-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeModal('financial-modal')"></div>
+        <div class="relative w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 z-10 m-4 border border-slate-600">
+            <h2 class="text-xl font-bold mb-4" id="fin-modal-title">إجراء مالي</h2>
+            <input type="hidden" id="fin-photo-id">
+            <input type="hidden" id="fin-type">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">المبلغ (ج.م)</label>
+                    <input type="number" id="fin-amount" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:border-yellow-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">البيان / ملاحظة</label>
+                    <input type="text" id="fin-note" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 focus:border-yellow-500">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeModal('financial-modal')" class="flex-1 bg-slate-700 hover:bg-slate-600 py-2 rounded-lg font-bold">إلغاء</button>
+                    <button onclick="saveFinancialAction()" id="fin-btn" class="flex-1 font-bold py-2 rounded-lg transition-colors text-white">تنفيذ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Firebase SDK Setup -->
     <script type="module">
@@ -447,7 +407,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, addDoc, onSnapshot, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuration
         const userProvidedConfig = {
             apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4",
             authDomain: "video-c59af.firebaseapp.com",
@@ -459,43 +418,47 @@
         };
         
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userProvidedConfig;
-        const CANVAS_APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'mrakby-visuals-db';
+        const CANVAS_APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'mrakby-visuals-app';
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // State variables
         let photographers = [];
         let locations = [];
         let logs = [];
-        let transactions = [];
-        let messages = [];
         let flashSettings = { inventory: 0, price: 0, totalUsed: 0, totalSales: 0 };
         let currentUserId = null;
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const portalPhotographerId = urlParams.get('p_id');
-        const isPortalMode = !!portalPhotographerId;
+        let selectedPhotographersForLog = {}; 
 
         const getCollectionPath = (colName) => collection(db, 'artifacts', CANVAS_APP_ID, 'public', 'data', colName);
         const getDocPath = (colName, docId) => doc(db, 'artifacts', CANVAS_APP_ID, 'public', 'data', colName, docId);
 
+        // Utilities
         window.showToast = (msg, type = 'success') => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast ${type === 'success' ? 'bg-green-600 text-white' : type === 'error' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`;
-            toast.innerText = msg;
+            toast.className = `toast shadow-lg border border-white/10 ${type === 'success' ? 'bg-green-600 text-white' : type === 'error' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} ml-2"></i> ${msg}`;
             container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 3000);
+            setTimeout(() => toast.remove(), 4000);
         };
 
-        window.openModal = (id) => { document.getElementById(id).classList.remove('hidden'); };
+        window.openModal = (id) => { 
+            document.getElementById(id).classList.remove('hidden'); 
+            if(id === 'add-log-modal') {
+                document.getElementById('log-date').valueAsDate = new Date();
+                renderLogPhotographerChips();
+                document.getElementById('log-flash-used').value = 0;
+            }
+        };
         window.closeModal = (id) => { document.getElementById(id).classList.add('hidden'); };
         
         window.switchTab = (tabId) => {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('active', 'bg-slate-700');
+                el.classList.remove('active', 'bg-slate-700', 'text-white');
                 el.classList.add('text-gray-400');
             });
             
@@ -504,21 +467,19 @@
             
             const targetBtn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
             if(targetBtn) {
-                targetBtn.classList.add('active', 'bg-slate-700');
+                targetBtn.classList.add('active', 'bg-slate-700', 'text-white');
                 targetBtn.classList.remove('text-gray-400');
             }
-
-            if(tabId === 'logs') document.getElementById('fab-add-log').classList.remove('hidden');
-            else document.getElementById('fab-add-log').classList.add('hidden');
         };
 
-        const formatMoney = (num) => Number(num || 0).toLocaleString('ar-EG') + ' ج.م';
+        const formatMoney = (num) => Number(num || 0).toLocaleString('ar-EG') + ' ج';
         const formatDate = (dateStr) => {
             if(!dateStr) return '';
             const options = { year: 'numeric', month: 'short', day: 'numeric' };
             return new Date(dateStr).toLocaleDateString('ar-EG', options);
         };
 
+        // Initialize App & Auth
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -528,7 +489,7 @@
                 }
             } catch (error) {
                 console.error("Auth error:", error);
-                showToast("خطأ في الاتصال بقاعدة البيانات", "error");
+                showToast("خطأ في المصادقة", "error");
             }
         };
 
@@ -536,526 +497,508 @@
             if (user) {
                 currentUserId = user.uid;
                 initDataFetching();
+                document.getElementById('loading-overlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading-overlay').classList.add('hidden'), 500);
             }
         });
 
+        // Fetch Data from Firestore
         const initDataFetching = () => {
+            if (!currentUserId) return;
+
+            // Flash Settings
             onSnapshot(getDocPath('settings', 'flash'), (docSnap) => {
                 if (docSnap.exists()) {
                     flashSettings = docSnap.data();
                 } else {
-                    setDoc(getDocPath('settings', 'flash'), { inventory: 50, price: 100, totalUsed: 0, totalSales: 0 });
+                    // Initialize default settings
+                    flashSettings = { inventory: 50, price: 100, totalUsed: 0, totalSales: 0 };
+                    setDoc(getDocPath('settings', 'flash'), flashSettings);
                 }
                 updateFlashUI();
-            }, (error) => console.error(error));
+            }, (error) => console.error("Error fetching settings:", error));
 
+            // Photographers
             onSnapshot(getCollectionPath('photographers'), (snapshot) => {
                 photographers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                if (photographers.length === 0) {
-                    const initialNames = ['محمد المراكبى', 'محمد عادل', 'محمد ايهاب', 'عبده العجوز', 'محمد نادر', 'محمود كوكو', 'مصور اخر'];
-                    initialNames.forEach(name => {
-                        addDoc(getCollectionPath('photographers'), { name: name, defaultWage: 300, balance: 0, createdAt: serverTimestamp() });
-                    });
-                } else {
-                    renderUI();
-                }
-            }, (error) => console.error(error));
+                renderPhotographersUI();
+            }, (error) => console.error("Error fetching photographers:", error));
 
+            // Locations
             onSnapshot(getCollectionPath('locations'), (snapshot) => {
                 locations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (locations.length === 0) {
-                    const initialLocs = ['قاعة الفيروز', 'قاعة الشافعى', 'شغل الشارع'];
-                    initialLocs.forEach(name => {
-                        addDoc(getCollectionPath('locations'), { name: name });
-                    });
-                } else {
-                    renderUI();
-                }
-            }, (error) => console.error(error));
+                renderLocationsUI();
+            }, (error) => console.error("Error fetching locations:", error));
 
+            // Logs
             onSnapshot(getCollectionPath('logs'), (snapshot) => {
                 logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => new Date(b.date) - new Date(a.date));
-                renderUI();
-            }, (error) => console.error(error));
-
-            onSnapshot(getCollectionPath('transactions'), (snapshot) => {
-                transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
-                recalculateBalances();
-                renderUI();
-            }, (error) => console.error(error));
-
-            onSnapshot(getCollectionPath('messages'), (snapshot) => {
-                messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.timestamp - a.timestamp);
-                if(isPortalMode) renderPortalUI();
-            }, (error) => console.error(error));
-
-            setTimeout(() => {
-                document.getElementById('loading-overlay').classList.add('hidden');
-                
-                if (isPortalMode) {
-                    document.getElementById('tab-photographer-portal').classList.remove('hidden');
-                    document.getElementById('photographer-nav').classList.remove('hidden');
-                    renderPortalUI();
-                } else {
-                    document.getElementById('admin-nav').classList.remove('hidden');
-                    switchTab('dashboard');
-                    document.getElementById('log-date').valueAsDate = new Date();
-                }
-            }, 1500);
+                renderLogsUI();
+                updateDashboardStats();
+            }, (error) => console.error("Error fetching logs:", error));
         };
 
-        const recalculateBalances = () => {
-            photographers.forEach(p => {
-                const pTrans = transactions.filter(t => t.photographerId === p.id);
-                let bal = 0; let earned = 0; let withdrawn = 0;
-                pTrans.forEach(t => {
-                    const amount = Number(t.amount);
-                    if (t.type === 'wage' || t.type === 'bonus') { bal += amount; earned += amount; }
-                    else if (t.type === 'withdrawal') { bal -= amount; withdrawn += amount; }
-                });
-                p._calculatedBalance = bal;
-                p._calculatedEarned = earned;
-                p._calculatedWithdrawn = withdrawn;
+        // UI Renderers
+        const updateFlashUI = () => {
+            document.getElementById('setting-flash-inventory').value = flashSettings.inventory;
+            document.getElementById('setting-flash-price').value = flashSettings.price;
+            
+            document.getElementById('stat-flash-inventory').innerText = flashSettings.inventory;
+            document.getElementById('stat-flash-used').innerText = flashSettings.totalUsed || 0;
+            document.getElementById('stat-flash-revenue').innerText = formatMoney(flashSettings.totalSales || 0);
+
+            document.getElementById('log-flash-inventory-display').innerText = flashSettings.inventory;
+            document.getElementById('log-flash-price-display').innerText = flashSettings.price;
+        };
+
+        const renderLocationsUI = () => {
+            const list = document.getElementById('settings-locations-list');
+            const select = document.getElementById('log-location');
+            list.innerHTML = '';
+            select.innerHTML = '<option value="">اختر المكان...</option>';
+            
+            locations.forEach(loc => {
+                // Settings List
+                const chip = document.createElement('div');
+                chip.className = 'bg-slate-800 border border-slate-600 px-3 py-1.5 rounded-lg flex items-center gap-2';
+                chip.innerHTML = `<span>${loc.name}</span> <button onclick="deleteLocation('${loc.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-times"></i></button>`;
+                list.appendChild(chip);
+
+                // Add Log Select
+                const option = document.createElement('option');
+                option.value = loc.id;
+                option.innerText = loc.name;
+                select.appendChild(option);
             });
         };
 
-        const renderUI = () => {
-            if (isPortalMode) {
-                renderPortalUI();
-            } else {
-                renderAdminDashboard();
-                renderLogs();
-                renderSettings();
-                populateFormDropdowns();
+        const renderPhotographersUI = () => {
+            const settingsList = document.getElementById('settings-photographers-list');
+            const dashGrid = document.getElementById('dashboard-photographers-grid');
+            
+            settingsList.innerHTML = '';
+            dashGrid.innerHTML = '';
+
+            photographers.forEach(p => {
+                // Dashboard Grid Card
+                const card = document.createElement('div');
+                card.className = 'glass-panel p-3 rounded-xl border border-slate-700 text-center relative overflow-hidden group';
+                card.innerHTML = `
+                    <div class="absolute inset-0 bg-yellow-500/5 group-hover:bg-yellow-500/10 transition-colors"></div>
+                    <div class="w-10 h-10 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-2 border border-slate-600">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </div>
+                    <h4 class="font-bold text-sm truncate">${p.name}</h4>
+                    <p class="text-yellow-400 font-bold mt-1 dir-ltr">${formatMoney(p.balance)}</p>
+                `;
+                dashGrid.appendChild(card);
+
+                // Settings Table Row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-bold">${p.name}</td>
+                    <td class="px-4 py-3">${formatMoney(p.defaultWage)}</td>
+                    <td class="px-4 py-3 text-yellow-400 font-bold">${formatMoney(p.balance)}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="openFinModal('${p.id}', 'withdraw')" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded text-xs transition-colors" title="سحب مبلغ">سحب</button>
+                            <button onclick="openFinModal('${p.id}', 'bonus')" class="bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white px-2 py-1 rounded text-xs transition-colors" title="إضافة مكافأة">مكافأة</button>
+                        </div>
+                    </td>
+                `;
+                settingsList.appendChild(tr);
+            });
+
+            // Update Log Modal Chips if open
+            if(!document.getElementById('add-log-modal').classList.contains('hidden')) {
+                renderLogPhotographerChips();
             }
         };
 
-        const renderAdminDashboard = () => {
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
+        const renderLogsUI = () => {
+            const container = document.getElementById('full-logs-container');
+            const recentContainer = document.getElementById('dashboard-recent-logs');
             
-            let totalRev = 0, netProf = 0, totalWages = 0;
+            container.innerHTML = '';
+            recentContainer.innerHTML = '';
             
-            logs.forEach(log => {
-                const logDate = new Date(log.date);
-                if(logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear) {
-                    totalRev += Number(log.totalRevenue || 0);
-                    netProf += Number(log.netRevenue || 0);
-                    totalWages += Number(log.totalWages || 0);
+            if(logs.length === 0) {
+                document.getElementById('no-logs-message').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('no-logs-message').classList.add('hidden');
+            }
+
+            logs.forEach((log, index) => {
+                const locName = locations.find(l => l.id === log.locationId)?.name || 'مكان غير معروف';
+                const photoNames = log.photographers.map(p => photographers.find(ph => ph.id === p.id)?.name || 'مصور').join('، ');
+                
+                // Full Logs (Archive) - Added log-item-card class for filtering
+                const logCard = document.createElement('div');
+                logCard.className = 'log-item-card glass-panel p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between gap-4';
+                logCard.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-slate-800 text-gray-300 px-2 py-1 rounded text-xs"><i class="fas fa-calendar-alt ml-1"></i>${formatDate(log.date)}</span>
+                            <span class="bg-blue-900/30 text-blue-300 px-2 py-1 rounded text-xs border border-blue-800"><i class="fas fa-map-marker-alt ml-1"></i>${locName}</span>
+                        </div>
+                        <p class="text-sm text-gray-400"><i class="fas fa-users ml-1"></i> ${photoNames || 'لم يتم تحديد مصورين'}</p>
+                        ${log.notes ? `<p class="text-sm text-gray-500 mt-2 bg-slate-900/50 p-2 rounded"><i class="fas fa-info-circle ml-1"></i> ${log.notes}</p>` : ''}
+                    </div>
+                    <div class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2 bg-slate-800/50 p-3 rounded-lg md:min-w-[150px]">
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400">الإيراد</p>
+                            <p class="font-bold text-green-400">${formatMoney(log.revenue)}</p>
+                        </div>
+                        <div class="w-px h-8 bg-slate-600 block md:hidden"></div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-400">الصافي</p>
+                            <p class="font-bold text-yellow-500">${formatMoney(log.netProfit)}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(logCard);
+
+                // Dashboard Recent (Top 5)
+                if (index < 5) {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-800/50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap">${formatDate(log.date)}</td>
+                        <td class="px-4 py-3">${locName}</td>
+                        <td class="px-4 py-3 text-white">${formatMoney(log.revenue)}</td>
+                        <td class="px-4 py-3 text-xs text-gray-400 max-w-[150px] truncate" title="${photoNames}">${photoNames}</td>
+                        <td class="px-4 py-3 font-bold text-green-400">${formatMoney(log.netProfit)}</td>
+                    `;
+                    recentContainer.appendChild(tr);
                 }
+            });
+        };
+
+        const updateDashboardStats = () => {
+            let totalRev = 0;
+            let totalNet = 0;
+            let totalWages = 0;
+
+            logs.forEach(log => {
+                totalRev += Number(log.revenue) || 0;
+                totalNet += Number(log.netProfit) || 0;
+                log.photographers.forEach(p => {
+                    totalWages += Number(p.wage) || 0;
+                });
             });
 
             document.getElementById('stat-total-revenue').innerText = formatMoney(totalRev);
-            document.getElementById('stat-net-profit').innerText = formatMoney(netProf);
+            document.getElementById('stat-net-profit').innerText = formatMoney(totalNet);
             document.getElementById('stat-total-wages').innerText = formatMoney(totalWages);
+        };
+
+        // Modal Action Handlers
+        window.addPhotographer = async () => {
+            const name = document.getElementById('new-photo-name').value;
+            const wage = document.getElementById('new-photo-wage').value;
             
-            document.getElementById('stat-flash-used').innerText = `${flashSettings.totalUsed || 0} فلاشة`;
-            document.getElementById('stat-flash-revenue').innerText = formatMoney(flashSettings.totalSales || 0);
+            if(!name || !wage) return showToast("يرجى ملء جميع البيانات", "error");
 
-            const grid = document.getElementById('dashboard-photographers-grid');
-            grid.innerHTML = photographers.map(p => `
-                <div class="bg-slate-800 p-3 rounded-lg border border-slate-700 text-center relative overflow-hidden group cursor-pointer" onclick="window.open('?p_id=${p.id}', '_blank')">
-                    <div class="absolute inset-0 bg-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="w-8 h-8 rounded-full bg-slate-700 mx-auto mb-2 flex items-center justify-center text-gray-400">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <p class="text-sm font-bold truncate">${p.name}</p>
-                    <p class="${p._calculatedBalance >= 0 ? 'text-green-400' : 'text-red-400'} font-bold text-xs mt-1" dir="ltr">${formatMoney(p._calculatedBalance)}</p>
-                </div>
-            `).join('');
-
-            const tbody = document.getElementById('dashboard-recent-logs');
-            tbody.innerHTML = logs.slice(0, 5).map(log => {
-                const locName = locations.find(l => l.id === log.locationId)?.name || 'غير محدد';
-                const photosCount = log.photographers ? log.photographers.length : 0;
-                return `
-                <tr class="hover:bg-slate-700/50 transition-colors">
-                    <td class="px-4 py-3">${formatDate(log.date)}</td>
-                    <td class="px-4 py-3 text-yellow-400">${locName}</td>
-                    <td class="px-4 py-3">${formatMoney(log.totalRevenue)}</td>
-                    <td class="px-4 py-3"><span class="bg-slate-600 px-2 py-1 rounded text-xs">${photosCount} مصورين</span></td>
-                    <td class="px-4 py-3 font-bold text-green-400">${formatMoney(log.netRevenue)}</td>
-                </tr>
-            `}).join('');
+            try {
+                await addDoc(getCollectionPath('photographers'), {
+                    name,
+                    defaultWage: Number(wage),
+                    balance: 0,
+                    earned: 0,
+                    withdrawn: 0
+                });
+                closeModal('add-photographer-modal');
+                showToast("تمت إضافة المصور بنجاح");
+                document.getElementById('new-photo-name').value = '';
+                document.getElementById('new-photo-wage').value = '';
+            } catch (e) {
+                showToast("حدث خطأ أثناء الإضافة", "error");
+            }
         };
 
-        const renderLogs = () => {
-            const container = document.getElementById('full-logs-container');
-            if(logs.length === 0) {
-                container.innerHTML = `<div class="text-center p-10 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3"></i><p>لا توجد سجلات بعد</p></div>`;
-                return;
+        window.addLocation = async () => {
+            const name = document.getElementById('new-loc-name').value;
+            if(!name) return showToast("يرجى إدخال اسم المكان", "error");
+            
+            try {
+                await addDoc(getCollectionPath('locations'), { name });
+                closeModal('add-location-modal');
+                showToast("تم إضافة المكان");
+                document.getElementById('new-loc-name').value = '';
+            } catch (e) {
+                showToast("خطأ", "error");
             }
+        };
 
-            container.innerHTML = logs.map(log => {
-                const locName = locations.find(l => l.id === log.locationId)?.name || 'غير محدد';
-                const pNames = (log.photographers || []).map(p => `${p.name} (${p.wage})`).join(' ، ');
+        window.deleteLocation = async (id) => {
+            if(confirm("هل أنت متأكد من حذف هذه القاعة؟")) {
+                await deleteDoc(getDocPath('locations', id));
+                showToast("تم الحذف");
+            }
+        };
+
+        window.saveFlashSettings = async () => {
+            const inv = Number(document.getElementById('setting-flash-inventory').value);
+            const price = Number(document.getElementById('setting-flash-price').value);
+            
+            try {
+                await updateDoc(getDocPath('settings', 'flash'), { inventory: inv, price: price });
+                showToast("تم تحديث إعدادات الفلاشات");
+            } catch (e) {
+                showToast("خطأ في الحفظ", "error");
+            }
+        };
+
+        // Filtering Logs
+        window.filterLogs = () => {
+            const searchTerm = document.getElementById('log-filter-input').value.toLowerCase();
+            const logItems = document.querySelectorAll('.log-item-card');
+            let visibleCount = 0;
+
+            logItems.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            const noLogsMsg = document.getElementById('no-logs-message');
+            if (visibleCount === 0 && logItems.length > 0) {
+                noLogsMsg.classList.remove('hidden');
+            } else {
+                noLogsMsg.classList.add('hidden');
+            }
+        };
+
+        // New Daily Log Logic
+        const renderLogPhotographerChips = () => {
+            const container = document.getElementById('log-photographers-chips');
+            container.innerHTML = '';
+            
+            photographers.forEach(p => {
+                const isSelected = !!selectedPhotographersForLog[p.id];
                 
-                return `
-                <div class="glass-panel p-5 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="bg-yellow-500 text-slate-900 px-2 py-1 rounded text-xs font-bold">${formatDate(log.date)}</span>
-                            <span class="font-bold text-lg"><i class="fas fa-map-marker-alt text-red-400 ml-1"></i>${locName}</span>
-                        </div>
-                        <p class="text-sm text-gray-300 mb-1"><i class="fas fa-users text-blue-400 ml-1"></i>المصورين: ${pNames}</p>
-                        ${log.flashDrivesUsed > 0 ? `<p class="text-sm text-gray-300 mb-1"><i class="fas fa-usb text-purple-400 ml-1"></i>فلاشات: ${log.flashDrivesUsed} (-${log.flashDrivesCost} ج.م)</p>` : ''}
-                        ${log.notes ? `<p class="text-sm text-gray-400 italic mt-2"><i class="fas fa-comment-alt ml-1 text-gray-500"></i>${log.notes}</p>` : ''}
+                const label = document.createElement('label');
+                label.className = 'cursor-pointer photographer-chip';
+                label.innerHTML = `
+                    <input type="checkbox" class="hidden" onchange="togglePhotographerLog('${p.id}', '${p.name}', ${p.defaultWage}, this.checked)" ${isSelected ? 'checked' : ''}>
+                    <div class="px-4 py-2 rounded-xl border border-slate-600 bg-slate-800 text-gray-300 font-medium transition-all duration-200 hover:bg-slate-700 flex items-center gap-2">
+                        <i class="fas ${isSelected ? 'fa-check text-slate-900' : 'fa-user'}"></i> ${p.name}
                     </div>
-                    <div class="bg-slate-900/50 p-3 rounded-lg text-left min-w-[150px] border border-slate-700 w-full md:w-auto">
-                        <p class="text-xs text-gray-400 mb-1">الإيراد الكلي: ${formatMoney(log.totalRevenue)}</p>
-                        <p class="text-sm font-bold text-green-400 border-t border-slate-700 pt-1 mt-1">الصافي: ${formatMoney(log.netRevenue)}</p>
-                        <button onclick="deleteLog('${log.id}')" class="text-red-400 hover:text-red-300 text-xs mt-2 w-full text-left"><i class="fas fa-trash ml-1"></i>حذف السجل</button>
-                    </div>
-                </div>
-            `}).join('');
+                `;
+                container.appendChild(label);
+            });
+            renderSelectedWages();
         };
 
-        const renderSettings = () => {
-            const locContainer = document.getElementById('settings-locations-list');
-            locContainer.innerHTML = locations.map(loc => `
-                <div class="bg-slate-700 px-3 py-2 rounded-lg flex items-center gap-2">
-                    <span>${loc.name}</span>
-                    <button onclick="deleteLocation('${loc.id}')" class="text-red-400 hover:text-red-300 ml-2"><i class="fas fa-times"></i></button>
-                </div>
-            `).join('');
-
-            const tbody = document.getElementById('settings-photographers-list');
-            tbody.innerHTML = photographers.map(p => {
-                const link = `${window.location.origin}${window.location.pathname}?p_id=${p.id}`;
-                return `
-                <tr class="hover:bg-slate-700/50 transition-colors">
-                    <td class="px-4 py-3 font-bold">${p.name}</td>
-                    <td class="px-4 py-3">${p.defaultWage} ج.م</td>
-                    <td class="px-4 py-3 font-bold ${p._calculatedBalance >= 0 ? 'text-green-400' : 'text-red-400'}" dir="ltr">${formatMoney(p._calculatedBalance)}</td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="flex gap-2 justify-center">
-                            <button onclick="openFinModal('${p.id}', 'bonus', 'إضافة مكافأة')" class="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white px-2 py-1 rounded text-xs transition-colors">مكافأة</button>
-                            <button onclick="openFinModal('${p.id}', 'withdrawal', 'تسجيل سحبية')" class="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs transition-colors">سحب</button>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="flex gap-2 justify-center">
-                            <button onclick="openMsgModal('${p.id}')" class="text-yellow-400 hover:text-yellow-300" title="إرسال تنبيه"><i class="fas fa-bell"></i></button>
-                            <button onclick="copyLink('${link}')" class="text-blue-400 hover:text-blue-300" title="نسخ رابط التتبع"><i class="fas fa-link"></i></button>
-                            <button onclick="deletePhotographer('${p.id}')" class="text-red-400 hover:text-red-300 ml-2" title="حذف"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-            `}).join('');
-        };
-
-        const updateFlashUI = () => {
-            if(document.getElementById('setting-flash-inventory')) {
-                document.getElementById('setting-flash-inventory').value = flashSettings.inventory;
-                document.getElementById('setting-flash-price').value = flashSettings.price;
-                document.getElementById('log-flash-info').innerText = `المخزون: ${flashSettings.inventory} | السعر: ${flashSettings.price} ج.م`;
+        window.togglePhotographerLog = (id, name, defaultWage, isChecked) => {
+            if(isChecked) {
+                selectedPhotographersForLog[id] = { id, name, wage: defaultWage };
+            } else {
+                delete selectedPhotographersForLog[id];
             }
+            renderLogPhotographerChips(); // Refresh styles
+            renderSelectedWages();
         };
 
-        const populateFormDropdowns = () => {
-            const locSelect = document.getElementById('log-location');
-            locSelect.innerHTML = '<option value="">اختر المكان...</option>' + locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-
-            const chipsContainer = document.getElementById('log-photographers-chips');
-            chipsContainer.innerHTML = photographers.map(p => `
-                <label class="photographer-chip cursor-pointer inline-block">
-                    <input type="checkbox" class="hidden peer" value="${p.id}" data-name="${p.name}" data-wage="${p.defaultWage}" onchange="updateSelectedWagesUI()">
-                    <div class="bg-slate-800 border border-slate-600 text-gray-300 px-4 py-3 rounded-xl text-lg transition-all flex items-center gap-2">
-                        <i class="fas fa-user-circle"></i> ${p.name}
-                    </div>
-                </label>
-            `).join('');
-        };
-
-        window.updateSelectedWagesUI = () => {
-            const checkboxes = document.querySelectorAll('.photographer-chip input:checked');
+        const renderSelectedWages = () => {
             const container = document.getElementById('log-selected-wages-container');
             const list = document.getElementById('log-selected-wages-list');
+            list.innerHTML = '';
             
-            if(checkboxes.length === 0) {
+            const selectedIds = Object.keys(selectedPhotographersForLog);
+            if(selectedIds.length === 0) {
                 container.classList.add('hidden');
                 return;
             }
             
             container.classList.remove('hidden');
-            let html = '';
-            checkboxes.forEach(cb => {
-                const id = cb.value;
-                const name = cb.getAttribute('data-name');
-                const wage = cb.getAttribute('data-wage');
-                const existingInput = document.getElementById(`wage-input-${id}`);
-                const currentVal = existingInput ? existingInput.value : wage;
-                
-                html += `
-                    <div class="flex justify-between items-center bg-slate-800 p-3 rounded-lg border border-slate-600">
-                        <span class="text-base font-medium">${name}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm text-gray-400">الأجر:</span>
-                            <input type="number" id="wage-input-${id}" value="${currentVal}" class="w-24 bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-base font-bold text-center focus:border-yellow-500 focus:outline-none text-green-400">
-                        </div>
+            selectedIds.forEach(id => {
+                const p = selectedPhotographersForLog[id];
+                const div = document.createElement('div');
+                div.className = "flex flex-col gap-1";
+                div.innerHTML = `
+                    <span class="text-sm text-gray-400">${p.name}</span>
+                    <div class="relative">
+                        <input type="number" value="${p.wage}" onchange="updateSelectedWage('${id}', this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-8 pr-3 py-2 focus:border-yellow-500 text-white font-bold">
+                        <span class="absolute left-3 top-2 text-gray-500 text-sm">ج.م</span>
                     </div>
                 `;
+                list.appendChild(div);
             });
-            list.innerHTML = html;
         };
 
-        window.adjustFlashCount = (amount) => {
+        window.updateSelectedWage = (id, newWage) => {
+            if(selectedPhotographersForLog[id]) {
+                selectedPhotographersForLog[id].wage = Number(newWage);
+            }
+        };
+
+        window.adjustFlashCount = (delta) => {
             const input = document.getElementById('log-flash-used');
-            let val = parseInt(input.value) + amount;
-            if (val < 0) val = 0;
-            if (val > flashSettings.inventory) {
-                showToast("العدد يتجاوز المخزون المتاح!", "error");
+            let val = parseInt(input.value) || 0;
+            val += delta;
+            if(val < 0) val = 0;
+            if(val > flashSettings.inventory) {
+                showToast(`أقصى كمية متاحة هي ${flashSettings.inventory}`, 'error');
                 val = flashSettings.inventory;
             }
             input.value = val;
         };
 
-        window.saveFlashSettings = async () => {
-            const inv = parseInt(document.getElementById('setting-flash-inventory').value) || 0;
-            const price = parseInt(document.getElementById('setting-flash-price').value) || 0;
+        window.saveDailyLog = async () => {
+            if(!currentUserId) return;
+            
+            const date = document.getElementById('log-date').value;
+            const locationId = document.getElementById('log-location').value;
+            const revenue = Number(document.getElementById('log-revenue').value);
+            const notes = document.getElementById('log-notes').value;
+            const flashUsed = Number(document.getElementById('log-flash-used').value);
+            
+            const selectedPhotosArray = Object.values(selectedPhotographersForLog);
+
+            if(!date || !locationId || !revenue) {
+                return showToast("الرجاء استكمال البيانات الأساسية (التاريخ، المكان، الإيراد)", "error");
+            }
+
+            // Calculate totals
+            const totalWages = selectedPhotosArray.reduce((sum, p) => sum + p.wage, 0);
+            const flashRevenue = flashUsed * flashSettings.price;
+            const netProfit = revenue - totalWages; // Flash cost handling depends on accounting style, usually net is just rev - wages. Flash rev is part of rev.
+
             try {
-                await updateDoc(getDocPath('settings', 'flash'), { inventory: inv, price: price });
-                showToast("تم تحديث إعدادات الفلاشات");
-            } catch(e) { console.error(e); showToast("خطأ في الحفظ", "error"); }
+                // 1. Save Log
+                await addDoc(getCollectionPath('logs'), {
+                    date,
+                    locationId,
+                    revenue,
+                    notes,
+                    flashUsed,
+                    netProfit,
+                    photographers: selectedPhotosArray,
+                    timestamp: serverTimestamp()
+                });
+
+                // 2. Update Flash Inventory if used
+                if(flashUsed > 0) {
+                    await updateDoc(getDocPath('settings', 'flash'), {
+                        inventory: flashSettings.inventory - flashUsed,
+                        totalUsed: flashSettings.totalUsed + flashUsed,
+                        totalSales: flashSettings.totalSales + flashRevenue
+                    });
+                }
+
+                // 3. Update Photographers Balances
+                for (const p of selectedPhotosArray) {
+                    const photoRef = getDocPath('photographers', p.id);
+                    const photoDoc = await getDoc(photoRef);
+                    if(photoDoc.exists()) {
+                        const data = photoDoc.data();
+                        await updateDoc(photoRef, {
+                            balance: (data.balance || 0) + p.wage,
+                            earned: (data.earned || 0) + p.wage
+                        });
+                    }
+                }
+
+                closeModal('add-log-modal');
+                showToast("تم تسجيل العملية وتحديث الأرصدة بنجاح!");
+                
+                // Reset form
+                document.getElementById('log-revenue').value = '';
+                document.getElementById('log-notes').value = '';
+                document.getElementById('log-flash-used').value = 0;
+                document.getElementById('log-location').value = '';
+                selectedPhotographersForLog = {};
+                
+            } catch (e) {
+                console.error(e);
+                showToast("حدث خطأ أثناء حفظ العملية", "error");
+            }
         };
 
-        window.addLocation = async () => {
-            const name = document.getElementById('new-loc-name').value.trim();
-            if(!name) return;
-            try {
-                await addDoc(getCollectionPath('locations'), { name });
-                document.getElementById('new-loc-name').value = '';
-                closeModal('add-location-modal');
-                showToast("تم إضافة القاعة");
-            } catch(e) { console.error(e); }
-        };
-        
-        window.deleteLocation = async (id) => {
-            if(!confirm("هل أنت متأكد من حذف هذا المكان؟")) return;
-            try { await deleteDoc(getDocPath('locations', id)); showToast("تم الحذف"); } catch(e) {}
-        };
-
-        window.addPhotographer = async () => {
-            const name = document.getElementById('new-photo-name').value.trim();
-            const wage = Number(document.getElementById('new-photo-wage').value) || 0;
-            if(!name) return;
-            try {
-                await addDoc(getCollectionPath('photographers'), { name, defaultWage: wage, createdAt: serverTimestamp() });
-                document.getElementById('new-photo-name').value = '';
-                document.getElementById('new-photo-wage').value = '';
-                closeModal('add-photographer-modal');
-                showToast("تم إضافة المصور");
-            } catch(e) { console.error(e); }
-        };
-
-        window.deletePhotographer = async (id) => {
-            if(!confirm("حذف هذا المصور سيحذف بياناته، هل أنت متأكد؟")) return;
-            try { await deleteDoc(getDocPath('photographers', id)); showToast("تم الحذف"); } catch(e) {}
-        };
-
-        window.openFinModal = (pId, type, title) => {
-            document.getElementById('fin-photo-id').value = pId;
+        // Financial Actions (Withdraw / Bonus)
+        window.openFinModal = (id, type) => {
+            const p = photographers.find(x => x.id === id);
+            if(!p) return;
+            
+            document.getElementById('fin-photo-id').value = id;
             document.getElementById('fin-type').value = type;
-            document.getElementById('fin-modal-title').innerText = title;
             document.getElementById('fin-amount').value = '';
             document.getElementById('fin-note').value = '';
             
+            const title = document.getElementById('fin-modal-title');
             const btn = document.getElementById('fin-btn');
-            btn.className = type === 'bonus' 
-                ? 'w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition-colors mt-2' 
-                : 'w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors mt-2';
+            
+            if(type === 'withdraw') {
+                title.innerHTML = `<i class="fas fa-hand-holding-usd text-red-500 ml-2"></i> سحب مبلغ لـ ${p.name}`;
+                btn.className = "w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors";
+                btn.innerText = "تأكيد السحب (خصم من الرصيد)";
+            } else {
+                title.innerHTML = `<i class="fas fa-gift text-green-500 ml-2"></i> إضافة مكافأة لـ ${p.name}`;
+                btn.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition-colors";
+                btn.innerText = "تأكيد المكافأة (إضافة للرصيد)";
+            }
             
             openModal('financial-modal');
         };
 
         window.saveFinancialAction = async () => {
-            const pId = document.getElementById('fin-photo-id').value;
+            const id = document.getElementById('fin-photo-id').value;
             const type = document.getElementById('fin-type').value;
             const amount = Number(document.getElementById('fin-amount').value);
-            const note = document.getElementById('fin-note').value;
+            const note = document.getElementById('fin-note').value || (type === 'withdraw' ? 'سحب نقدي' : 'مكافأة');
             
             if(!amount || amount <= 0) return showToast("أدخل مبلغ صحيح", "error");
-
-            try {
-                await addDoc(getCollectionPath('transactions'), {
-                    photographerId: pId,
-                    type: type,
-                    amount: amount,
-                    note: note,
-                    date: new Date().toISOString(),
-                    timestamp: serverTimestamp()
-                });
-                closeModal('financial-modal');
-                showToast("تم تسجيل العملية بنجاح");
-            } catch(e) { console.error(e); showToast("حدث خطأ", "error"); }
-        };
-
-        window.openMsgModal = (pId) => {
-            document.getElementById('msg-photo-id').value = pId;
-            document.getElementById('msg-text').value = '';
-            openModal('message-modal');
-        };
-
-        window.sendMessage = async () => {
-            const pId = document.getElementById('msg-photo-id').value;
-            const text = document.getElementById('msg-text').value.trim();
-            if(!text) return;
-            try {
-                await addDoc(getCollectionPath('messages'), {
-                    photographerId: pId,
-                    text: text,
-                    date: new Date().toISOString(),
-                    timestamp: serverTimestamp()
-                });
-                closeModal('message-modal');
-                showToast("تم إرسال التنبيه للمصور");
-            } catch(e) { console.error(e); }
-        };
-
-        window.saveDailyLog = async () => {
-            if(!currentUserId) return showToast("غير مصرح، جاري الاتصال بقاعدة البيانات", "error");
-
-            const date = document.getElementById('log-date').value;
-            const locId = document.getElementById('log-location').value;
-            const totalRev = Number(document.getElementById('log-revenue').value);
-            const notes = document.getElementById('log-notes').value;
-            const flashUsed = parseInt(document.getElementById('log-flash-used').value) || 0;
             
-            if(!date || !locId || !totalRev) return showToast("الرجاء إكمال البيانات الأساسية", "error");
-
-            const selectedCbs = document.querySelectorAll('.photographer-chip input:checked');
-            if(selectedCbs.length === 0) return showToast("الرجاء اختيار مصور واحد على الأقل", "error");
-
-            let logPhotographers = [];
-            let totalWages = 0;
-
-            selectedCbs.forEach(cb => {
-                const pId = cb.value;
-                const pName = cb.getAttribute('data-name');
-                const pWage = Number(document.getElementById(`wage-input-${pId}`).value);
-                logPhotographers.push({ id: pId, name: pName, wage: pWage });
-                totalWages += pWage;
-            });
-
-            const flashCost = flashUsed * flashSettings.price;
-            if (flashUsed > flashSettings.inventory) {
-                return showToast("عدد الفلاشات يتجاوز المخزون!", "error");
-            }
-
-            const netRevenue = totalRev - totalWages - flashCost;
-
-            try {
-                const logRef = await addDoc(getCollectionPath('logs'), {
-                    date,
-                    locationId: locId,
-                    totalRevenue: totalRev,
-                    totalWages: totalWages,
-                    flashDrivesUsed: flashUsed,
-                    flashDrivesCost: flashCost,
-                    netRevenue: netRevenue,
-                    notes: notes,
-                    photographers: logPhotographers,
-                    timestamp: serverTimestamp()
-                });
-
-                const locName = locations.find(l => l.id === locId)?.name || 'موقع';
-                for (const p of logPhotographers) {
+            const pDocRef = getDocPath('photographers', id);
+            const pDoc = await getDoc(pDocRef);
+            
+            if(pDoc.exists()) {
+                const data = pDoc.data();
+                let newBalance = data.balance || 0;
+                let newEarned = data.earned || 0;
+                let newWithdrawn = data.withdrawn || 0;
+                
+                if(type === 'withdraw') {
+                    if(amount > newBalance) return showToast("المبلغ المطلوب سحبه أكبر من الرصيد!", "error");
+                    newBalance -= amount;
+                    newWithdrawn += amount;
+                } else {
+                    newBalance += amount;
+                    newEarned += amount;
+                }
+                
+                try {
+                    await updateDoc(pDocRef, {
+                        balance: newBalance,
+                        earned: newEarned,
+                        withdrawn: newWithdrawn
+                    });
+                    
+                    // Add to transactions log
                     await addDoc(getCollectionPath('transactions'), {
-                        photographerId: p.id,
-                        type: 'wage',
-                        amount: p.wage,
-                        note: `أجر عمل يوم ${date} في ${locName}`,
-                        logId: logRef.id,
-                        date: date,
+                        photoId: id,
+                        type,
+                        amount,
+                        note,
+                        date: new Date().toISOString(),
                         timestamp: serverTimestamp()
                     });
+                    
+                    closeModal('financial-modal');
+                    showToast("تمت العملية بنجاح");
+                } catch(e) {
+                    showToast("حدث خطأ", "error");
                 }
-
-                if (flashUsed > 0) {
-                    await updateDoc(getDocPath('settings', 'flash'), {
-                        inventory: flashSettings.inventory - flashUsed,
-                        totalUsed: (flashSettings.totalUsed || 0) + flashUsed,
-                        totalSales: (flashSettings.totalSales || 0) + flashCost
-                    });
-                }
-
-                document.getElementById('log-revenue').value = '';
-                document.getElementById('log-notes').value = '';
-                document.getElementById('log-flash-used').value = '0';
-                document.querySelectorAll('.photographer-chip input').forEach(cb => cb.checked = false);
-                updateSelectedWagesUI();
-                closeModal('add-log-modal');
-                showToast("تم حفظ السجل بنجاح وإضافة أجور المصورين");
-
-            } catch (error) {
-                console.error("Error saving log:", error);
-                showToast("حدث خطأ أثناء الحفظ", "error");
             }
         };
 
-        window.deleteLog = async (logId) => {
-            if(!confirm("تأكيد الحذف؟ سيتم إزالة السجل ولكن لن يتم عكس عمليات خصم الفلاشات أو أجور المصورين تلقائياً.")) return;
-            try {
-                await deleteDoc(getDocPath('logs', logId));
-                showToast("تم الحذف");
-            } catch(e) {}
-        };
-
-        window.copyLink = (link) => {
-            navigator.clipboard.writeText(link).then(() => {
-                showToast("تم نسخ الرابط! أرسله للمصور.");
-            });
-        };
-
-        const renderPortalUI = () => {
-            const p = photographers.find(ph => ph.id === portalPhotographerId);
-            if(!p) {
-                document.getElementById('portal-name').innerText = "مصور غير موجود";
-                return;
-            }
-
-            document.getElementById('current-photographer-name').innerText = p.name;
-            document.getElementById('portal-name').innerText = p.name;
-
-            document.getElementById('portal-balance').innerText = formatMoney(p._calculatedBalance);
-            document.getElementById('portal-earned').innerText = formatMoney(p._calculatedEarned);
-            document.getElementById('portal-withdrawn').innerText = formatMoney(p._calculatedWithdrawn);
-
-            const myTrans = transactions.filter(t => t.photographerId === p.id);
-            const tbody = document.getElementById('portal-transactions');
-            if(myTrans.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">لا توجد عمليات مسجلة</td></tr>`;
-            } else {
-                tbody.innerHTML = myTrans.map(t => {
-                    const isPositive = (t.type === 'wage' || t.type === 'bonus');
-                    const typeLabel = t.type === 'wage' ? 'أجر عمل' : (t.type === 'bonus' ? 'مكافأة' : 'سحب نقدي');
-                    const color = isPositive ? 'text-green-400' : 'text-red-400';
-                    const sign = isPositive ? '+' : '-';
-                    return `
-                    <tr class="hover:bg-slate-700/50 transition-colors">
-                        <td class="px-4 py-3">${formatDate(t.date)}</td>
-                        <td class="px-4 py-3"><span class="bg-slate-700 px-2 py-1 rounded text-xs">${typeLabel}</span></td>
-                        <td class="px-4 py-3 text-gray-300 text-sm">${t.note || '-'}</td>
-                        <td class="px-4 py-3 font-bold ${color}" dir="ltr">${sign} ${formatMoney(t.amount)}</td>
-                    </tr>
-                `}).join('');
-            }
-
-            const myMsgs = messages.filter(m => m.photographerId === p.id);
-            const msgContainer = document.getElementById('portal-messages');
-            if(myMsgs.length === 0) {
-                msgContainer.innerHTML = `<p class="text-gray-500 text-sm text-center py-4 bg-slate-800 rounded-lg border border-slate-700">لا توجد تنبيهات جديدة</p>`;
-            } else {
-                msgContainer.innerHTML = myMsgs.map(m => `
-                    <div class="bg-yellow-500/10 border-r-4 border-yellow-500 p-3 rounded-l-lg">
-                        <p class="text-xs text-yellow-500 mb-1"><i class="fas fa-clock ml-1"></i>${formatDate(m.date)}</p>
-                        <p class="text-sm">${m.text}</p>
-                    </div>
-                `).join('');
-            }
-        };
-
+        // Start App
         initAuth();
 
     </script>
