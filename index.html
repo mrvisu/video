@@ -19,7 +19,7 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         /* Custom Checkbox/Radio */
-        .photographer-chip input:checked + div {
+        .photographer-chip.selected {
             background-color: #f59e0b;
             color: #111827;
             border-color: #f59e0b;
@@ -140,7 +140,7 @@
         <section id="tab-logs" class="tab-content hidden space-y-6">
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold">سجل العمليات اليومية</h2>
-                <button onclick="openModal('add-log-modal')" class="accent-gradient text-slate-900 px-4 py-2 rounded-lg font-bold shadow-lg hover:opacity-90 transition-opacity">
+                <button onclick="openAddLogModal()" class="accent-gradient text-slate-900 px-4 py-2 rounded-lg font-bold shadow-lg hover:opacity-90 transition-opacity">
                     <i class="fas fa-plus ml-1"></i> تسجيل جديد
                 </button>
             </div>
@@ -273,17 +273,17 @@
     </main>
 
     <!-- Floating Action Button (Mobile) -->
-    <button id="fab-add-log" onclick="openModal('add-log-modal')" class="fixed bottom-6 right-6 w-14 h-14 rounded-full accent-gradient text-slate-900 flex items-center justify-center text-2xl shadow-xl shadow-yellow-500/20 z-40 hidden md:hidden">
+    <button id="fab-add-log" onclick="openAddLogModal()" class="fixed bottom-6 right-6 w-14 h-14 rounded-full accent-gradient text-slate-900 flex items-center justify-center text-2xl shadow-xl shadow-yellow-500/20 z-40 hidden md:hidden">
         <i class="fas fa-plus"></i>
     </button>
 
     <!-- MODALS -->
-    <!-- Add Log Modal -->
+    <!-- Add/Edit Log Modal -->
     <div id="add-log-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeModal('add-log-modal')"></div>
         <div class="absolute inset-0 md:top-4 md:bottom-4 md:left-4 md:right-4 bg-slate-800 md:rounded-2xl shadow-2xl overflow-y-auto hide-scrollbar flex flex-col">
             <div class="p-6 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-slate-800 z-10">
-                <h2 class="text-2xl font-bold"><i class="fas fa-file-invoice-dollar accent-text ml-2"></i>تسجيل عملية يومية جديدة</h2>
+                <h2 class="text-2xl font-bold" id="add-log-modal-title"><i class="fas fa-file-invoice-dollar accent-text ml-2"></i>تسجيل عملية يومية</h2>
                 <button onclick="closeModal('add-log-modal')" class="text-gray-400 hover:text-white bg-slate-700 hover:bg-red-500 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -352,7 +352,7 @@
                 <button onclick="closeModal('add-log-modal')" class="px-8 py-4 rounded-xl font-bold text-lg border border-slate-600 hover:bg-slate-700 transition-colors">
                     إلغاء
                 </button>
-                <button onclick="saveDailyLog()" class="md:w-1/3 w-full accent-gradient text-slate-900 font-bold text-xl py-4 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
+                <button id="btn-save-log" onclick="saveDailyLog()" class="md:w-1/3 w-full accent-gradient text-slate-900 font-bold text-xl py-4 rounded-xl shadow-lg hover:opacity-90 transition-opacity">
                     حفظ وتسجيل العملية الآن
                 </button>
             </div>
@@ -464,7 +464,8 @@
         let flashSettings = { inventory: 0, price: 0, totalUsed: 0, totalSales: 0 };
         let currentUserId = null;
         
-        let selectedPhotographersForLog = []; // [{id, name, defaultWage, customWage}]
+        let selectedPhotographersForLog = []; 
+        let editingLogId = null; // للمساعدة في تعديل السجلات
 
         const urlParams = new URLSearchParams(window.location.search);
         const portalPhotographerId = urlParams.get('p_id');
@@ -483,10 +484,12 @@
         };
 
         window.openModal = (id) => { 
-            if(id === 'add-log-modal') prepareAddLogModal();
             document.getElementById(id).classList.remove('hidden'); 
         };
-        window.closeModal = (id) => { document.getElementById(id).classList.add('hidden'); };
+        
+        window.closeModal = (id) => { 
+            document.getElementById(id).classList.add('hidden'); 
+        };
         
         window.switchTab = (tabId) => {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -548,289 +551,360 @@
         });
 
         const initDataFetching = () => {
-            // Fetch Settings
-            onSnapshot(getDocPath('settings', 'flash'), (docSnap) => {
-                if (docSnap.exists()) {
-                    flashSettings = docSnap.data();
-                } else {
-                    setDoc(getDocPath('settings', 'flash'), { inventory: 50, price: 100, totalUsed: 0, totalSales: 0 });
-                }
-                updateFlashUI();
-                renderDashboard();
-            }, (error) => console.error(error));
+            if (!currentUserId) return;
 
             // Fetch Photographers
             onSnapshot(getCollectionPath('photographers'), (snapshot) => {
                 photographers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderPhotographersSettings();
-                renderDashboard();
-                if(isPortalMode) renderPortal();
-            }, (error) => console.error(error));
+                updateUI();
+            }, (err) => console.error(err));
 
             // Fetch Locations
             onSnapshot(getCollectionPath('locations'), (snapshot) => {
                 locations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderLocationsSettings();
-            }, (error) => console.error(error));
+                updateUI();
+            });
 
             // Fetch Logs
             onSnapshot(getCollectionPath('logs'), (snapshot) => {
                 logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Sort descending by date
                 logs.sort((a, b) => new Date(b.date) - new Date(a.date));
-                renderDashboard();
-                renderLogsTab();
-            }, (error) => console.error(error));
+                updateUI();
+            });
 
             // Fetch Transactions
             onSnapshot(getCollectionPath('transactions'), (snapshot) => {
                 transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                if(isPortalMode) renderPortal();
-            }, (error) => console.error(error));
-
-            // Fetch Messages
-            onSnapshot(getCollectionPath('messages'), (snapshot) => {
-                messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                if(isPortalMode) renderPortal();
-            }, (error) => console.error(error));
-        };
-
-        // --- RENDER FUNCTIONS ---
-        const updateFlashUI = () => {
-            document.getElementById('setting-flash-inventory').value = flashSettings.inventory || 0;
-            document.getElementById('setting-flash-price').value = flashSettings.price || 0;
-            document.getElementById('log-flash-info').innerText = `المخزون: ${flashSettings.inventory || 0} | السعر: ${flashSettings.price || 0} ج.م`;
-        };
-
-        const renderLocationsSettings = () => {
-            const container = document.getElementById('settings-locations-list');
-            container.innerHTML = locations.map(loc => 
-                `<span class="bg-slate-800 border border-slate-600 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    ${loc.name}
-                </span>`
-            ).join('');
-        };
-
-        const renderPhotographersSettings = () => {
-            const container = document.getElementById('settings-photographers-list');
-            container.innerHTML = photographers.map(p => {
-                const balanceClass = p.balance > 0 ? 'text-green-400' : (p.balance < 0 ? 'text-red-400' : 'text-gray-400');
-                const portalUrl = `${window.location.origin}${window.location.pathname}?p_id=${p.id}`;
-                return `
-                <tr>
-                    <td class="px-4 py-3 font-bold">${p.name}</td>
-                    <td class="px-4 py-3">${formatMoney(p.defaultWage)}</td>
-                    <td class="px-4 py-3 font-bold ${balanceClass}">${formatMoney(p.balance)}</td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="openFinancialModal('${p.id}', 'withdrawal')" class="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs transition-colors border border-red-600/50" title="سحب نقدي / سداد">
-                                <i class="fas fa-hand-holding-usd"></i> سحب
-                            </button>
-                            <button onclick="openFinancialModal('${p.id}', 'bonus')" class="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white px-2 py-1 rounded text-xs transition-colors border border-green-600/50" title="مكافأة إضافية">
-                                <i class="fas fa-gift"></i> مكافأة
-                            </button>
-                        </div>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="flex justify-center gap-2">
-                            <button onclick="openMessageModal('${p.id}')" class="bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600 hover:text-white px-2 py-1 rounded text-xs transition-colors border border-yellow-600/50" title="إرسال تنبيه">
-                                <i class="fas fa-bell"></i>
-                            </button>
-                            <button onclick="copyPortalLink('${portalUrl}')" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-2 py-1 rounded text-xs transition-colors border border-blue-600/50" title="نسخ رابط المصور">
-                                <i class="fas fa-link"></i> رابط
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join('');
-        };
-
-        const renderDashboard = () => {
-            if (isPortalMode) return;
-            
-            // Calculate Stats (Current Month)
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            
-            let monthRevenue = 0;
-            let monthWages = 0;
-            let monthNet = 0;
-
-            logs.forEach(log => {
-                const logDate = new Date(log.date);
-                if(logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear) {
-                    monthRevenue += Number(log.revenue || 0);
-                    monthWages += Number(log.totalWages || 0);
-                    monthNet += Number(log.netProfit || 0);
-                }
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                updateUI();
             });
 
-            document.getElementById('stat-total-revenue').innerText = formatMoney(monthRevenue);
-            document.getElementById('stat-net-profit').innerText = formatMoney(monthNet);
-            document.getElementById('stat-total-wages').innerText = formatMoney(monthWages);
-            
-            document.getElementById('stat-flash-used').innerText = `${flashSettings.totalUsed || 0} فلاشة`;
-            document.getElementById('stat-flash-revenue').innerText = formatMoney(flashSettings.totalSales || 0);
-
-            // Quick Status
-            const grid = document.getElementById('dashboard-photographers-grid');
-            grid.innerHTML = photographers.map(p => {
-                const isPositive = p.balance > 0;
-                return `
-                <div class="glass-panel p-3 rounded-lg text-center border-t-2 ${isPositive ? 'border-green-500' : 'border-slate-600'}">
-                    <p class="font-bold text-sm truncate">${p.name}</p>
-                    <p class="${isPositive ? 'text-green-400' : 'text-gray-400'} font-bold text-sm">${formatMoney(p.balance)}</p>
-                </div>`;
-            }).join('');
-
-            // Recent Logs
-            const recentLogs = logs.slice(0, 5);
-            document.getElementById('dashboard-recent-logs').innerHTML = recentLogs.map(log => {
-                const locName = locations.find(l => l.id === log.locationId)?.name || 'غير محدد';
-                const photosHtml = log.photographers.map(p => `<span class="bg-slate-700 px-2 py-0.5 rounded text-xs">${p.name}</span>`).join(' ');
-                return `
-                <tr>
-                    <td class="px-4 py-2">${formatDate(log.date)}</td>
-                    <td class="px-4 py-2 font-medium">${locName}</td>
-                    <td class="px-4 py-2 text-yellow-500 font-bold">${formatMoney(log.revenue)}</td>
-                    <td class="px-4 py-2"><div class="flex gap-1 justify-end flex-wrap">${photosHtml}</div></td>
-                    <td class="px-4 py-2 text-green-400 font-bold">${formatMoney(log.netProfit)}</td>
-                </tr>`;
-            }).join('');
+            // Fetch Settings
+            onSnapshot(getDocPath('settings', 'flash'), (docSnap) => {
+                if (docSnap.exists()) {
+                    flashSettings = docSnap.data();
+                    document.getElementById('setting-flash-inventory').value = flashSettings.inventory || 0;
+                    document.getElementById('setting-flash-price').value = flashSettings.price || 0;
+                    document.getElementById('log-flash-info').innerText = `المخزون: ${flashSettings.inventory || 0} | السعر: ${flashSettings.price || 0} ج.م`;
+                }
+                updateUI();
+            });
         };
 
-        const renderLogsTab = () => {
-            if (isPortalMode) return;
-            const container = document.getElementById('full-logs-container');
-            
-            if (logs.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-gray-500"><i class="fas fa-folder-open text-4xl mb-3 block"></i>لا توجد سجلات بعد</div>`;
-                return;
+        const updateUI = () => {
+            if (isPortalMode) {
+                renderPortal();
+            } else {
+                renderDashboard();
+                renderLogs();
+                renderSettings();
             }
+        };
 
-            container.innerHTML = logs.map(log => {
-                const locName = locations.find(l => l.id === log.locationId)?.name || 'غير محدد';
+        // --- Render Functions ---
+
+        const renderDashboard = () => {
+            let totalRev = 0, totalWages = 0, flashUsed = 0, flashRev = 0;
+            
+            logs.forEach(log => {
+                totalRev += Number(log.revenue || 0);
+                flashUsed += Number(log.flashUsed || 0);
+                log.photographers.forEach(p => totalWages += Number(p.customWage || 0));
+            });
+
+            flashRev = flashUsed * Number(flashSettings.price || 0);
+            const netProfit = totalRev + flashRev - totalWages;
+
+            document.getElementById('stat-total-revenue').innerText = formatMoney(totalRev);
+            document.getElementById('stat-total-wages').innerText = formatMoney(totalWages);
+            document.getElementById('stat-net-profit').innerText = formatMoney(netProfit);
+            document.getElementById('stat-flash-used').innerText = `${flashUsed} فلاشة`;
+            document.getElementById('stat-flash-revenue').innerText = formatMoney(flashRev);
+
+            // Photographers Grid
+            const grid = document.getElementById('dashboard-photographers-grid');
+            grid.innerHTML = photographers.map(p => `
+                <div class="glass-panel p-3 rounded-lg text-center ${p.balance > 0 ? 'border-b-2 border-red-500' : 'border-b-2 border-green-500'}">
+                    <p class="font-bold text-sm truncate" title="${p.name}">${p.name}</p>
+                    <p class="${p.balance > 0 ? 'text-red-400' : 'text-green-400'} font-bold mt-1">${formatMoney(p.balance)}</p>
+                </div>
+            `).join('');
+
+            // Recent Logs Table
+            const recent = document.getElementById('dashboard-recent-logs');
+            recent.innerHTML = logs.slice(0, 5).map(log => {
+                const logWages = log.photographers.reduce((sum, p) => sum + Number(p.customWage), 0);
+                const logNet = Number(log.revenue) - logWages + (Number(log.flashUsed || 0) * Number(flashSettings.price || 0));
+                
                 return `
-                <div class="glass-panel p-5 rounded-xl border-r-4 border-yellow-500 hover:bg-slate-800/80 transition-colors">
-                    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                        <div>
-                            <div class="flex items-center gap-3 mb-2">
-                                <span class="bg-slate-800 px-3 py-1 rounded-lg text-sm font-bold border border-slate-600"><i class="far fa-calendar-alt ml-1"></i>${formatDate(log.date)}</span>
-                                <span class="text-lg font-bold">${locName}</span>
-                            </div>
-                            <div class="flex flex-wrap gap-2 mt-2">
-                                ${log.photographers.map(p => `<span class="bg-blue-900/40 text-blue-300 border border-blue-800/50 px-2 py-1 rounded text-xs"><i class="fas fa-camera ml-1"></i>${p.name} (${formatMoney(p.wage)})</span>`).join('')}
-                                ${log.flashUsed > 0 ? `<span class="bg-purple-900/40 text-purple-300 border border-purple-800/50 px-2 py-1 rounded text-xs"><i class="fas fa-usb ml-1"></i>${log.flashUsed} فلاشة</span>` : ''}
-                            </div>
-                            ${log.notes ? `<p class="text-gray-400 text-sm mt-3 bg-slate-900/50 p-2 rounded"><i class="fas fa-info-circle ml-1"></i>${log.notes}</p>` : ''}
+                <tr class="hover:bg-slate-700/30 transition-colors">
+                    <td class="px-4 py-3 whitespace-nowrap">${formatDate(log.date)}</td>
+                    <td class="px-4 py-3">${log.locationName}</td>
+                    <td class="px-4 py-3 font-bold text-yellow-500">${formatMoney(log.revenue)}</td>
+                    <td class="px-4 py-3 text-gray-400 text-xs">${log.photographers.map(p=>p.name).join('، ')}</td>
+                    <td class="px-4 py-3 font-bold text-green-400">${formatMoney(logNet)}</td>
+                </tr>
+            `}).join('');
+        };
+
+        const renderLogs = () => {
+            const container = document.getElementById('full-logs-container');
+            container.innerHTML = logs.map(log => {
+                const logWages = log.photographers.reduce((sum, p) => sum + Number(p.customWage), 0);
+                const logNet = Number(log.revenue) - logWages + (Number(log.flashUsed || 0) * Number(flashSettings.price || 0));
+                
+                return `
+                <div class="glass-panel p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-slate-500 transition-colors">
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="bg-slate-800 text-yellow-500 px-3 py-1 rounded-lg font-bold text-sm">${formatDate(log.date)}</span>
+                            <span class="font-bold text-lg">${log.locationName}</span>
+                            ${log.flashUsed > 0 ? `<span class="bg-purple-900/50 text-purple-300 px-2 py-1 rounded text-xs"><i class="fas fa-usb ml-1"></i>${log.flashUsed}</span>` : ''}
                         </div>
-                        <div class="text-right shrink-0 bg-slate-900 p-3 rounded-xl border border-slate-700 min-w-[150px]">
-                            <p class="text-xs text-gray-400 mb-1">الإيراد: <span class="text-white">${formatMoney(log.revenue)}</span></p>
-                            <p class="text-xs text-gray-400 mb-1">الأجور: <span class="text-red-400">${formatMoney(log.totalWages)}</span></p>
-                            <div class="border-t border-slate-700 my-1"></div>
-                            <p class="text-sm font-bold text-green-400">الصافي: ${formatMoney(log.netProfit)}</p>
-                        </div>
+                        <p class="text-gray-400 text-sm mb-1"><i class="fas fa-users ml-1"></i>المصورين: ${log.photographers.map(p => `${p.name} (${p.customWage})`).join('، ')}</p>
+                        ${log.notes ? `<p class="text-gray-500 text-xs"><i class="fas fa-edit ml-1"></i>${log.notes}</p>` : ''}
                     </div>
-                </div>`;
-            }).join('');
+                    <div class="text-right min-w-[120px]">
+                        <p class="text-sm text-gray-400">الصافي</p>
+                        <p class="text-xl font-bold text-green-400">${formatMoney(logNet)}</p>
+                    </div>
+                    <!-- Edit/Delete Buttons -->
+                    <div class="flex items-center gap-2 mt-3 md:mt-0 border-t md:border-t-0 md:border-r border-slate-700 pt-3 md:pt-0 md:pr-4">
+                        <button onclick="editLog('${log.id}')" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-colors" title="تعديل">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button onclick="deleteLog('${log.id}')" class="w-10 h-10 rounded-full bg-slate-700 hover:bg-red-600 text-white flex items-center justify-center transition-colors" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        };
+
+        const renderSettings = () => {
+            // Locations
+            document.getElementById('settings-locations-list').innerHTML = locations.map(loc => `
+                <span class="bg-slate-800 border border-slate-600 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                    ${loc.name}
+                    <button onclick="deleteLocation('${loc.id}')" class="text-red-400 hover:text-red-300"><i class="fas fa-times"></i></button>
+                </span>
+            `).join('');
+
+            // Photographers Table
+            document.getElementById('settings-photographers-list').innerHTML = photographers.map(p => {
+                const portalUrl = `${window.location.origin}${window.location.pathname}?p_id=${p.id}`;
+                return `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="px-4 py-3 font-bold">${p.name}</td>
+                    <td class="px-4 py-3 text-yellow-500">${formatMoney(p.defaultWage)}</td>
+                    <td class="px-4 py-3 ${p.balance > 0 ? 'text-red-400' : 'text-green-400'} font-bold">${formatMoney(p.balance)}</td>
+                    <td class="px-4 py-3 text-center space-x-2 space-x-reverse">
+                        <button onclick="openFinancialModal('${p.id}', 'withdrawal')" class="bg-red-900/50 hover:bg-red-600 text-red-200 px-2 py-1 rounded text-xs transition-colors">سحب دفعة</button>
+                        <button onclick="openFinancialModal('${p.id}', 'bonus')" class="bg-green-900/50 hover:bg-green-600 text-green-200 px-2 py-1 rounded text-xs transition-colors">مكافأة</button>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="copyToClipboard('${portalUrl}')" class="text-blue-400 hover:text-blue-300 mx-1" title="نسخ رابط البوابة"><i class="fas fa-link"></i></button>
+                        <button onclick="deletePhotographer('${p.id}')" class="text-red-400 hover:text-red-300 mx-1" title="حذف المصور"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `}).join('');
         };
 
         const renderPortal = () => {
-            const photographer = photographers.find(p => p.id === portalPhotographerId);
-            if (!photographer) {
-                document.getElementById('tab-photographer-portal').innerHTML = `<div class="text-center py-20 text-red-500 font-bold text-xl">المصور غير موجود. يرجى التأكد من الرابط.</div>`;
+            const p = photographers.find(ph => ph.id === portalPhotographerId);
+            if (!p) {
+                document.getElementById('portal-name').innerText = "مصور غير موجود";
                 return;
             }
 
-            document.getElementById('current-photographer-name').innerText = photographer.name;
-            document.getElementById('portal-name').innerText = photographer.name;
-            
-            document.getElementById('portal-balance').innerText = formatMoney(photographer.balance);
-            document.getElementById('portal-earned').innerText = formatMoney(photographer.earned);
-            document.getElementById('portal-withdrawn').innerText = formatMoney(photographer.withdrawn);
+            document.getElementById('portal-name').innerText = p.name;
+            document.getElementById('current-photographer-name').innerText = p.name;
+            document.getElementById('portal-balance').innerText = formatMoney(p.balance);
+            document.getElementById('portal-earned').innerText = formatMoney(p.earned);
+            document.getElementById('portal-withdrawn').innerText = formatMoney(p.withdrawn);
 
-            // Transactions
-            const photoTrans = transactions.filter(t => t.photoId === portalPhotographerId);
-            document.getElementById('portal-transactions').innerHTML = photoTrans.map(t => {
-                let typeHtml = '';
-                let amountClass = '';
-                let amountSign = '';
-                
-                if(t.type === 'wage') { typeHtml = '<span class="text-blue-400"><i class="fas fa-camera"></i> أجر عمل</span>'; amountClass = 'text-green-400'; amountSign = '+'; }
-                else if(t.type === 'bonus') { typeHtml = '<span class="text-green-400"><i class="fas fa-gift"></i> مكافأة</span>'; amountClass = 'text-green-400'; amountSign = '+'; }
-                else if(t.type === 'withdrawal') { typeHtml = '<span class="text-red-400"><i class="fas fa-hand-holding-usd"></i> سحب نقدي</span>'; amountClass = 'text-red-400'; amountSign = '-'; }
+            const pTx = transactions.filter(t => t.photographerId === p.id);
+            document.getElementById('portal-transactions').innerHTML = pTx.map(tx => {
+                let typeText, colorClass;
+                if(tx.type === 'wage') { typeText = 'أجر تصوير'; colorClass = 'text-green-400'; }
+                else if(tx.type === 'bonus') { typeText = 'مكافأة'; colorClass = 'text-green-400'; }
+                else { typeText = 'سحب / دفعة'; colorClass = 'text-red-400'; }
 
                 return `
-                <tr>
-                    <td class="px-4 py-3 whitespace-nowrap">${formatDate(t.date)}</td>
-                    <td class="px-4 py-3">${typeHtml}</td>
-                    <td class="px-4 py-3 text-gray-300">${t.note || '-'}</td>
-                    <td class="px-4 py-3 font-bold ${amountClass}" dir="ltr">${amountSign}${formatMoney(t.amount)}</td>
-                </tr>`;
-            }).join('');
+                <tr class="hover:bg-slate-700/30">
+                    <td class="px-4 py-3">${formatDate(tx.date)}</td>
+                    <td class="px-4 py-3"><span class="bg-slate-800 px-2 py-1 rounded text-xs">${typeText}</span></td>
+                    <td class="px-4 py-3 text-gray-300">${tx.note}</td>
+                    <td class="px-4 py-3 font-bold ${colorClass}" dir="ltr">${tx.type === 'withdrawal' ? '-' : '+'}${formatMoney(tx.amount)}</td>
+                </tr>
+            `}).join('');
+        };
 
-            if(photoTrans.length === 0) {
-                document.getElementById('portal-transactions').innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">لا توجد حركات مالية مسجلة</td></tr>`;
-            }
+        // --- Actions ---
 
-            // Messages
-            const photoMsgs = messages.filter(m => m.photoId === portalPhotographerId);
-            const msgContainer = document.getElementById('portal-messages');
-            if (photoMsgs.length > 0) {
-                msgContainer.innerHTML = photoMsgs.map(m => `
-                    <div class="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-lg flex items-start gap-3">
-                        <i class="fas fa-exclamation-circle text-yellow-500 mt-1"></i>
-                        <div>
-                            <p class="text-sm text-yellow-500 mb-1">${formatDate(m.createdAt)}</p>
-                            <p class="text-white">${m.text}</p>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                msgContainer.innerHTML = `<p class="text-gray-500 text-sm">لا توجد تنبيهات جديدة.</p>`;
+        window.addPhotographer = async () => {
+            const name = document.getElementById('new-photo-name').value;
+            const wage = document.getElementById('new-photo-wage').value;
+            if(!name || !wage) return showToast('يرجى إدخال كافة البيانات', 'error');
+
+            try {
+                await addDoc(getCollectionPath('photographers'), {
+                    name, defaultWage: Number(wage), balance: 0, earned: 0, withdrawn: 0, createdAt: serverTimestamp()
+                });
+                closeModal('add-photographer-modal');
+                showToast('تمت إضافة المصور بنجاح');
+                document.getElementById('new-photo-name').value = '';
+                document.getElementById('new-photo-wage').value = '';
+            } catch (e) { showToast('حدث خطأ', 'error'); }
+        };
+
+        window.deletePhotographer = async (id) => {
+            if(confirm('هل أنت متأكد من حذف هذا المصور؟')) {
+                await deleteDoc(getDocPath('photographers', id));
+                showToast('تم الحذف');
             }
         };
 
-        const prepareAddLogModal = () => {
+        window.addLocation = async () => {
+            const name = document.getElementById('new-loc-name').value;
+            if(!name) return;
+            await addDoc(getCollectionPath('locations'), { name });
+            closeModal('add-location-modal');
+            document.getElementById('new-loc-name').value = '';
+            showToast('تم إضافة المكان');
+        };
+
+        window.deleteLocation = async (id) => {
+            if(confirm('حذف هذا المكان؟')) await deleteDoc(getDocPath('locations', id));
+        };
+
+        window.saveFlashSettings = async () => {
+            const inv = document.getElementById('setting-flash-inventory').value;
+            const price = document.getElementById('setting-flash-price').value;
+            await setDoc(getDocPath('settings', 'flash'), { ...flashSettings, inventory: Number(inv), price: Number(price) });
+            showToast('تم تحديث الإعدادات');
+        };
+
+        window.openFinancialModal = (pId, type) => {
+            document.getElementById('fin-photo-id').value = pId;
+            document.getElementById('fin-type').value = type;
+            document.getElementById('fin-modal-title').innerText = type === 'withdrawal' ? 'تسجيل سحب / دفعة نقدية' : 'إضافة مكافأة';
+            document.getElementById('fin-btn').className = `w-full font-bold py-2 rounded-lg transition-colors mt-2 ${type === 'withdrawal' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`;
+            openModal('financial-modal');
+        };
+
+        window.saveFinancialAction = async () => {
+            const pId = document.getElementById('fin-photo-id').value;
+            const type = document.getElementById('fin-type').value;
+            const amount = Number(document.getElementById('fin-amount').value);
+            const note = document.getElementById('fin-note').value;
+
+            if(!amount || amount <= 0) return showToast('مبلغ غير صحيح', 'error');
+
+            const p = photographers.find(ph => ph.id === pId);
+            if(!p) return;
+
+            let newBalance = Number(p.balance || 0);
+            let newWithdrawn = Number(p.withdrawn || 0);
+            let newEarned = Number(p.earned || 0);
+
+            if (type === 'withdrawal') {
+                newBalance -= amount;
+                newWithdrawn += amount;
+            } else if (type === 'bonus') {
+                newBalance += amount;
+                newEarned += amount;
+            }
+
+            try {
+                await updateDoc(getDocPath('photographers', pId), { balance: newBalance, withdrawn: newWithdrawn, earned: newEarned });
+                await addDoc(getCollectionPath('transactions'), {
+                    photographerId: pId, type, amount, note: note || (type === 'withdrawal' ? 'سحب نقدي' : 'مكافأة'), date: new Date().toISOString()
+                });
+                closeModal('financial-modal');
+                document.getElementById('fin-amount').value = '';
+                document.getElementById('fin-note').value = '';
+                showToast('تم تسجيل العملية بنجاح');
+            } catch(e) { showToast('خطأ في الحفظ', 'error'); }
+        };
+
+        window.copyToClipboard = (text) => {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast('تم نسخ الرابط');
+        };
+
+        // --- Log Creation / Edit Logic ---
+
+        window.openAddLogModal = () => {
+            editingLogId = null;
+            document.getElementById('add-log-modal-title').innerHTML = '<i class="fas fa-file-invoice-dollar accent-text ml-2"></i>تسجيل عملية يومية جديدة';
+            document.getElementById('btn-save-log').innerText = "حفظ وتسجيل العملية الآن";
+            
             // Reset fields
-            document.getElementById('log-date').valueAsDate = new Date();
+            document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('log-revenue').value = '';
-            document.getElementById('log-notes').value = '';
             document.getElementById('log-flash-used').value = '0';
-            
-            // Populate Locations
-            const locSelect = document.getElementById('log-location');
-            locSelect.innerHTML = '<option value="">اختر المكان...</option>' + 
-                locations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
-
-            // Populate Photographers Chips
+            document.getElementById('log-notes').value = '';
             selectedPhotographersForLog = [];
-            document.getElementById('log-selected-wages-container').classList.add('hidden');
             
-            const chipsContainer = document.getElementById('log-photographers-chips');
-            chipsContainer.innerHTML = photographers.map(p => `
-                <label class="photographer-chip cursor-pointer relative">
-                    <input type="checkbox" class="sr-only peer" onchange="window.togglePhotographerForLog('${p.id}', '${p.name}', ${p.defaultWage}, this.checked)">
-                    <div class="px-4 py-2 bg-slate-800 border border-slate-600 rounded-full text-sm font-medium transition-all peer-checked:bg-yellow-500 peer-checked:text-slate-900 peer-checked:border-yellow-500 flex items-center gap-2 hover:bg-slate-700">
-                        <i class="fas fa-user"></i> ${p.name}
-                    </div>
-                </label>
-            `).join('');
+            populateLogModalData();
+            openModal('add-log-modal');
         };
 
-        // --- ACTIONS & LOGIC ---
+        window.editLog = (logId) => {
+            const log = logs.find(l => l.id === logId);
+            if(!log) return;
 
-        window.togglePhotographerForLog = (id, name, defaultWage, isChecked) => {
-            if (isChecked) {
-                selectedPhotographersForLog.push({ id, name, defaultWage, customWage: defaultWage });
+            editingLogId = logId;
+            document.getElementById('add-log-modal-title').innerHTML = '<i class="fas fa-edit accent-text ml-2"></i>تعديل تسجيل اليومية';
+            document.getElementById('btn-save-log').innerText = "حفظ التعديلات";
+
+            document.getElementById('log-date').value = log.date.split('T')[0];
+            document.getElementById('log-revenue').value = log.revenue;
+            document.getElementById('log-flash-used').value = log.flashUsed || 0;
+            document.getElementById('log-notes').value = log.notes || '';
+            
+            selectedPhotographersForLog = [...log.photographers];
+            
+            populateLogModalData(log.locationId);
+            openModal('add-log-modal');
+        };
+
+        window.populateLogModalData = (selectedLocId = '') => {
+            // Locations
+            const locSelect = document.getElementById('log-location');
+            locSelect.innerHTML = '<option value="">اختر المكان...</option>' + locations.map(l => `<option value="${l.id}" ${l.id === selectedLocId ? 'selected' : ''}>${l.name}</option>`).join('');
+
+            // Photographers Chips
+            const chips = document.getElementById('log-photographers-chips');
+            chips.innerHTML = photographers.map(p => {
+                const isSelected = selectedPhotographersForLog.some(sp => sp.id === p.id);
+                return `
+                <div onclick="togglePhotographerChip('${p.id}', '${p.name}', ${p.defaultWage})" class="photographer-chip cursor-pointer px-4 py-2 rounded-full border border-slate-600 transition-all ${isSelected ? 'selected font-bold shadow-lg shadow-yellow-500/20' : 'bg-slate-800 text-gray-300 hover:bg-slate-700'}">
+                    ${p.name}
+                </div>
+            `}).join('');
+
+            renderSelectedWages();
+        };
+
+        window.togglePhotographerChip = (id, name, defaultWage) => {
+            const idx = selectedPhotographersForLog.findIndex(p => p.id === id);
+            if (idx >= 0) {
+                selectedPhotographersForLog.splice(idx, 1);
             } else {
-                selectedPhotographersForLog = selectedPhotographersForLog.filter(p => p.id !== id);
+                selectedPhotographersForLog.push({ id, name, defaultWage, customWage: defaultWage });
             }
-            renderSelectedWagesInputs();
+            populateLogModalData(document.getElementById('log-location').value); // Re-render chips
         };
 
-        const renderSelectedWagesInputs = () => {
+        window.renderSelectedWages = () => {
             const container = document.getElementById('log-selected-wages-container');
             const list = document.getElementById('log-selected-wages-list');
             
@@ -838,271 +912,155 @@
                 container.classList.add('hidden');
                 return;
             }
-            
             container.classList.remove('hidden');
+
             list.innerHTML = selectedPhotographersForLog.map(p => `
-                <div class="flex flex-col">
-                    <label class="text-sm text-gray-300 mb-1">${p.name}</label>
-                    <div class="relative">
-                        <input type="number" value="${p.customWage}" onchange="window.updateSelectedWage('${p.id}', this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-8 pr-3 py-2 text-white focus:border-yellow-500 focus:outline-none">
-                        <span class="absolute left-3 top-2 text-gray-500 text-sm">ج.م</span>
-                    </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">${p.name}</label>
+                    <input type="number" onchange="updateCustomWage('${p.id}', this.value)" value="${p.customWage}" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-yellow-500 font-bold focus:border-yellow-500 focus:outline-none">
                 </div>
             `).join('');
         };
 
-        window.updateSelectedWage = (id, newWage) => {
-            const val = parseFloat(newWage) || 0;
-            const photo = selectedPhotographersForLog.find(p => p.id === id);
-            if(photo) photo.customWage = val;
+        window.updateCustomWage = (id, val) => {
+            const p = selectedPhotographersForLog.find(sp => sp.id === id);
+            if(p) p.customWage = Number(val);
         };
 
-        window.adjustFlashCount = (delta) => {
+        window.adjustFlashCount = (val) => {
             const input = document.getElementById('log-flash-used');
-            let val = parseInt(input.value) || 0;
-            val = Math.max(0, val + delta);
-            input.value = val;
+            let current = parseInt(input.value) || 0;
+            let newVal = current + val;
+            if(newVal < 0) newVal = 0;
+            input.value = newVal;
         };
 
-        // THE MAIN FIX: Save Daily Log Logic
         window.saveDailyLog = async () => {
             const date = document.getElementById('log-date').value;
-            const locationId = document.getElementById('log-location').value;
-            const revenue = parseFloat(document.getElementById('log-revenue').value) || 0;
-            const notes = document.getElementById('log-notes').value;
+            const locSelect = document.getElementById('log-location');
+            const locationId = locSelect.value;
+            const locationName = locSelect.options[locSelect.selectedIndex]?.text;
+            const revenue = document.getElementById('log-revenue').value;
             const flashUsed = parseInt(document.getElementById('log-flash-used').value) || 0;
+            const notes = document.getElementById('log-notes').value;
 
-            if (!date || !locationId || !revenue) {
-                showToast("يرجى تعبئة الحقول الأساسية (التاريخ، المكان، الإيراد)", "error");
-                return;
+            if(!date || !locationId || !revenue || selectedPhotographersForLog.length === 0) {
+                return showToast('يرجى استكمال البيانات الأساسية واختيار مصور واحد على الأقل', 'error');
             }
-
-            if (selectedPhotographersForLog.length === 0) {
-                showToast("يجب اختيار مصور واحد على الأقل", "error");
-                return;
-            }
-
-            if (flashUsed > flashSettings.inventory) {
-                showToast("عدد الفلاشات المستخدمة أكبر من المخزون المتاح!", "error");
-                return;
-            }
-
-            const btn = document.querySelector('#add-log-modal button[onclick="saveDailyLog()"]');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-            btn.disabled = true;
 
             try {
-                // 1. Calculate totals
-                let totalWages = 0;
-                const logPhotographers = selectedPhotographersForLog.map(p => {
-                    totalWages += p.customWage;
-                    return { id: p.id, name: p.name, wage: p.customWage };
-                });
+                let oldLog = null;
+                if (editingLogId) {
+                    oldLog = logs.find(l => l.id === editingLogId);
+                    // 1. Revert Old Log Effects
+                    if (oldLog) {
+                        // Revert Photographers Balances & Txs
+                        for (const oldP of oldLog.photographers) {
+                            const photoData = photographers.find(ph => ph.id === oldP.id);
+                            if (photoData) {
+                                await updateDoc(getDocPath('photographers', oldP.id), {
+                                    balance: Number(photoData.balance || 0) - Number(oldP.customWage),
+                                    earned: Number(photoData.earned || 0) - Number(oldP.customWage)
+                                });
+                            }
+                            const oldTxs = transactions.filter(t => t.logId === editingLogId && t.photographerId === oldP.id);
+                            for (const tx of oldTxs) await deleteDoc(getDocPath('transactions', tx.id));
+                        }
+                    }
+                }
 
-                const flashRevenue = flashUsed * (flashSettings.price || 0);
-                const netProfit = revenue - totalWages + flashRevenue;
+                // 2. Adjust Flash Inventory Difference
+                let flashDiff = flashUsed;
+                if (oldLog) {
+                    flashDiff = flashUsed - (oldLog.flashUsed || 0);
+                }
+                const newInventory = Number(flashSettings.inventory) - flashDiff;
+                if (newInventory < 0) {
+                    showToast('تحذير: رصيد الفلاشات بالسالب', 'error');
+                }
+                await setDoc(getDocPath('settings', 'flash'), { ...flashSettings, inventory: newInventory });
 
-                // 2. Save Log Document
+                // 3. Prepare Log Document
                 const logData = {
-                    date,
-                    locationId,
-                    revenue,
-                    totalWages,
-                    flashUsed,
-                    flashRevenue,
-                    netProfit,
-                    notes,
-                    photographers: logPhotographers,
-                    createdAt: new Date().toISOString()
+                    date, locationId, locationName, revenue: Number(revenue),
+                    photographers: selectedPhotographersForLog,
+                    flashUsed, notes, updatedAt: serverTimestamp()
                 };
-                
-                await addDoc(getCollectionPath('logs'), logData);
 
-                // 3. Update Photographers (Balances & Create Transactions)
-                for (const p of logPhotographers) {
-                    if(p.wage > 0) {
-                        // Create transaction
-                        await addDoc(getCollectionPath('transactions'), {
-                            photoId: p.id,
-                            type: 'wage',
-                            amount: p.wage,
-                            date: date,
-                            note: `أجر عمل - ${locations.find(l=>l.id===locationId)?.name || ''}`,
-                            createdAt: new Date().toISOString()
+                let savedLogId = editingLogId;
+
+                if (editingLogId) {
+                    await updateDoc(getDocPath('logs', editingLogId), logData);
+                } else {
+                    logData.createdAt = serverTimestamp();
+                    const docRef = await addDoc(getCollectionPath('logs'), logData);
+                    savedLogId = docRef.id;
+                }
+
+                // 4. Apply New Photographer Effects (Balances & Txs)
+                for (const p of selectedPhotographersForLog) {
+                    const photoData = photographers.find(ph => ph.id === p.id);
+                    if (photoData) {
+                        await updateDoc(getDocPath('photographers', p.id), {
+                            balance: Number(photoData.balance || 0) + Number(p.customWage),
+                            earned: Number(photoData.earned || 0) + Number(p.customWage)
                         });
-
-                        // Update balance
-                        const photoDoc = getDocPath('photographers', p.id);
-                        const pData = photographers.find(x => x.id === p.id);
-                        await updateDoc(photoDoc, {
-                            balance: (pData.balance || 0) + p.wage,
-                            earned: (pData.earned || 0) + p.wage
+                        
+                        await addDoc(getCollectionPath('transactions'), {
+                            photographerId: p.id,
+                            logId: savedLogId, // Link to the log
+                            type: 'wage',
+                            amount: Number(p.customWage),
+                            note: `أجر تصوير: ${locationName}`,
+                            date: date
                         });
                     }
                 }
 
-                // 4. Update Flash Inventory if used
-                if (flashUsed > 0) {
-                    await updateDoc(getDocPath('settings', 'flash'), {
-                        inventory: flashSettings.inventory - flashUsed,
-                        totalUsed: (flashSettings.totalUsed || 0) + flashUsed,
-                        totalSales: (flashSettings.totalSales || 0) + flashRevenue
-                    });
-                }
-
-                showToast("تم تسجيل العملية بنجاح!");
                 closeModal('add-log-modal');
-            } catch (error) {
-                console.error("Error saving log:", error);
-                showToast("حدث خطأ أثناء الحفظ", "error");
-            } finally {
-                btn.innerHTML = 'حفظ وتسجيل العملية الآن';
-                btn.disabled = false;
-            }
-        };
-
-        // --- OTHER ADMIN ACTIONS ---
-
-        window.addLocation = async () => {
-            const name = document.getElementById('new-loc-name').value;
-            if (!name) return showToast("يرجى إدخال اسم المكان", "error");
-            
-            try {
-                await addDoc(getCollectionPath('locations'), { name });
-                showToast("تمت إضافة المكان بنجاح");
-                closeModal('add-location-modal');
-                document.getElementById('new-loc-name').value = '';
+                showToast(editingLogId ? 'تم تعديل التسجيل بنجاح' : 'تم الحفظ والتسجيل بنجاح');
             } catch (e) {
-                showToast("خطأ في الإضافة", "error");
+                console.error(e);
+                showToast('حدث خطأ أثناء الحفظ', 'error');
             }
         };
 
-        window.addPhotographer = async () => {
-            const name = document.getElementById('new-photo-name').value;
-            const wage = parseFloat(document.getElementById('new-photo-wage').value) || 0;
-            if (!name) return showToast("يرجى إدخال الاسم", "error");
+        window.deleteLog = async (logId) => {
+            if(!confirm('هل أنت متأكد من حذف هذا التسجيل؟ سيتم التراجع عن أجور المصورين المتعلقة بهذا اليوم واسترجاع الفلاشات للمخزون.')) return;
             
-            try {
-                await addDoc(getCollectionPath('photographers'), {
-                    name,
-                    defaultWage: wage,
-                    balance: 0,
-                    earned: 0,
-                    withdrawn: 0
-                });
-                showToast("تمت الإضافة بنجاح");
-                closeModal('add-photographer-modal');
-                document.getElementById('new-photo-name').value = '';
-                document.getElementById('new-photo-wage').value = '';
-            } catch (e) {
-                showToast("خطأ في الإضافة", "error");
-            }
-        };
-
-        window.saveFlashSettings = async () => {
-            const inv = parseInt(document.getElementById('setting-flash-inventory').value) || 0;
-            const price = parseFloat(document.getElementById('setting-flash-price').value) || 0;
-            try {
-                await updateDoc(getDocPath('settings', 'flash'), { inventory: inv, price: price });
-                showToast("تم حفظ الإعدادات");
-            } catch (e) {
-                showToast("خطأ في الحفظ", "error");
-            }
-        };
-
-        window.openFinancialModal = (photoId, type) => {
-            document.getElementById('fin-photo-id').value = photoId;
-            document.getElementById('fin-type').value = type;
-            document.getElementById('fin-amount').value = '';
-            document.getElementById('fin-note').value = '';
-            
-            const title = type === 'withdrawal' ? 'سحب نقدي / سداد مصور' : 'إضافة مكافأة للمصور';
-            const btnColor = type === 'withdrawal' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white';
-            
-            document.getElementById('fin-modal-title').innerText = title;
-            const btn = document.getElementById('fin-btn');
-            btn.className = `w-full font-bold py-2 rounded-lg transition-colors mt-2 ${btnColor}`;
-            
-            openModal('financial-modal');
-        };
-
-        window.saveFinancialAction = async () => {
-            const photoId = document.getElementById('fin-photo-id').value;
-            const type = document.getElementById('fin-type').value;
-            const amount = parseFloat(document.getElementById('fin-amount').value) || 0;
-            const note = document.getElementById('fin-note').value;
-
-            if (amount <= 0) return showToast("المبلغ غير صحيح", "error");
+            const log = logs.find(l => l.id === logId);
+            if(!log) return;
 
             try {
-                const pData = photographers.find(p => p.id === photoId);
-                const photoDoc = getDocPath('photographers', photoId);
-                
-                if (type === 'withdrawal') {
-                    await updateDoc(photoDoc, {
-                        balance: (pData.balance || 0) - amount,
-                        withdrawn: (pData.withdrawn || 0) + amount
-                    });
-                } else if (type === 'bonus') {
-                    await updateDoc(photoDoc, {
-                        balance: (pData.balance || 0) + amount,
-                        earned: (pData.earned || 0) + amount
-                    });
+                // 1. Revert Flash
+                const newInventory = Number(flashSettings.inventory) + Number(log.flashUsed || 0);
+                await setDoc(getDocPath('settings', 'flash'), { ...flashSettings, inventory: newInventory });
+
+                // 2. Revert Photographer balances and delete transactions
+                for (const p of log.photographers) {
+                    const photoData = photographers.find(ph => ph.id === p.id);
+                    if (photoData) {
+                        await updateDoc(getDocPath('photographers', p.id), {
+                            balance: Number(photoData.balance || 0) - Number(p.customWage),
+                            earned: Number(photoData.earned || 0) - Number(p.customWage)
+                        });
+                    }
+                    const txsToDelete = transactions.filter(t => t.logId === logId && t.photographerId === p.id);
+                    for (const tx of txsToDelete) {
+                        await deleteDoc(getDocPath('transactions', tx.id));
+                    }
                 }
 
-                await addDoc(getCollectionPath('transactions'), {
-                    photoId,
-                    type,
-                    amount,
-                    note,
-                    date: new Date().toISOString().split('T')[0],
-                    createdAt: new Date().toISOString()
-                });
-
-                showToast("تمت العملية بنجاح");
-                closeModal('financial-modal');
+                // 3. Delete Log
+                await deleteDoc(getDocPath('logs', logId));
+                showToast('تم الحذف بنجاح');
             } catch (e) {
-                showToast("خطأ في التنفيذ", "error");
+                console.error(e);
+                showToast('حدث خطأ أثناء الحذف', 'error');
             }
         };
 
-        window.openMessageModal = (photoId) => {
-            document.getElementById('msg-photo-id').value = photoId;
-            document.getElementById('msg-text').value = '';
-            openModal('message-modal');
-        };
-
-        window.sendMessage = async () => {
-            const photoId = document.getElementById('msg-photo-id').value;
-            const text = document.getElementById('msg-text').value;
-            if (!text) return showToast("الرسالة فارغة", "error");
-
-            try {
-                await addDoc(getCollectionPath('messages'), {
-                    photoId,
-                    text,
-                    createdAt: new Date().toISOString()
-                });
-                showToast("تم إرسال التنبيه");
-                closeModal('message-modal');
-            } catch (e) {
-                showToast("خطأ في الإرسال", "error");
-            }
-        };
-
-        window.copyPortalLink = (url) => {
-            const tempInput = document.createElement("input");
-            tempInput.value = url;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            showToast("تم نسخ الرابط! يمكنك إرساله للمصور.");
-        };
-
-        // Initialize App
-        window.onload = initAuth;
-
+        initAuth();
     </script>
 </body>
 </html>
