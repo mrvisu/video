@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinema Studio Pro | نظام إدارة الاستوديو</title>
+    <title>Mrakby Studio Pro | نظام إدارة الاستوديو</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -872,7 +872,7 @@
             lucide.createIcons();
         };
 
-        window.checkLogin = function() { if (document.getElementById('loginPass').value === "1234") { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('mainContent').classList.remove('hidden'); window.refreshAllViews(); } else { const e = document.getElementById('loginError'); if(e) { e.classList.remove('hidden'); setTimeout(() => e.classList.add('hidden'), 3000); } } };
+        window.checkLogin = function() { if (document.getElementById('loginPass').value === "271192@") { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('mainContent').classList.remove('hidden'); window.refreshAllViews(); } else { const e = document.getElementById('loginError'); if(e) { e.classList.remove('hidden'); setTimeout(() => e.classList.add('hidden'), 3000); } } };
         window.adminLogout = function() { location.href = window.location.origin + window.location.pathname; };
         window.showTab = function(id) { ['dashboard', 'bookings', 'inventory', 'reports'].forEach(t => { const el = document.getElementById(`tab-${t}`); if(el) el.classList.add('hidden'); }); const sel = document.getElementById(`tab-${id}`); if(sel) sel.classList.remove('hidden'); lucide.createIcons(); if(id === 'dashboard') window.renderCalendar(); };
 
