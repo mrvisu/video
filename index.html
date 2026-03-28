@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinema Studio Pro | نظام إدارة الاستوديو</title>
+    <title> MrakbyVisuals | نظام الإدارة </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -357,49 +357,25 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-8 left-8 glass p-4 translate-y-24 opacity-0 transition-all duration-300 z-[250] flex items-center gap-3">
-        <div id="toastIcon" class="bg-emerald-500 p-2 rounded-lg"><i data-lucide="check" class="text-white w-4 h-4"></i></div>
-        <p id="toastMessage" class="text-sm font-medium">تمت العملية بنجاح</p>
-    </div>
-
-    <!-- Firebase Integration Module -->
+    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4",
-            authDomain: "video-c59af.firebaseapp.com",
-            databaseURL: "https://video-c59af-default-rtdb.firebaseio.com",
-            projectId: "video-c59af",
-            storageBucket: "video-c59af.firebasestorage.app",
-            messagingSenderId: "418823882244",
-            appId: "1:418823882244:web:a3b858a11bc191032a5751"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4", authDomain: "video-c59af.firebaseapp.com", databaseURL: "https://video-c59af-default-rtdb.firebaseio.com", projectId: "video-c59af", storageBucket: "video-c59af.firebasestorage.app", messagingSenderId: "418823882244", appId: "1:418823882244:web:a3b858a11bc191032a5751" };
         const appId = 'video-c59af-studio-main';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const initAuth = async () => {
+        async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    try {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } catch (e) {
-                        await signInAnonymously(auth);
-                    }
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth Fail:", error);
-            }
-        };
-
+                    try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { await signInAnonymously(auth); }
+                } else { await signInAnonymously(auth); }
+            } catch (error) { console.error("Auth Fail:", error); }
+        }
         initAuth();
 
         onAuthStateChanged(auth, (user) => {
@@ -414,14 +390,14 @@
                     } else {
                         setDoc(stateRef, window.state).then(() => window.bootApp());
                     }
-                });
+                }, (err) => console.error("Snapshot error:", err));
                 window.saveStateToFirebase = () => setDoc(stateRef, window.state);
             }
         });
     </script>
 
     <script>
-        // --- Core Application State & Helpers ---
+        // --- Core Application Logic ---
         var defaultState = {
             isLoggedIn: false, bookings: [], dailyEntries: [], finances: { revenue: 0, expenses: 0 },
             inventory: { flashesCount: 0, flashesTotalValue: 0 }, selectedServices: [],
@@ -438,27 +414,14 @@
             else localStorage.setItem('studio_pro_local', JSON.stringify(state));
         }
 
-        // Helper: Workload Counter
-        function getPhotogJobCount(name) {
-            let count = 0;
-            if (state.dailyEntries) count += state.dailyEntries.filter(e => e.photographers?.some(p => p.name === name)).length;
-            if (state.bookings) count += state.bookings.filter(b => b.photographers?.some(p => p.name === name)).length;
-            return count;
+        // --- Renderers & UI Update Functions (Defined before refreshAllViews) ---
+
+        function updateFlashInventoryUI() { 
+            const fc = document.getElementById('flashCountDisplay'), fv = document.getElementById('flashTotalValueDisplay'); 
+            if(fc) fc.innerText = state.inventory.flashesCount; 
+            if(fv) fv.innerText = state.inventory.flashesTotalValue + " ج.م"; 
         }
 
-        // UI Toast Safety
-        function showToast(m, t="success") {
-            const ts = document.getElementById('toast');
-            const tm = document.getElementById('toastMessage');
-            const ti = document.getElementById('toastIcon');
-            if (!ts || !tm || !ti) return;
-            tm.innerText = m;
-            ti.className = t === "success" ? "bg-emerald-500 p-2 rounded-lg" : "bg-red-500 p-2 rounded-lg";
-            ts.classList.remove('translate-y-24', 'opacity-0');
-            setTimeout(() => ts.classList.add('translate-y-24', 'opacity-0'), 3000);
-        }
-
-        // Renderers
         function renderCalendar() {
             const cal = document.getElementById('dashboardCalendar'); if(!cal) return;
             const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -477,11 +440,126 @@
             }
         }
 
+        function updateDashboard() {
+            let r = 0, e = 0; 
+            state.bookings.forEach(b => { if(b.status==='completed') r += b.total; else r += b.deposit; });
+            state.dailyEntries.forEach(d => { r += d.income; e += d.totalExpenses; });
+            state.bookings.forEach(b => { if(b.status === 'completed') b.photographers?.forEach(p => e += p.fee); });
+            const sRev = document.getElementById('stat-revenue'), sExp = document.getElementById('stat-expenses'), sPrf = document.getElementById('stat-profit');
+            if(sRev) sRev.innerText = r; if(sExp) sExp.innerText = e; if(sPrf) sPrf.innerText = r - e;
+            const log = document.getElementById('recentBookings'); if(!log) return;
+            log.innerHTML = '';
+            state.dailyEntries.slice(-5).reverse().forEach(act => {
+                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition";
+                d.onclick = () => showEntryDetails(act.id);
+                d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[9px] text-zinc-500">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-xs">+${act.income}</span>`;
+                log.appendChild(d);
+            });
+        }
+
+        function renderBookings() {
+            const fD = document.getElementById('filterBookingDate').value, fN = document.getElementById('filterBookingName').value.toLowerCase(), fP = document.getElementById('filterBookingPhotog').value;
+            const filtered = state.bookings.filter(b => (!fD || b.date === fD) && (!fN || b.name.toLowerCase().includes(fN)) && (!fP || b.photographers?.some(p=>p.name===fP)));
+            const bTable = document.getElementById('bookingsTable'); if(!bTable) return;
+            bTable.innerHTML = filtered.map(b => `
+                <tr class="border-b border-white/5 hover:bg-white/5 transition cursor-pointer" onclick="showBookingDetails(${b.id})">
+                    <td class="p-4"><p class="font-bold text-sm text-white">${b.name}</p><p class="text-[10px] text-zinc-500">${b.services?.map(s=>s.name).join('، ')||''}</p></td>
+                    <td class="p-4 text-xs text-zinc-400">${new Date(b.date).toLocaleDateString('ar-EG')}</td>
+                    <td class="p-4 text-[10px] text-blue-400">${b.photographers?.map(p=>p.name).join('، ')||'لم يحدد'}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded-full text-[10px] ${b.status==='completed' ? 'bg-emerald-500/10 text-emerald-400':'bg-yellow-500/10 text-yellow-400'}">${b.status==='completed'?'تم':'معلق'}</span></td>
+                    <td class="p-4 flex gap-2 justify-center" onclick="event.stopPropagation()">
+                        <button onclick="sendWhatsApp(${b.id})" class="p-2 text-green-500"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
+                        <button onclick="deleteBooking(${b.id})" class="p-2 text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderServices() {
+            const grid = document.getElementById('servicesGrid'); if(!grid) return;
+            grid.innerHTML = state.services.map((s, i) => `<button id="svc-btn-${i}" onclick="toggleService(${i})" class="service-btn glass p-3 text-sm text-right flex justify-between items-center transition rounded-xl"><span>${s.name}</span><span class="text-xs text-zinc-400">${s.price}</span></button>`).join('');
+            const eList = document.getElementById('serviceEditList');
+            if(eList) eList.innerHTML = state.services.map((s, i) => `<div class="flex gap-2 items-center"><input type="text" value="${s.name}" onchange="state.services[${i}].name=this.value;saveState();renderServices();" class="flex-grow p-1 text-xs"><input type="number" value="${s.price}" onchange="state.services[${i}].price=parseFloat(this.value);saveState();renderServices();" class="w-16 p-1 text-xs text-center"><button onclick="state.services.splice(${i},1);saveState();renderServices();" class="text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderTemplates() {
+            const grid = document.getElementById('templatesGrid'); if(!grid) return;
+            grid.innerHTML = state.templates.map((t, i) => `<button onclick="document.getElementById('incomeNote').value='${t.name}';document.getElementById('incomeAmount').value='${t.price}';" class="p-3 glass hover:bg-emerald-500/10 text-xs text-right border-r-2 border-r-emerald-500 rounded-xl flex justify-between"><span>${t.name}</span><span class="text-emerald-400">${t.price}</span></button>`).join('');
+            const eList = document.getElementById('templateEditList');
+            if(eList) eList.innerHTML = state.templates.map((t, i) => `<div class="flex gap-2 items-center"><input type="text" value="${t.name}" onchange="state.templates[${i}].name=this.value;saveState();renderTemplates();" class="flex-grow p-1 text-xs"><input type="number" value="${t.price}" onchange="state.templates[${i}].price=parseFloat(this.value);saveState();renderTemplates();" class="w-16 p-1 text-xs"><button onclick="state.templates.splice(${i},1);saveState();renderTemplates();" class="text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
+            lucide.createIcons();
+        }
+
+        function updateFiltersUI() { 
+            const bP = document.getElementById('filterBookingPhotog'), dP = document.getElementById('filterDailyPhotog'), aB = document.getElementById('adminBonusPhotog'); 
+            if(bP) bP.innerHTML = '<option value="">الكل</option>' + state.photographers.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); 
+            if(dP) dP.innerHTML = '<option value="">الكل</option>' + state.photographers.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); 
+            if(aB) aB.innerHTML = '<option value="">اختر</option>' + state.photographers.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); 
+        }
+
+        function getPhotogJobCount(name) {
+            let count = 0;
+            if (state.dailyEntries) count += state.dailyEntries.filter(e => e.photographers?.some(p => p.name === name)).length;
+            if (state.bookings) count += state.bookings.filter(b => b.photographers?.some(p => p.name === name)).length;
+            return count;
+        }
+
+        function renderPhotographers() {
+            const dL = document.getElementById('dailyPhotographerList'), bL = document.getElementById('bookingPhotographerList'), eL = document.getElementById('photogEditList');
+            if(!dL) return;
+            dL.innerHTML = ''; bL.innerHTML = ''; eL.innerHTML = '';
+            state.photographers.forEach((p, i) => {
+                const count = getPhotogJobCount(p.name);
+                dL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5"><input type="checkbox" class="w-4 h-4 daily-photog-check" data-name="${p.name}" data-fee="${p.fee}"><div class="flex-grow text-[11px] font-bold">${p.name}</div><span class="text-[10px] text-red-400">${p.fee}</span></label>`;
+                bL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5"><input type="checkbox" class="w-4 h-4 booking-photog-check" data-name="${p.name}" data-fee="${p.fee}"><div class="flex-grow"><p class="text-[11px] font-bold">${p.name}</p><p class="text-[8px] text-zinc-500">عمل: ${count} مرات</p></div></label>`;
+                eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;saveState();renderPhotographers();" class="w-20 p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);saveState();renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="copyPhotogLink('${p.name}')" class="text-blue-400"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="state.photographers[${i}].deviceId=null;saveState();showToast('تم فك القفل')" class="text-yellow-400"><i data-lucide="unlock" class="w-3 h-3"></i></button><button onclick="state.photographers.splice(${i},1);saveState();renderPhotographers();" class="text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
+            });
+            lucide.createIcons(); updateFiltersUI();
+        }
+
+        function updateEntryLog() {
+            const fD = document.getElementById('filterDailyDate').value, fN = document.getElementById('filterDailyNote').value.toLowerCase(), fP = document.getElementById('filterDailyPhotog').value;
+            const filtered = state.dailyEntries.filter(e => (!fD || (e.date || new Date(e.id).toISOString().split('T')[0]) === fD) && (!fN || e.note.toLowerCase().includes(fN)) && (!fP || e.photographers?.some(p=>p.name===fP)));
+            let r=0, x=0; filtered.forEach(e => { r += e.income; x += e.totalExpenses; });
+            const incL = document.getElementById('dailyIncomeLabel'), expL = document.getElementById('dailyExpenseLabel');
+            if(incL) incL.innerText = `+${r}`; if(expL) expL.innerText = `-${x}`;
+            const logC = document.getElementById('dailyEntryLog'); if(!logC) return;
+            logC.innerHTML = filtered.slice().reverse().map(e => `<div onclick="showEntryDetails(${e.id})" class="glass p-3 rounded-xl border-r-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition"><div class="flex justify-between items-start mb-2"><div><p class="font-bold text-xs text-white">${e.note}</p><p class="text-[8px] text-zinc-500">${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-[11px]">+${e.income}</span></div><div class="flex flex-wrap gap-1">${e.photographers?.map(p=>`<span class="entry-chip text-[9px] text-blue-400">${p.name} (-${p.totalFee})</span>`).join('')||''}${e.gear?`<span class="entry-chip text-[9px] text-indigo-400">معدات (-${e.gear.amount})</span>`:''}${e.flash?`<span class="entry-chip text-[9px] text-yellow-400">فلاشة (-50)</span>`:''}</div><div class="mt-2 pt-2 border-t border-white/5 flex justify-between"><span class="text-[9px] text-zinc-400">الصافي: ${e.income-e.totalExpenses}</span><button onclick="event.stopPropagation(); deleteEntry(${e.id})" class="text-red-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`).join('');
+            lucide.createIcons();
+        }
+
+        function renderReports() {
+            const pS = {}, hS = {}; let tW = 0, tI = 0, tE = 0;
+            state.dailyEntries.forEach(e => {
+                if(e.note.startsWith('سحب مالي للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[n].withdrawals += e.totalExpenses; tE += e.totalExpenses; return; }
+                if(e.note.startsWith('مكافأة إضافية للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[n].bonuses += e.totalExpenses; tE += e.totalExpenses; return; }
+                if(!hS[e.note]) hS[e.note] = { jobs: 0, income: 0 }; hS[e.note].jobs++; hS[e.note].income += e.income; tI += e.income; tE += e.totalExpenses;
+                e.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[p.name].jobs++; pS[p.name].wages += p.totalFee; tW += p.totalFee; });
+            });
+            state.bookings.forEach(bk => { if(bk.status==='completed') { const l = 'حجوزات الاستوديو'; if(!hS[l]) hS[l] = { jobs: 0, income: 0 }; hS[l].jobs++; hS[l].income += bk.total; tI += bk.total; bk.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[p.name].jobs++; pS[p.name].wages += p.fee; tW += p.fee; tE += p.fee; }); }});
+            const wL = document.getElementById('reportTotalWages'), nL = document.getElementById('reportNetProfit');
+            if(wL) wL.innerText = tW; if(nL) nL.innerText = tI - tE;
+            const pR = document.getElementById('reportPhotographers'); if(pR) pR.innerHTML = Object.keys(pS).map(n => { const net = pS[n].wages + pS[n].bonuses - pS[n].withdrawals; return `<div onclick="showPhotogDetails('${n}')" class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition cursor-pointer"><div><p class="font-bold text-xs text-white">${n}</p><p class="text-[8px] text-zinc-400">شغل: ${pS[n].jobs} | إضافي: ${pS[n].bonuses} | سحب: ${pS[n].withdrawals}</p></div><p class="font-bold text-xs ${net>=0?'text-emerald-400':'text-red-400'}">${net}</p></div>`; }).join('');
+            const hR = document.getElementById('reportHalls'); if(hR) hR.innerHTML = Object.keys(hS).map(n => `<div onclick="showHallDetails('${n}')" class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition cursor-pointer"><div><p class="font-bold text-xs text-white">${n}</p><p class="text-[8px] text-zinc-400">مرات التسجيل: ${hS[n].jobs}</p></div><p class="font-bold text-xs text-emerald-400">${hS[n].income}</p></div>`).join('');
+        }
+
+        // --- Helper View Updates ---
+
         function refreshAllViews() {
             if (!document.getElementById('photogPortal').classList.contains('hidden')) { 
                 if(currentPhotogName) renderPhotogDashboard(); 
             } else if (!document.getElementById('mainContent').classList.contains('hidden')) { 
-                updateFiltersUI(); updateDashboard(); updateFlashInventoryUI(); renderCalendar(); renderBookings(); renderServices(); renderTemplates(); renderPhotographers(); renderReports(); updateEntryLog(); 
+                updateFiltersUI(); 
+                updateDashboard(); 
+                updateFlashInventoryUI(); 
+                renderCalendar(); 
+                renderBookings(); 
+                renderServices(); 
+                renderTemplates(); 
+                renderPhotographers(); 
+                renderReports(); 
+                updateEntryLog(); 
             }
             lucide.createIcons();
         }
@@ -493,12 +571,51 @@
             lucide.createIcons();
         }
 
-        function checkLogin() { if (document.getElementById('loginPass').value === "271192@") { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('mainContent').classList.remove('hidden'); refreshAllViews(); } else { const e = document.getElementById('loginError'); e.classList.remove('hidden'); setTimeout(() => e.classList.add('hidden'), 3000); } }
+        function checkLogin() { if (document.getElementById('loginPass').value === "271192@") { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('mainContent').classList.remove('hidden'); refreshAllViews(); } else { const e = document.getElementById('loginError'); if(e) { e.classList.remove('hidden'); setTimeout(() => e.classList.add('hidden'), 3000); } } }
         function adminLogout() { location.href = window.location.origin + window.location.pathname; }
-        function showTab(id) { ['dashboard', 'bookings', 'inventory', 'reports'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden')); document.getElementById(`tab-${id}`).classList.remove('hidden'); lucide.createIcons(); if(id === 'dashboard') renderCalendar(); }
+        function showTab(id) { ['dashboard', 'bookings', 'inventory', 'reports'].forEach(t => { const el = document.getElementById(`tab-${t}`); if(el) el.classList.add('hidden'); }); const sel = document.getElementById(`tab-${id}`); if(sel) sel.classList.remove('hidden'); lucide.createIcons(); if(id === 'dashboard') renderCalendar(); }
 
-        // Drills
-        function showStatsModal(title, html) { document.getElementById('statsModalTitleText').innerText = title; document.getElementById('statsModalContent').innerHTML = html; document.getElementById('statsModal').classList.remove('hidden'); lucide.createIcons(); }
+        // Logic Handlers
+        function toggleService(idx) {
+            const s = state.services[idx], btn = document.getElementById(`svc-btn-${idx}`), ex = state.selectedServices.findIndex(x=>x.name===s.name);
+            if(ex > -1) { state.selectedServices.splice(ex, 1); if(btn) btn.classList.remove('bg-cinema-red','text-white'); } 
+            else { state.selectedServices.push({...s}); if(btn) btn.classList.add('bg-cinema-red','text-white'); }
+            calcTotal();
+        }
+        function calcTotal() {
+            const t = state.selectedServices.reduce((a,c)=>a+c.price,0), d = parseFloat(document.getElementById('depositAmount').value)||0;
+            const tC = document.getElementById('totalCalc'), bC = document.getElementById('balanceCalc');
+            if(tC) tC.innerText = t; if(bC) bC.innerText = t - d;
+            return {t, d, b:t-d};
+        }
+        function saveBooking() {
+            const n = document.getElementById('clientName').value, d = document.getElementById('bookingDate').value; if(!n||!d) return showToast("يرجى إكمال البيانات", "error");
+            const fin = calcTotal(), pgs = []; document.querySelectorAll('.booking-photog-check:checked').forEach(c => pgs.push({name:c.dataset.name, fee:parseFloat(c.dataset.fee)}));
+            state.bookings.push({id:Date.now(), name:n, date:d, phone:document.getElementById('clientPhone').value, details:document.getElementById('bookingDetails').value, services:[...state.selectedServices], photographers:pgs, total:fin.t, deposit:fin.d, balance:fin.b, status:'pending'});
+            saveState(); refreshAllViews(); showToast("تم الحجز بنجاح");
+            document.getElementById('clientName').value=''; document.getElementById('depositAmount').value='0'; state.selectedServices=[];
+        }
+        function completePayment(id) { const b = state.bookings.find(x=>x.id===id); if(b) { b.status='completed'; b.balance=0; saveState(); refreshAllViews(); showToast("تم التحصيل"); }}
+        function deleteBooking(id) { const i = state.bookings.findIndex(x=>x.id===id); if(i>-1) { state.bookings.splice(i,1); saveState(); refreshAllViews(); showToast("تم الحذف"); } }
+        function recordUnifiedTransaction() {
+            const n = document.getElementById('incomeNote').value, inc = parseFloat(document.getElementById('incomeAmount').value)||0; if(!n||inc<=0) return;
+            let date = document.getElementById('dailyEntryDate').value || new Date().toISOString().split('T')[0];
+            let exp = 0, pgs = []; document.querySelectorAll('.daily-photog-check:checked').forEach(c => { pgs.push({name:c.dataset.name, totalFee:parseFloat(c.dataset.fee)}); exp += parseFloat(c.dataset.fee); });
+            const g = parseFloat(document.getElementById('gearRentalAmount').value)||0, useF = document.getElementById('useFlashCheckbox').checked;
+            if(g) exp += g; if(useF) { exp += 50; if(state.inventory.flashesCount>0) { state.inventory.flashesCount--; state.inventory.flashesTotalValue -= (state.inventory.flashesTotalValue/(state.inventory.flashesCount+1)); } }
+            state.dailyEntries.push({id:Date.now(), note:n, income:inc, date:date, photographers:pgs, gear: g?{note:document.getElementById('gearRentalNote').value||'معدات', amount:g}:null, flash:useF?50:null, totalExpenses:exp, time: new Date().toLocaleTimeString('ar-EG')});
+            saveState(); refreshAllViews(); showToast("تم التسجيل");
+            document.getElementById('incomeNote').value=''; document.getElementById('incomeAmount').value='';
+        }
+        function adminAddBonus() {
+            const p = document.getElementById('adminBonusPhotog').value, a = parseFloat(document.getElementById('adminBonusAmount').value), n = document.getElementById('adminBonusNote').value.trim();
+            if(!p||!a) return;
+            state.dailyEntries.push({id:Date.now(), note: `مكافأة إضافية للمصور: ${p}${n?' - '+n:''}`, income:0, photographers:[], gear:null, flash:null, totalExpenses:a, time:new Date().toLocaleTimeString('ar-EG'), date:new Date().toISOString().split('T')[0]});
+            saveState(); refreshAllViews(); showToast("تم منح المكافأة");
+        }
+        function deleteEntry(id) { const i = state.dailyEntries.findIndex(x=>x.id===id); if(i>-1) { state.dailyEntries.splice(i,1); saveState(); refreshAllViews(); showToast("تم الحذف"); } }
+
+        function showStatsModal(title, html) { const mT = document.getElementById('statsModalTitleText'); const mC = document.getElementById('statsModalContent'); if(mT) mT.innerText = title; if(mC) mC.innerHTML = html; document.getElementById('statsModal').classList.remove('hidden'); lucide.createIcons(); }
         function closeStatsModal() { document.getElementById('statsModal').classList.add('hidden'); }
 
         function showBookingDetails(id) {
@@ -523,102 +640,20 @@
             showStatsModal(title, html);
         }
 
-        function updateDashboard() {
-            let r = 0, e = 0; state.bookings.forEach(b => { if(b.status==='completed') r += b.total; else r += b.deposit; });
-            state.dailyEntries.forEach(d => { r += d.income; e += d.totalExpenses; });
-            state.bookings.forEach(b => { if(b.status === 'completed') b.photographers?.forEach(p => e += p.fee); });
-            document.getElementById('stat-revenue').innerText = r; document.getElementById('stat-expenses').innerText = e; document.getElementById('stat-profit').innerText = r - e;
-            const log = document.getElementById('recentBookings'); if(!log) return;
-            log.innerHTML = '';
-            state.dailyEntries.slice(-5).reverse().forEach(act => {
-                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition";
-                d.onclick = () => showEntryDetails(act.id);
-                d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[9px] text-zinc-500">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-xs">+${act.income}</span>`;
-                log.appendChild(d);
-            });
+        function showPhotogDetails(name) {
+            let items = []; state.bookings.forEach(b => { if(b.status === 'completed' && b.photographers?.some(p=>p.name===name)) items.push({date:b.date, text:`حجز: ${b.name}`, val:b.photographers.find(x=>x.name===name).fee, c:'text-blue-400', s:'+'}); });
+            state.dailyEntries.forEach(d => { if(d.note.startsWith(`سحب مالي للمصور: ${name}`)) items.push({date:d.date||d.id, text:d.note, val:d.totalExpenses, c:'text-red-400', s:'-'}); else if(d.note.startsWith(`مكافأة إضافية للمصور: ${name}`)) items.push({date:d.date||d.id, text:d.note, val:d.totalExpenses, c:'text-yellow-400', s:'+'}); else if(d.photographers?.some(p=>p.name===name)) items.push({date:d.date||d.id, text:d.note, val:d.photographers.find(p=>p.name===name).totalFee, c:'text-blue-400', s:'+'}); });
+            items.sort((a,b) => new Date(b.date) - new Date(a.date));
+            const html = items.map(i => `<div class="flex justify-between p-2 border-b border-white/5"><div class="text-[11px]"><p class="text-white">${i.text}</p><p class="text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold ${i.c}">${i.s}${i.val}</span></div>`).join('') || 'لا يوجد';
+            showStatsModal(`كشف حساب: ${name}`, html);
         }
 
-        function renderBookings() {
-            const fD = document.getElementById('filterBookingDate').value, fN = document.getElementById('filterBookingName').value.toLowerCase(), fP = document.getElementById('filterBookingPhotog').value;
-            const filtered = state.bookings.filter(b => (!fD || b.date === fD) && (!fN || b.name.toLowerCase().includes(fN)) && (!fP || b.photographers?.some(p=>p.name===fP)));
-            const bTable = document.getElementById('bookingsTable');
-            if(!bTable) return;
-            bTable.innerHTML = filtered.map(b => `
-                <tr class="border-b border-white/5 hover:bg-white/5 transition cursor-pointer" onclick="showBookingDetails(${b.id})">
-                    <td class="p-4"><p class="font-bold text-sm text-white">${b.name}</p><p class="text-[10px] text-zinc-500">${b.services?.map(s=>s.name).join('، ')||''}</p></td>
-                    <td class="p-4 text-xs text-zinc-400">${new Date(b.date).toLocaleDateString('ar-EG')}</td>
-                    <td class="p-4 text-[10px] text-blue-400">${b.photographers?.map(p=>p.name).join('، ')||'لم يحدد'}</td>
-                    <td class="p-4"><span class="px-2 py-1 rounded-full text-[10px] ${b.status==='completed' ? 'bg-emerald-500/10 text-emerald-400':'bg-yellow-500/10 text-yellow-400'}">${b.status==='completed'?'تم':'معلق'}</span></td>
-                    <td class="p-4 flex gap-2 justify-center" onclick="event.stopPropagation()">
-                        <button onclick="sendWhatsApp(${b.id})" class="p-2 text-green-500"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
-                        ${b.status==='pending' ? `<button onclick="completePayment(${b.id})" class="p-2 text-emerald-400"><i data-lucide="check-circle" class="w-4 h-4"></i></button>`:''}
-                        <button onclick="deleteBooking(${b.id})" class="p-2 text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </td>
-                </tr>`).join('');
-            lucide.createIcons();
+        function showHallDetails(note) {
+            let items = []; if(note === 'حجوزات الاستوديو') state.bookings.forEach(b => b.status === 'completed' && items.push({date:b.date, val:b.total})); else state.dailyEntries.forEach(d => d.note === note && items.push({date:d.date||d.id, val:d.income}));
+            const html = items.map(i => `<div class="flex justify-between p-2 border-b border-white/5"><span class="text-[10px] text-zinc-400">${new Date(i.date).toLocaleDateString('ar-EG')}</span><span class="text-xs font-bold text-emerald-400">+${i.val}</span></div>`).join('') || 'لا يوجد';
+            showStatsModal(`تفاصيل: ${note}`, html);
         }
 
-        function renderServices() {
-            const grid = document.getElementById('servicesGrid'); if(!grid) return;
-            grid.innerHTML = state.services.map((s, i) => `<button id="svc-btn-${i}" onclick="toggleService(${i})" class="service-btn glass p-3 text-sm text-right flex justify-between items-center transition rounded-xl"><span>${s.name}</span><span class="text-xs text-zinc-400">${s.price}</span></button>`).join('');
-            document.getElementById('serviceEditList').innerHTML = state.services.map((s, i) => `<div class="flex gap-2 items-center"><input type="text" value="${s.name}" onchange="state.services[${i}].name=this.value;saveState();renderServices();" class="flex-grow p-1 text-xs"><input type="number" value="${s.price}" onchange="state.services[${i}].price=parseFloat(this.value);saveState();renderServices();" class="w-16 p-1 text-xs text-center"><button onclick="state.services.splice(${i},1);saveState();renderServices();" class="text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
-            lucide.createIcons();
-        }
-
-        function renderTemplates() {
-            const grid = document.getElementById('templatesGrid'); if(!grid) return;
-            grid.innerHTML = state.templates.map((t, i) => `<button onclick="document.getElementById('incomeNote').value='${t.name}';document.getElementById('incomeAmount').value='${t.price}';" class="p-3 glass hover:bg-emerald-500/10 text-xs text-right border-r-2 border-r-emerald-500 rounded-xl flex justify-between"><span>${t.name}</span><span class="text-emerald-400">${t.price}</span></button>`).join('');
-            document.getElementById('templateEditList').innerHTML = state.templates.map((t, i) => `<div class="flex gap-2 items-center"><input type="text" value="${t.name}" onchange="state.templates[${i}].name=this.value;saveState();renderTemplates();" class="flex-grow p-1 text-xs"><input type="number" value="${t.price}" onchange="state.templates[${i}].price=parseFloat(this.value);saveState();renderTemplates();" class="w-16 p-1 text-xs"><button onclick="state.templates.splice(${i},1);saveState();renderTemplates();" class="text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
-            lucide.createIcons();
-        }
-
-        function renderPhotographers() {
-            const dL = document.getElementById('dailyPhotographerList'), bL = document.getElementById('bookingPhotographerList'), eL = document.getElementById('photogEditList');
-            if(!dL) return;
-            dL.innerHTML = ''; bL.innerHTML = ''; eL.innerHTML = '';
-            state.photographers.forEach((p, i) => {
-                const count = getPhotogJobCount(p.name);
-                dL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5"><input type="checkbox" class="w-4 h-4 daily-photog-check" data-name="${p.name}" data-fee="${p.fee}"><div class="flex-grow text-[11px] font-bold">${p.name}</div><span class="text-[10px] text-red-400">${p.fee}</span></label>`;
-                bL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5"><input type="checkbox" class="w-4 h-4 booking-photog-check" data-name="${p.name}" data-fee="${p.fee}"><div class="flex-grow"><p class="text-[11px] font-bold">${p.name}</p><p class="text-[8px] text-zinc-500">عمل: ${count} مرات</p></div></label>`;
-                eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;saveState();renderPhotographers();" class="w-20 p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);saveState();renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="copyPhotogLink('${p.name}')" class="text-blue-400"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="state.photographers[${i}].deviceId=null;saveState();showToast('تم فك القفل')" class="text-yellow-400"><i data-lucide="unlock" class="w-3 h-3"></i></button><button onclick="state.photographers.splice(${i},1);saveState();renderPhotographers();" class="text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
-            });
-            lucide.createIcons(); updateFiltersUI();
-        }
-
-        function updateEntryLog() {
-            const fD = document.getElementById('filterDailyDate').value, fN = document.getElementById('filterDailyNote').value.toLowerCase(), fP = document.getElementById('filterDailyPhotog').value;
-            const filtered = state.dailyEntries.filter(e => (!fD || (e.date || new Date(e.id).toISOString().split('T')[0]) === fD) && (!fN || e.note.toLowerCase().includes(fN)) && (!fP || e.photographers?.some(p=>p.name===fP)));
-            let r=0, x=0; filtered.forEach(e => { r += e.income; x += e.totalExpenses; });
-            const incomeLbl = document.getElementById('dailyIncomeLabel');
-            const expenseLbl = document.getElementById('dailyExpenseLabel');
-            if(incomeLbl) incomeLbl.innerText = `+${r}`; 
-            if(expenseLbl) expenseLbl.innerText = `-${x}`;
-            const logContainer = document.getElementById('dailyEntryLog');
-            if(!logContainer) return;
-            logContainer.innerHTML = filtered.slice().reverse().map(e => `<div onclick="showEntryDetails(${e.id})" class="glass p-3 rounded-xl border-r-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition"><div class="flex justify-between items-start mb-2"><div><p class="font-bold text-xs text-white">${e.note}</p><p class="text-[8px] text-zinc-500">${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-[11px]">+${e.income}</span></div><div class="flex flex-wrap gap-1">${e.photographers?.map(p=>`<span class="entry-chip text-[9px] text-blue-400">${p.name} (-${p.totalFee})</span>`).join('')||''}${e.gear?`<span class="entry-chip text-[9px] text-indigo-400">معدات (-${e.gear.amount})</span>`:''}${e.flash?`<span class="entry-chip text-[9px] text-yellow-400">فلاشة (-50)</span>`:''}</div><div class="mt-2 pt-2 border-t border-white/5 flex justify-between"><span class="text-[9px] text-zinc-400">الصافي: ${e.income-e.totalExpenses}</span><button onclick="event.stopPropagation(); deleteEntry(${e.id})" class="text-red-500 hover:text-red-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`).join('');
-            lucide.createIcons();
-        }
-
-        function renderReports() {
-            const pS = {}, hS = {}; let tW = 0, tI = 0, tE = 0;
-            state.dailyEntries.forEach(e => {
-                if(e.note.startsWith('سحب مالي للمصور: ')) { const n = e.note.split(': ')[1].split(' - ')[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[n].withdrawals += e.totalExpenses; tE += e.totalExpenses; return; }
-                if(e.note.startsWith('مكافأة إضافية للمصور: ')) { const n = e.note.split(': ')[1].split(' - ')[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[n].bonuses += e.totalExpenses; tE += e.totalExpenses; return; }
-                if(!hS[e.note]) hS[e.note] = { jobs: 0, income: 0 }; hS[e.note].jobs++; hS[e.note].income += e.income; tI += e.income; tE += e.totalExpenses;
-                e.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[p.name].jobs++; pS[p.name].wages += p.totalFee; tW += p.totalFee; });
-            });
-            state.bookings.forEach(bk => { if(bk.status==='completed') { const l = 'حجوزات الاستوديو'; if(!hS[l]) hS[l] = { jobs: 0, income: 0 }; hS[l].jobs++; hS[l].income += bk.total; tI += bk.total; bk.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[p.name].jobs++; pS[p.name].wages += p.fee; tW += p.fee; tE += p.fee; }); }});
-            const wLabel = document.getElementById('reportTotalWages');
-            const nLabel = document.getElementById('reportNetProfit');
-            if(wLabel) wLabel.innerText = tW; 
-            if(nLabel) nLabel.innerText = tI - tE;
-            const pRep = document.getElementById('reportPhotographers');
-            if(pRep) pRep.innerHTML = Object.keys(pS).map(n => { const net = pS[n].wages + pS[n].bonuses - pS[n].withdrawals; return `<div onclick="showPhotogDetails('${n}')" class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition cursor-pointer"><div><p class="font-bold text-xs text-white">${n}</p><p class="text-[8px] text-zinc-400">شغل: ${pS[n].jobs} | إضافي: ${pS[n].bonuses} | سحب: ${pS[n].withdrawals}</p></div><p class="font-bold text-xs ${net>=0?'text-emerald-400':'text-red-400'}">${net}</p></div>`; }).join('');
-            const hRep = document.getElementById('reportHalls');
-            if(hRep) hRep.innerHTML = Object.keys(hS).map(n => `<div onclick="showHallDetails('${n}')" class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition cursor-pointer"><div><p class="font-bold text-xs text-white">${n}</p><p class="text-[8px] text-zinc-400">مرات التسجيل: ${hS[n].jobs}</p></div><p class="font-bold text-xs text-emerald-400">${hS[n].income}</p></div>`).join('');
-        }
-
-        // Auth Portals
         function initPhotogPortal(name) {
             currentPhotogName = name; const pObj = state.photographers.find(x=>x.name===name); if(!pObj) return alert("المصور غير موجود");
             let dId = localStorage.getItem('studio_device_id') || crypto.randomUUID(); localStorage.setItem('studio_device_id', dId);
@@ -637,46 +672,34 @@
                 else if(e.note.startsWith(`مكافأة إضافية للمصور: ${currentPhotogName}`)) b += e.totalExpenses;
                 else if(e.photographers?.some(p=>p.name===currentPhotogName)) { w += e.photographers.find(p=>p.name===currentPhotogName).totalFee; locs[e.note] = (locs[e.note]||0)+1; }
             });
-            document.getElementById('photogTotalWages').innerText = w; document.getElementById('photogTotalBonuses').innerText = b;
-            document.getElementById('photogTotalWithdrawals').innerText = s; document.getElementById('photogBalance').innerText = w + b - s;
-            document.getElementById('photogLocationsList').innerHTML = Object.keys(locs).map(l => `<div class="flex justify-between bg-white/5 p-2 rounded-lg border border-white/5"><span>${l}</span><span class="text-blue-400 font-bold">${locs[l]} أيام</span></div>`).join('') || 'لا توجد أعمال مكتملة';
+            const tW = document.getElementById('photogTotalWages'), tB = document.getElementById('photogTotalBonuses'), tS = document.getElementById('photogTotalWithdrawals'), bL = document.getElementById('photogBalance');
+            if(tW) tW.innerText = w; if(tB) tB.innerText = b; if(tS) tS.innerText = s; if(bL) bL.innerText = w + b - s;
+            const lC = document.getElementById('photogLocationsList'); if(lC) lC.innerHTML = Object.keys(locs).map(l => `<div class="flex justify-between bg-white/5 p-2 rounded-lg border border-white/5"><span>${l}</span><span class="text-blue-400 font-bold">${locs[l]} أيام</span></div>`).join('') || 'لا توجد أعمال مكتملة';
             const upcoming = state.bookings.filter(bk => bk.status==='pending' && bk.photographers?.some(p=>p.name===currentPhotogName) && new Date(bk.date) >= new Date().setHours(0,0,0,0));
-            document.getElementById('photogAssignmentsList').innerHTML = upcoming.map(bk => `<div class="glass p-4 rounded-xl border-r-4 border-yellow-500 relative"><h4 class="font-bold text-white text-sm">${bk.name}</h4><p class="text-[10px] text-zinc-400">${new Date(bk.date).toLocaleDateString('ar-EG')}</p></div>`).join('') || 'لا يوجد مهام جديدة';
+            const aC = document.getElementById('photogAssignmentsList'); if(aC) aC.innerHTML = upcoming.map(bk => `<div class="glass p-4 rounded-xl border-r-4 border-yellow-500 relative"><h4 class="font-bold text-white text-sm">${bk.name}</h4><p class="text-[10px] text-zinc-400">${new Date(bk.date).toLocaleDateString('ar-EG')}</p></div>`).join('') || 'لا يوجد مهام جديدة';
             lucide.createIcons();
         }
 
-        // Logic Actions
         function photogWithdraw() {
             const a = parseFloat(document.getElementById('photogWithdrawAmount').value), n = document.getElementById('photogWithdrawNote').value.trim();
             if(!a||a<=0) return;
-            state.dailyEntries.push({id:Date.now(), note:`سحب مالي للمصور: ${currentPhotogName}${n?' - '+n:''}`, income:0, photographers:[], totalExpenses:a, time:new Date().toLocaleTimeString('ar-EG'), date:new Date().toISOString().split('T')[0]});
+            state.dailyEntries.push({id:Date.now(), note:`سحب مالي للمصور: ${currentPhotogName}${n?' - '+n:''}`, income:0, photographers: [], totalExpenses:a, time:new Date().toLocaleTimeString('ar-EG'), date:new Date().toISOString().split('T')[0]});
             saveState(); renderPhotogDashboard(); showToast("تم تسجيل السحب");
         }
         function sendMsgToAdmin() { const m = document.getElementById('photogMsgToAdmin').value; if(m) window.open(`https://wa.me/201097576073?text=${encodeURIComponent('رسالة من: '+currentPhotogName+'\n'+m)}`, '_blank'); }
 
-        function adminAddBonus() {
-            const p = document.getElementById('adminBonusPhotog').value, a = parseFloat(document.getElementById('adminBonusAmount').value), n = document.getElementById('adminBonusNote').value.trim();
-            if(!p||!a) return;
-            state.dailyEntries.push({id:Date.now(), note: `مكافأة إضافية للمصور: ${p}${n?' - '+n:''}`, income:0, photographers:[], totalExpenses:a, time:new Date().toLocaleTimeString('ar-EG'), date:new Date().toISOString().split('T')[0]});
-            saveState(); refreshAllViews(); showToast("تم منح المكافأة");
-        }
-        function deleteEntry(id) { const i = state.dailyEntries.findIndex(x=>x.id===id); if(i>-1) { state.dailyEntries.splice(i,1); saveState(); refreshAllViews(); showToast("تم الحذف"); } }
-        function deleteBooking(id) { const i = state.bookings.findIndex(b=>b.id===id); if(i>-1) { state.bookings.splice(i,1); saveState(); refreshAllViews(); showToast("تم الحذف"); } }
-        function completePayment(id) { const b = state.bookings.find(x=>x.id===id); if(b) { b.status='completed'; b.balance=0; saveState(); refreshAllViews(); showToast("تم التحصيل"); }}
-
         // Utils
         function copyPhotogLink(name) { const url = window.location.origin + window.location.pathname + '?photog=' + encodeURIComponent(name); const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); showToast("تم النسخ"); }
         function sendWhatsApp(id) { const b = state.bookings.find(x=>x.id===id); if(b) window.open(`https://wa.me/${(b.phone||'').replace('+','') || ''}?text=${encodeURIComponent('تفاصيل حجزك في المراكبى:\n'+b.name+'\n'+new Date(b.date).toLocaleDateString('ar-EG'))}`, '_blank'); }
-        function toggleTemplateManager() { document.getElementById('templateManager').classList.toggle('hidden'); }
-        function togglePhotogManager() { document.getElementById('photogManager').classList.toggle('hidden'); }
-        function toggleServiceManager() { document.getElementById('serviceManager').classList.toggle('hidden'); }
+        function toggleTemplateManager() { const el = document.getElementById('templateManager'); if(el) el.classList.toggle('hidden'); }
+        function togglePhotogManager() { const el = document.getElementById('photogManager'); if(el) el.classList.toggle('hidden'); }
+        function toggleServiceManager() { const el = document.getElementById('serviceManager'); if(el) el.classList.toggle('hidden'); }
         function addNewTemplate() { state.templates.push({ id: Date.now(), name: 'قاعة جديدة', price: 0 }); saveState(); renderTemplates(); }
         function addNewPhotographer() { state.photographers.push({ id: Date.now(), name: 'مصور جديد', fee: 0, deviceId: null }); saveState(); renderPhotographers(); }
         function addNewService() { state.services.push({ id: Date.now(), name: 'خدمة جديدة', price: 0 }); saveState(); renderServices(); }
-        function openBookingForDate(d) { showTab('bookings'); document.getElementById('bookingDate').value = d; showToast("تم تحديد التاريخ"); }
-        function updateFiltersUI() { const bP = document.getElementById('filterBookingPhotog'), dP = document.getElementById('filterDailyPhotog'), aB = document.getElementById('adminBonusPhotog'); if(bP) bP.innerHTML = '<option value="">الكل</option>' + state.photographers.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); if(dP) dP.innerHTML = '<option value="">الكل</option>' + state.photographers.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); if(aB) aB.innerHTML = '<option value="">اختر</option>' + state.photographers.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''); }
-        function updateFlashInventoryUI() { const fc = document.getElementById('flashCountDisplay'); const fv = document.getElementById('flashTotalValueDisplay'); if(fc) fc.innerText = state.inventory.flashesCount; if(fv) fv.innerText = state.inventory.flashesTotalValue + " ج.م"; }
+        function openBookingForDate(d) { showTab('bookings'); const bD = document.getElementById('bookingDate'); if(bD) bD.value = d; showToast("تم تحديد التاريخ"); }
         function saveFlashInventory() { state.inventory.flashesCount = parseInt(document.getElementById('editFlashCount').value)||0; state.inventory.flashesTotalValue = parseFloat(document.getElementById('editFlashValue').value)||0; saveState(); updateFlashInventoryUI(); toggleFlashInventoryEdit(); }
+        function toggleFlashInventoryEdit() { const f = document.getElementById('flashInventoryEditForm'); if(f) f.classList.toggle('hidden'); }
 
     </script>
 </body>
