@@ -579,7 +579,7 @@
             const log = document.getElementById('recentBookings'); if(!log) return;
             log.innerHTML = '';
             state.dailyEntries.slice(-5).reverse().forEach(act => {
-                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition";
+                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:bg-white/5";
                 d.onclick = () => window.showEntryDetails(act.id);
                 d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[9px] text-zinc-500">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-xs">+${act.income}</span>`;
                 log.appendChild(d);
@@ -613,9 +613,9 @@
                         </div>
                     </td>
                     <td class="p-3 flex gap-2 justify-center items-center h-full" onclick="event.stopPropagation()">
-                        <button onclick="window.openWhatsAppModal(${b.id})" class="p-2 text-green-500 bg-green-500/10 rounded-lg transition flex items-center justify-center" title="قوالب واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
-                        <button onclick="window.editBooking(${b.id})" class="p-2 text-blue-400 bg-blue-500/10 rounded-lg transition flex items-center justify-center" title="تعديل الحجز"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                        <button onclick="window.deleteBooking(${b.id})" class="p-2 text-red-500 bg-red-500/10 rounded-lg transition flex items-center justify-center" title="حذف الحجز"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="window.openWhatsAppModal(${b.id})" class="p-2 text-green-500 bg-green-500/10 rounded-lg transition flex items-center justify-center hover:bg-green-500/20" title="قوالب واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
+                        <button onclick="window.editBooking(${b.id})" class="p-2 text-blue-400 bg-blue-500/10 rounded-lg transition flex items-center justify-center hover:bg-blue-500/20" title="تعديل الحجز"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="window.deleteBooking(${b.id})" class="p-2 text-red-500 bg-red-500/10 rounded-lg transition flex items-center justify-center hover:bg-red-500/20" title="حذف الحجز"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>`
             }).join('');
@@ -627,10 +627,10 @@
             grid.innerHTML = state.services.map((s, i) => {
                 const isSelected = state.selectedServices.some(x => x.name === s.name);
                 const btnClass = isSelected ? 'bg-cinema-red text-white' : '';
-                return `<button id="svc-btn-${i}" onclick="window.toggleService(${i})" class="service-btn glass p-3 text-sm text-right flex justify-between items-center transition rounded-xl ${btnClass}"><span>${s.name}</span><span class="text-xs text-zinc-400">${s.price}</span></button>`;
+                return `<button id="svc-btn-${i}" onclick="window.toggleService(${i})" class="service-btn glass p-3 text-sm text-right flex justify-between items-center transition rounded-xl hover:bg-white/5 ${btnClass}"><span>${s.name}</span><span class="text-xs text-zinc-400">${s.price}</span></button>`;
             }).join('');
             const eList = document.getElementById('serviceEditList');
-            if(eList) eList.innerHTML = state.services.map((s, i) => `<div class="flex gap-2 items-center"><input type="text" value="${s.name}" onchange="state.services[${i}].name=this.value;window.saveState();window.renderServices();" class="flex-grow p-1 text-xs"><input type="number" value="${s.price}" onchange="state.services[${i}].price=parseFloat(this.value);window.saveState();window.renderServices();" class="w-16 p-1 text-xs text-center"><button onclick="state.services.splice(${i},1);window.saveState();window.renderServices();" class="text-red-500 transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
+            if(eList) eList.innerHTML = state.services.map((s, i) => `<div class="flex gap-2 items-center"><input type="text" value="${s.name}" onchange="state.services[${i}].name=this.value;window.saveState();window.renderServices();" class="flex-grow p-1 text-xs"><input type="number" value="${s.price}" onchange="state.services[${i}].price=parseFloat(this.value);window.saveState();window.renderServices();" class="w-16 p-1 text-xs text-center"><button onclick="state.services.splice(${i},1);window.saveState();window.renderServices();" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
             lucide.createIcons();
         };
 
@@ -638,7 +638,7 @@
             const grid = document.getElementById('templatesGrid'); if(!grid) return;
             grid.innerHTML = state.templates.map((t, i) => `<button onclick="document.getElementById('incomeNote').value='${t.name}';document.getElementById('incomeAmount').value='${t.price}';" class="p-3 glass hover:bg-emerald-500/10 text-xs text-right border-r-2 border-r-emerald-500 rounded-xl flex justify-between transition"><span>${t.name}</span><span class="text-emerald-400">${t.price}</span></button>`).join('');
             const eList = document.getElementById('templateEditList');
-            if(eList) eList.innerHTML = state.templates.map((t, i) => `<div class="flex gap-2 items-center"><input type="text" value="${t.name}" onchange="state.templates[${i}].name=this.value;window.saveState();window.renderTemplates();" class="flex-grow p-1 text-xs"><input type="number" value="${t.price}" onchange="state.templates[${i}].price=parseFloat(this.value);window.saveState();window.renderTemplates();" class="w-16 p-1 text-xs"><button onclick="state.templates.splice(${i},1);window.saveState();window.renderTemplates();" class="text-red-500 transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
+            if(eList) eList.innerHTML = state.templates.map((t, i) => `<div class="flex gap-2 items-center"><input type="text" value="${t.name}" onchange="state.templates[${i}].name=this.value;window.saveState();window.renderTemplates();" class="flex-grow p-1 text-xs"><input type="number" value="${t.price}" onchange="state.templates[${i}].price=parseFloat(this.value);window.saveState();window.renderTemplates();" class="w-16 p-1 text-xs"><button onclick="state.templates.splice(${i},1);window.saveState();window.renderTemplates();" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
             lucide.createIcons();
         };
 
@@ -658,7 +658,7 @@
                 
                 bL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 booking-photog-check" data-name="${p.name}" data-fee="${p.fee}" ${isSelectedInEdit}><div class="flex-grow flex items-center justify-between"><span class="text-[12px] font-bold">${p.name}</span><span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-bold">${count} عمل</span></div></label>`;
                 
-                eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="w-20 p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="window.copyPhotogLink('${p.name}')" class="text-blue-400 transition"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="state.photographers[${i}].deviceId=null;window.saveState();window.showToast('تم فك القفل')" class="text-yellow-400 transition"><i data-lucide="unlock" class="w-3 h-3"></i></button><button onclick="state.photographers.splice(${i},1);window.saveState();window.renderPhotographers();" class="text-red-500 transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
+                eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="w-20 p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="window.copyPhotogLink('${p.name}')" class="text-blue-400 transition hover:bg-white/5 p-1 rounded"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="state.photographers[${i}].deviceId=null;window.saveState();window.showToast('تم فك القفل')" class="text-yellow-400 transition hover:bg-white/5 p-1 rounded"><i data-lucide="unlock" class="w-3 h-3"></i></button><button onclick="state.photographers.splice(${i},1);window.saveState();window.renderPhotographers();" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
             });
             lucide.createIcons(); window.updateFiltersUI();
         };
@@ -670,19 +670,22 @@
             const incomeLbl = document.getElementById('dailyIncomeLabel'), expLbl = document.getElementById('dailyExpenseLabel');
             if(incomeLbl) incomeLbl.innerText = `+${r}`; if(expLbl) expLbl.innerText = `-${x}`;
             const logContainer = document.getElementById('dailyEntryLog'); if(!logContainer) return;
-            logContainer.innerHTML = filtered.slice().reverse().map(e => `<div onclick="window.showEntryDetails(${e.id})" class="glass p-3 rounded-xl border-r-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition"><div class="flex justify-between items-start mb-2"><div><p class="font-bold text-xs text-white">${e.note}</p><p class="text-[8px] text-zinc-500">${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-[11px]">+${e.income}</span></div><div class="flex flex-wrap gap-1">${e.photographers?.map(p=>`<span class="entry-chip text-[9px] text-blue-400">${p.name} (-${p.totalFee})</span>`).join('')||''}${e.gear?`<span class="entry-chip text-[9px] text-indigo-400">معدات (-${e.gear.amount})</span>`:''}${e.flash?`<span class="entry-chip text-[9px] text-yellow-400">فلاشة (-50)</span>`:''}</div><div class="mt-2 pt-2 border-t border-white/5 flex justify-between"><span class="text-[9px] text-zinc-400">الصافي: ${e.income-e.totalExpenses}</span><button onclick="event.stopPropagation(); window.deleteEntry(${e.id})" class="text-red-500 transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`).join('');
+            logContainer.innerHTML = filtered.slice().reverse().map(e => `<div onclick="window.showEntryDetails(${e.id})" class="glass p-3 rounded-xl border-r-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition"><div class="flex justify-between items-start mb-2"><div><p class="font-bold text-xs text-white">${e.note}</p><p class="text-[8px] text-zinc-500">${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-[11px]">+${e.income}</span></div><div class="flex flex-wrap gap-1">${e.photographers?.map(p=>`<span class="entry-chip text-[9px] text-blue-400">${p.name} (-${p.totalFee})</span>`).join('')||''}${e.gear?`<span class="entry-chip text-[9px] text-indigo-400">معدات (-${e.gear.amount})</span>`:''}${e.flash?`<span class="entry-chip text-[9px] text-yellow-400">فلاشة (-50)</span>`:''}</div><div class="mt-2 pt-2 border-t border-white/5 flex justify-between"><span class="text-[9px] text-zinc-400">الصافي: ${e.income-e.totalExpenses}</span><button onclick="event.stopPropagation(); window.deleteEntry(${e.id})" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`).join('');
             lucide.createIcons();
         };
 
         window.renderReports = function() {
             const pS = {}, hS = {}; let tW = 0, tI = 0, tE = 0;
+            
+            // Build the statistics first
             state.dailyEntries.forEach(e => {
-                if(e.note.startsWith('سحب مالي للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[n].withdrawals += e.totalExpenses; tE += e.totalExpenses; return; }
-                if(e.note.startsWith('مكافأة إضافية للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[n].bonuses += e.totalExpenses; tE += e.totalExpenses; return; }
+                if(e.note.startsWith('سحب مالي للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[n].withdrawals += e.totalExpenses; tE += e.totalExpenses; return; }
+                if(e.note.startsWith('مكافأة إضافية للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[n].bonuses += e.totalExpenses; tE += e.totalExpenses; return; }
                 if(!hS[e.note]) hS[e.note] = { jobs: 0, income: 0 }; hS[e.note].jobs++; hS[e.note].income += e.income; tI += e.income; tE += e.totalExpenses;
-                e.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[p.name].jobs++; pS[p.name].wages += p.totalFee; tW += p.totalFee; });
+                e.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[p.name].jobs++; pS[p.name].wages += p.totalFee; pS[p.name].locs[e.note] = (pS[p.name].locs[e.note] || 0) + 1; tW += p.totalFee; });
             });
-            state.bookings.forEach(bk => { if(bk.status==='completed') { const l = 'حجوزات الاستوديو'; if(!hS[l]) hS[l] = { jobs: 0, income: 0 }; hS[l].jobs++; hS[l].income += bk.total; tI += bk.total; bk.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 }; pS[p.name].jobs++; pS[p.name].wages += p.fee; tW += p.fee; tE += p.fee; }); }});
+            state.bookings.forEach(bk => { if(bk.status==='completed') { const l = 'حجوزات الاستوديو'; if(!hS[l]) hS[l] = { jobs: 0, income: 0 }; hS[l].jobs++; hS[l].income += bk.total; tI += bk.total; bk.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[p.name].jobs++; pS[p.name].wages += p.fee; pS[p.name].locs[l] = (pS[p.name].locs[l] || 0) + 1; tW += p.fee; tE += p.fee; }); }});
+            
             const wL = document.getElementById('reportTotalWages'), nL = document.getElementById('reportNetProfit');
             if(wL) wL.innerText = tW + " ج.م"; if(nL) nL.innerText = (tI - tE) + " ج.م";
             
@@ -690,13 +693,14 @@
             if(pR) {
                 pR.innerHTML = Object.keys(pS).map(n => { 
                     const net = pS[n].wages + pS[n].bonuses - pS[n].withdrawals; 
-                    return `<div onclick="window.showPhotogDetails('${n}')" class="glass p-4 rounded-xl border-r-4 border-blue-500 hover:bg-white/5 transition cursor-pointer mb-3">
+                    return `
+                    <div onclick="window.showPhotogDetails('${n}')" class="glass p-4 rounded-xl border-r-4 border-blue-500 hover:bg-white/5 transition cursor-pointer mb-3">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex items-center gap-2">
                                 <div class="bg-blue-500/20 p-2 rounded-full"><i data-lucide="camera" class="w-4 h-4 text-blue-400"></i></div>
                                 <h5 class="font-bold text-white text-sm">${n}</h5>
                             </div>
-                            <div class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-[10px] font-bold">
+                            <div class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-[10px] font-bold border border-blue-500/30">
                                 ${pS[n].jobs} أيام عمل
                             </div>
                         </div>
@@ -722,46 +726,148 @@
                 }).join('');
             }
             
-            const hR = document.getElementById('reportHalls'); if(hR) hR.innerHTML = Object.keys(hS).map(n => `<div onclick="window.showHallDetails('${n}')" class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition cursor-pointer"><div><p class="font-bold text-xs text-white">${n}</p><p class="text-[8px] text-zinc-400">مرات التسجيل: ${hS[n].jobs}</p></div><p class="font-bold text-xs text-emerald-400">${hS[n].income} ج.م</p></div>`).join('');
-        };
-
-        window.showBookingDetails = function(id) {
-            const b = state.bookings.find(x => x.id === id); if(!b) return;
-            const receiptHtml = b.paymentReceipt ? `<div class="glass p-3 rounded-lg mt-4 border border-blue-500/30"><p class="text-xs text-blue-400 mb-2 font-bold"><i data-lucide="receipt" class="w-4 h-4 inline"></i> إيصال سداد إلكتروني مرفق</p><img src="${b.paymentReceipt}" class="w-full rounded-lg max-h-64 object-contain mb-3 bg-black/50 p-2"><button onclick="window.completePayment(${b.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg text-sm font-bold transition">تأكيد الدفع وتحصيل المبلغ المتبقي</button></div>` : '';
-            
-            const html = `<div class="space-y-4 text-white"><div class="grid grid-cols-2 gap-4"><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">العميل</p><p class="font-bold text-sm">${b.name}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">التاريخ</p><p class="font-bold text-sm">${new Date(b.date).toLocaleDateString('ar-EG')}</p></div></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الخدمات</p><p class="text-sm font-bold">${b.services?.map(s=>s.name).join('، ')||'لا يوجد'}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المصورين</p><p class="text-sm font-bold">${b.photographers?.map(p=>p.name).join('، ')||'لا يوجد'}</p></div><div class="grid grid-cols-3 gap-2 mt-4 text-center"><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الإجمالي</p><p class="font-bold">${b.total}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المقدم</p><p class="text-emerald-400 font-bold">${b.deposit}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الباقي</p><p class="text-red-400 font-bold">${b.balance}</p></div></div>${receiptHtml}</div>`;
-            window.showStatsModal(`كشف حجز: ${b.name}`, html);
-        };
-
-        window.showEntryDetails = function(id) {
-            const e = state.dailyEntries.find(x => x.id === id); if(!e) return;
-            const html = `<div class="space-y-4 text-white"><div class="glass p-4 rounded-xl border-r-4 border-emerald-500"><div class="flex justify-between border-b border-white/5 pb-2"><span class="text-zinc-400">دخل العملية</span><span class="font-bold text-emerald-400">+${e.income} ج.م</span></div><div class="mt-2"><p class="text-[10px] text-zinc-500 mb-2">مصروفات وتكاليف:</p>${e.photographers?.map(p=>`<div class="flex justify-between text-[11px]"><span class="text-blue-300">${p.name}</span><span class="text-red-400">-${p.totalFee}</span></div>`).join('')||''}${e.gear?`<div class="flex justify-between text-[11px]"><span class="text-indigo-400">${e.gear.note}</span><span class="text-red-400">-${e.gear.amount}</span></div>`:''}${e.flash?`<div class="flex justify-between text-[11px]"><span class="text-yellow-400">فلاشة</span><span class="text-red-400">-50</span></div>`:''}</div><div class="mt-3 pt-3 border-t border-white/5 flex justify-between font-bold text-sm"><span>الصافي</span><span class="text-white">${e.income - e.totalExpenses} ج.م</span></div></div></div>`;
-            window.showStatsModal(`تفاصيل: ${e.note}`, html);
-        };
-
-        window.showDashboardDetails = function(type) {
-            let title = '', items = [];
-            if(type === 'revenue') { title = 'كشف الإيرادات'; state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); state.dailyEntries.forEach(d => d.income > 0 && items.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date||d.id})); }
-            else if(type === 'expenses') { title = 'كشف المصروفات'; state.bookings.forEach(b => b.status === 'completed' && b.photographers?.forEach(p => items.push({id:b.id, type:'booking', text:`أجر: ${p.name}`, val:p.fee, c:'text-red-400', s:'-', date:b.date}))); state.dailyEntries.forEach(d => d.totalExpenses > 0 && items.push({id:d.id, type:'entry', text:d.note, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date||d.id})); }
-            else { title = 'كشف الأرباح'; state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); state.dailyEntries.forEach(d => { if(d.income>0) items.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date}); if(d.totalExpenses>0) items.push({id:d.id, type:'entry', text:`مصاريف: ${d.note}`, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date}); }); }
-            items.sort((a,b) => new Date(b.date) - new Date(a.date));
-            const html = items.length ? items.map(i => `<div onclick="window.closeStatsModal(); ${i.type==='booking' ? `window.showBookingDetails(${i.id})` : `window.showEntryDetails(${i.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="font-bold text-xs text-white">${i.text}</p><p class="text-[9px] text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="font-bold text-xs ${i.c}">${i.s}${i.val}</span></div>`).join('') : '<p class="text-zinc-500 text-center py-4">لا يوجد</p>';
-            window.showStatsModal(title, html);
+            const hR = document.getElementById('reportHalls'); 
+            if(hR) {
+                hR.innerHTML = Object.keys(hS).map(n => `<div onclick="window.showHallDetails('${n}')" class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition cursor-pointer mb-2"><div><p class="font-bold text-xs text-white">${n}</p><p class="text-[8px] text-zinc-400">مرات التسجيل: ${hS[n].jobs}</p></div><p class="font-bold text-xs text-emerald-400">${hS[n].income} ج.م</p></div>`).join('');
+            }
         };
 
         window.showPhotogDetails = function(name) {
-            let items = []; state.bookings.forEach(b => { if(b.status === 'completed' && b.photographers?.some(p=>p.name===name)) items.push({id:b.id, type:'booking', date:b.date, text:`حجز: ${b.name}`, val:b.photographers.find(x=>x.name===name).fee, c:'text-blue-400', s:'+'}); });
-            state.dailyEntries.forEach(d => { if(d.note.startsWith(`سحب مالي للمصور: ${name}`)) items.push({id:d.id, type:'entry', date:d.date||d.id, text:d.note, val:d.totalExpenses, c:'text-red-400', s:'-'}); else if(d.note.startsWith(`مكافأة إضافية للمصور: ${name}`)) items.push({id:d.id, type:'entry', date:d.date||d.id, text:d.note, val:d.totalExpenses, c:'text-yellow-400', s:'+'}); else if(d.photographers?.some(p=>p.name===name)) items.push({id:d.id, type:'entry', date:d.date||d.id, text:d.note, val:d.photographers.find(p=>p.name===name).totalFee, c:'text-blue-400', s:'+'}); });
+            let items = []; 
+            let stats = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0 };
+            let locs = {};
+
+            state.bookings.forEach(b => { 
+                if(b.status === 'completed' && b.photographers?.some(p=>p.name===name)) {
+                    let fee = b.photographers.find(x=>x.name===name).fee;
+                    stats.jobs++;
+                    stats.wages += fee;
+                    locs['حجوزات الاستوديو'] = (locs['حجوزات الاستوديو'] || 0) + 1;
+                    items.push({id:b.id, type:'booking', date:b.date, text:`حجز: ${b.name}`, val:fee, c:'text-blue-400', s:'+'}); 
+                }
+            });
+            
+            state.dailyEntries.forEach(d => { 
+                if(d.note.startsWith(`سحب مالي للمصور: ${name}`)) {
+                    stats.withdrawals += d.totalExpenses;
+                    items.push({id:d.id, type:'entry', date:d.date||d.id, text:d.note, val:d.totalExpenses, c:'text-red-400', s:'-'}); 
+                }
+                else if(d.note.startsWith(`مكافأة إضافية للمصور: ${name}`)) {
+                    stats.bonuses += d.totalExpenses;
+                    items.push({id:d.id, type:'entry', date:d.date||d.id, text:d.note, val:d.totalExpenses, c:'text-yellow-400', s:'+'}); 
+                }
+                else if(d.photographers?.some(p=>p.name===name)) {
+                    let fee = d.photographers.find(p=>p.name===name).totalFee;
+                    stats.jobs++;
+                    stats.wages += fee;
+                    locs[d.note] = (locs[d.note] || 0) + 1;
+                    items.push({id:d.id, type:'entry', date:d.date||d.id, text:d.note, val:fee, c:'text-blue-400', s:'+'}); 
+                }
+            });
+            
             items.sort((a,b) => new Date(b.date) - new Date(a.date));
-            const html = items.map(i => `<div onclick="window.closeStatsModal(); ${i.type==='booking' ? `window.showBookingDetails(${i.id})` : `window.showEntryDetails(${i.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="text-white text-[11px] font-bold">${i.text}</p><p class="text-[9px] text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold ${i.c}">${i.s}${i.val}</span></div>`).join('') || '<p class="text-zinc-500 text-center py-4">لا يوجد</p>';
-            window.showStatsModal(`كشف حساب: ${name}`, html);
+            let net = stats.wages + stats.bonuses - stats.withdrawals;
+            
+            let locHtml = Object.keys(locs).map(l => `<div class="bg-black/30 p-2 rounded-lg border border-white/5 flex justify-between items-center"><span class="text-[10px] text-zinc-300">${l}</span><span class="text-[10px] font-bold text-emerald-400">${locs[l]} أيام</span></div>`).join('');
+            if(!locHtml) locHtml = '<p class="text-[10px] text-zinc-500">لم يتم تسجيل أعمال بعد</p>';
+
+            let statsHtml = `
+                <div class="glass p-4 rounded-xl mb-6 border border-white/10 shadow-lg">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-center">
+                        <div class="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                            <p class="text-[9px] text-blue-300 mb-1">أيام العمل</p>
+                            <p class="font-bold text-blue-400">${stats.jobs}</p>
+                        </div>
+                        <div class="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                            <p class="text-[9px] text-emerald-300 mb-1">الأجور</p>
+                            <p class="font-bold text-emerald-400">${stats.wages}</p>
+                        </div>
+                        <div class="bg-yellow-500/10 p-2 rounded-lg border border-yellow-500/20">
+                            <p class="text-[9px] text-yellow-300 mb-1">المكافآت</p>
+                            <p class="font-bold text-yellow-400">${stats.bonuses}</p>
+                        </div>
+                        <div class="bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+                            <p class="text-[9px] text-red-300 mb-1">المسحوبات</p>
+                            <p class="font-bold text-red-400">${stats.withdrawals}</p>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg border border-white/10 flex justify-between items-center mb-4">
+                        <span class="text-xs text-zinc-300">الرصيد الصافي المستحق:</span>
+                        <span class="text-lg font-bold ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span>
+                    </div>
+                    <div>
+                        <h5 class="text-[11px] font-bold text-zinc-400 mb-2 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> أماكن العمل:</h5>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            ${locHtml}
+                        </div>
+                    </div>
+                </div>
+                <h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات المالية:</h4>
+            `;
+
+            const historyHtml = items.map(i => `<div onclick="window.closeStatsModal(); ${i.type==='booking' ? `window.showBookingDetails(${i.id})` : `window.showEntryDetails(${i.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="text-white text-[11px] font-bold">${i.text}</p><p class="text-[9px] text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold ${i.c}">${i.s}${i.val}</span></div>`).join('') || '<p class="text-zinc-500 text-center py-4">لا يوجد سجل حركات</p>';
+            
+            window.showStatsModal(`تفاصيل المصور: ${name}`, statsHtml + historyHtml);
         };
 
         window.showHallDetails = function(note) {
-            let items = []; if(note === 'حجوزات الاستوديو') state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', date:b.date, val:b.total, text:b.name})); else state.dailyEntries.forEach(d => d.note === note && items.push({id:d.id, type:'entry', date:d.date||d.id, val:d.income, text:d.note}));
+            let items = []; 
+            let stats = { jobs: 0, income: 0, expenses: 0 };
+
+            if(note === 'حجوزات الاستوديو') {
+                state.bookings.forEach(b => { 
+                    if(b.status === 'completed') {
+                        stats.jobs++;
+                        stats.income += b.total;
+                        let exp = 0;
+                        if(b.photographers) {
+                            b.photographers.forEach(p => exp += p.fee);
+                        }
+                        stats.expenses += exp;
+                        items.push({id:b.id, type:'booking', date:b.date, val:b.total, text:b.name});
+                    }
+                });
+            } else {
+                state.dailyEntries.forEach(d => { 
+                    if(d.note === note) {
+                        stats.jobs++;
+                        stats.income += d.income;
+                        stats.expenses += d.totalExpenses;
+                        items.push({id:d.id, type:'entry', date:d.date||d.id, val:d.income, text:d.note});
+                    }
+                });
+            }
+
             items.sort((a,b) => new Date(b.date) - new Date(a.date));
-            const html = items.map(i => `<div onclick="window.closeStatsModal(); ${i.type==='booking' ? `window.showBookingDetails(${i.id})` : `window.showEntryDetails(${i.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="text-white text-[11px] font-bold">${i.text}</p><p class="text-[9px] text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold text-emerald-400">+${i.val}</span></div>`).join('') || '<p class="text-zinc-500 text-center py-4">لا يوجد</p>';
-            window.showStatsModal(`تفاصيل: ${note}`, html);
+            let net = stats.income - stats.expenses;
+
+            let statsHtml = `
+                <div class="glass p-4 rounded-xl mb-6 border border-white/10 shadow-lg">
+                    <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+                        <div class="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                            <p class="text-[9px] text-blue-300 mb-1">مرات التسجيل</p>
+                            <p class="font-bold text-blue-400">${stats.jobs}</p>
+                        </div>
+                        <div class="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                            <p class="text-[9px] text-emerald-300 mb-1">الإيرادات</p>
+                            <p class="font-bold text-emerald-400">${stats.income}</p>
+                        </div>
+                        <div class="bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+                            <p class="text-[9px] text-red-300 mb-1">المصروفات</p>
+                            <p class="font-bold text-red-400">${stats.expenses}</p>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg border border-white/10 flex justify-between items-center">
+                        <span class="text-xs text-zinc-300">صافي الربح المستحق:</span>
+                        <span class="text-lg font-bold ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span>
+                    </div>
+                </div>
+                <h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>
+            `;
+
+            const historyHtml = items.map(i => `<div onclick="window.closeStatsModal(); ${i.type==='booking' ? `window.showBookingDetails(${i.id})` : `window.showEntryDetails(${i.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="text-white text-[11px] font-bold">${i.text}</p><p class="text-[9px] text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold text-emerald-400">+${i.val} ج.م</span></div>`).join('') || '<p class="text-zinc-500 text-center py-4">لا يوجد</p>';
+            
+            window.showStatsModal(`تفاصيل المكان/القاعة: ${note}`, statsHtml + historyHtml);
         };
 
         // --- General Updates & Boot ---
