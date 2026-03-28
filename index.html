@@ -91,6 +91,19 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #e11d48; }
         
+        .entry-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.3s;
+        }
+        .entry-chip:hover { background: rgba(255, 255, 255, 0.1); }
+        
         .calendar-day {
             aspect-ratio: 1;
             display: flex;
@@ -107,12 +120,20 @@
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen relative">
 
     <!-- شاشة التحميل الفورية لتغطية التأخير -->
     <div id="appLoader">
         <div class="spinner"></div>
         <p style="color: #a1a1aa; font-weight: bold; font-size: 14px; margin-top: 10px;">جاري تحميل Cinema Studio Pro...</p>
+    </div>
+
+    <!-- نظام التنبيهات المنبثقة (Toast) -->
+    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 translate-y-24 opacity-0 transition-all duration-300 z-[1000] flex items-center gap-3 bg-zinc-900 border border-white/10 text-white px-4 py-3 rounded-2xl shadow-2xl">
+        <div id="toastIcon" class="bg-emerald-500 p-2 rounded-lg flex items-center justify-center">
+            <i data-lucide="check" class="w-4 h-4 text-white"></i>
+        </div>
+        <p id="toastMessage" class="text-sm font-bold m-0"></p>
     </div>
 
     <!-- Login Overlay -->
@@ -1435,12 +1456,17 @@
             document.getElementById('photogPortal').classList.remove('hidden');
             document.getElementById('portalPhotogName').innerText = "مرحباً: " + name;
             
-            // تهيئة نظام إشعارات المتصفح للمصورين
+            // تهيئة نظام إشعارات المتصفح للمصورين بشكل آمن لمنع تعطل النظام
             window.isFirstPhotogLoad = true;
             window.knownAssignmentIds = [];
-            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-                Notification.requestPermission();
-            }
+            try {
+                if ("Notification" in window && window.Notification && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    const permPromise = Notification.requestPermission();
+                    if (permPromise && typeof permPromise.then === 'function') {
+                        permPromise.catch(e => console.log('Notification req denied/error', e));
+                    }
+                }
+            } catch(e) { console.log('Notifications not supported'); }
 
             window.renderPhotogDashboard();
         };
@@ -1460,23 +1486,28 @@
             const upcoming = state.bookings.filter(bk => bk.status==='pending' && bk.photographers?.some(p=>p.name===currentPhotogName) && new Date(bk.date) >= new Date().setHours(0,0,0,0));
             
             // --- Notification Logic ---
-            if ("Notification" in window) {
-                upcoming.forEach(bk => {
-                    if (!window.knownAssignmentIds.includes(bk.id)) {
-                        if (!window.isFirstPhotogLoad && Notification.permission === "granted") {
-                            try {
-                                const n = new Notification("🎥 المراكبى: شغل جديد!", {
-                                    body: `تم تكليفك بحجز للعميل (${bk.name}) بتاريخ ${new Date(bk.date).toLocaleDateString('ar-EG')}. افتح البرنامج للتفاصيل.`,
-                                });
-                                n.onclick = function() { window.focus(); };
-                            } catch(e) {}
-                        }
-                        window.knownAssignmentIds.push(bk.id);
+            upcoming.forEach(bk => {
+                if (!window.knownAssignmentIds.includes(bk.id)) {
+                    if (!window.isFirstPhotogLoad) {
+                        const title = "🎥 المراكبى: شغل جديد!";
+                        const body = `تم تكليفك بحجز للعميل (${bk.name}) بتاريخ ${new Date(bk.date).toLocaleDateString('ar-EG')}.`;
+                        try {
+                            if ("Notification" in window && window.Notification && Notification.permission === "granted") {
+                                try {
+                                    const n = new Notification(title, { body: body });
+                                    n.onclick = function() { window.focus(); };
+                                } catch(e) {
+                                    // Fallback for Android Chrome
+                                    window.showToast(title + " - " + body, "success");
+                                }
+                            } else {
+                                window.showToast(title + " - " + body, "success");
+                            }
+                        } catch(err) {}
                     }
-                });
-            } else {
-                upcoming.forEach(bk => { if (!window.knownAssignmentIds.includes(bk.id)) window.knownAssignmentIds.push(bk.id); });
-            }
+                    window.knownAssignmentIds.push(bk.id);
+                }
+            });
             window.isFirstPhotogLoad = false;
             // --------------------------
 
