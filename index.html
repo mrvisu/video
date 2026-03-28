@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cinema Studio Pro | نظام إدارة الاستوديو</title>
+    <!-- إضافة أيقونة الكاميرا لعلامة التبويب -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e11d48'><path d='M15 8V7a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1l7 4V4l-7 4z'/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -144,7 +146,7 @@
                 <h2 id="statsModalTitle" class="text-xl font-bold text-white flex items-center gap-2">
                     <i data-lucide="info" class="w-5 h-5 text-blue-400"></i> <span id="statsModalTitleText">التفاصيل</span>
                 </h2>
-                <button onclick="window.closeStatsModal()" class="text-zinc-400 hover:text-white transition p-1"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <button onclick="window.closeStatsModal()" class="text-zinc-400 hover:text-white transition p-1 hover:scale-110"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div id="statsModalContent" class="overflow-y-auto pr-2 space-y-3 flex-grow"></div>
         </div>
@@ -321,7 +323,6 @@
         <div class="container mx-auto px-4 pb-20">
             <div id="tab-dashboard" class="space-y-8 animate-in fade-in duration-500">
                 
-                <!-- Quick Access Moved to Top -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <button onclick="window.showTab('inventory')" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
                         <i data-lucide="trending-up" class="w-6 h-6 mb-2 text-emerald-500 transition"></i>
@@ -341,7 +342,6 @@
                     </button>
                 </div>
 
-                <!-- Stats Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
                     <div class="glass p-6 border-r-4 border-r-emerald-500 cursor-pointer" onclick="window.showDashboardDetails('revenue')"><p class="text-zinc-400 text-sm">إجمالي الإيرادات</p><h3 class="text-3xl sm:text-4xl font-bold mt-2 text-emerald-400" id="stat-revenue">0</h3></div>
                     <div class="glass p-6 border-r-4 border-r-red-500 cursor-pointer" onclick="window.showDashboardDetails('expenses')"><p class="text-zinc-400 text-sm">إجمالي المصروفات</p><h3 class="text-3xl sm:text-4xl font-bold mt-2 text-red-400" id="stat-expenses">0</h3></div>
@@ -378,7 +378,7 @@
                             <label class="block text-sm text-zinc-400">تفاصيل أخرى</label><textarea id="bookingDetails" class="w-full p-3 min-h-[80px]"></textarea>
                         </div>
                         <div class="space-y-4">
-                            <div class="flex justify-between items-center"><label class="text-sm text-zinc-400">الخدمات</label><button onclick="window.toggleServiceManager()" class="text-[10px] bg-white/5 px-3 py-1 rounded-full border border-white/10 hover:bg-white/10 transition">إدارة</button></div>
+                            <div class="flex justify-between items-center"><label class="text-sm text-zinc-400">الخدمات</label><button onclick="window.toggleServiceManager()" class="text-[10px] bg-white/5 px-2 py-1 rounded-full border border-white/10 hover:bg-white/10 transition">إدارة</button></div>
                             <div id="serviceManager" class="hidden p-4 bg-zinc-900/50 rounded-xl border border-dashed border-white/20 mb-2"><div id="serviceEditList" class="space-y-2 mb-4"></div><button onclick="window.addNewService()" class="w-full p-2 text-[10px] border border-white/10 hover:bg-white/5">+ خدمة</button></div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="servicesGrid"></div>
                             <label class="block text-sm text-zinc-400 mt-4">المصورين</label><div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="bookingPhotographerList"></div>
@@ -579,7 +579,7 @@
             const log = document.getElementById('recentBookings'); if(!log) return;
             log.innerHTML = '';
             state.dailyEntries.slice(-5).reverse().forEach(act => {
-                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:bg-white/5";
+                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:scale-[1.03]";
                 d.onclick = () => window.showEntryDetails(act.id);
                 d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[9px] text-zinc-500">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-xs">+${act.income}</span>`;
                 log.appendChild(d);
