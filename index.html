@@ -544,11 +544,9 @@
             const nextD = new Date(d);
             nextD.setDate(nextD.getDate() + 1);
             const end = nextD.toISOString().split('T')[0].replace(/-/g, '');
-            
-            const title = encodeURIComponent(`🎥 حجز تصوير: ${b.name}`);
+            const title = encodeURIComponent(`حجز استوديو: ${b.name}`);
             const svcs = b.services?.map(s=>s.name).join('، ') || 'غير محدد';
-            const details = encodeURIComponent(`👤 العميل: ${b.name}\n📞 رقم الهاتف: ${b.phone||'لا يوجد'}\n📋 الخدمات: ${svcs}\n📍 العنوان/التفاصيل: ${b.details||'لا توجد'}\n\n✨ تمت الإضافة بواسطة نظام المراكبى`);
-            
+            const details = encodeURIComponent(`رقم العميل: ${b.phone||'لا يوجد'}\nالخدمات: ${svcs}\nالتفاصيل: ${b.details||'لا توجد'}`);
             return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
         };
 
@@ -594,7 +592,7 @@
             const log = document.getElementById('recentBookings'); if(!log) return;
             log.innerHTML = '';
             state.dailyEntries.slice(-5).reverse().forEach(act => {
-                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:bg-white/5";
+                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:scale-[1.03]";
                 d.onclick = () => window.showEntryDetails(act.id);
                 d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[9px] text-zinc-500">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-xs">+${act.income}</span>`;
                 log.appendChild(d);
@@ -1331,7 +1329,7 @@
         window.sendMsgToAdmin = function() { const m = document.getElementById('photogMsgToAdmin').value; if(m) window.open(`https://wa.me/201097576073?text=${encodeURIComponent('رسالة من: '+currentPhotogName+'\n'+m)}`, '_blank'); };
 
         // Utils Setters
-        window.copyPhotogLink = function(name) { const url = window.location.origin + window.location.pathname + '?photog=' + encodeURIComponent(name); const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); window.showToast("تم النسخ"); };
+        window.copyPhotogLink = function(name) { const url = window.location.href.split('?')[0] + '?photog=' + encodeURIComponent(name); const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); window.showToast("تم النسخ"); };
         window.copyPaymentNumber = function() { const t = document.createElement("textarea"); t.value = "01126810107"; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); window.showToast("تم نسخ رقم الدفع بنجاح"); };
         window.changeMonth = function(s) { currentCalMonth += s; if(currentCalMonth<0){currentCalMonth=11;currentCalYear--;} else if(currentCalMonth>11){currentCalMonth=0;currentCalYear++;} window.renderCalendar(); };
         window.toggleTemplateManager = function() { const el = document.getElementById('templateManager'); if(el) el.classList.toggle('hidden'); };
