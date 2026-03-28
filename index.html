@@ -298,6 +298,270 @@
                 <div id="photogLocationsList" class="space-y-2 mb-6 text-xs"></div>
                 <div class="p-4 border border-dashed border-white/20 rounded-xl bg-white/5">
                     <h4 class="text-sm font-bold mb-3 text-white flex items-center gap-2"><i data-lucide="wallet" class="w-4 h-4 text-red-400"></i> سحب مبلغ مالي</h4>
+                    <div class="flex gap-2 flex-col sm        }
+        .bg-cinema-red:hover {
+            background-color: #be123c;
+        }
+        .card-shadow {
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+        /* توهج للحقول بدون زوم */
+        input, select, textarea {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            border-radius: 0.75rem !important;
+            transition: all 0.3s ease-in-out !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #e11d48 !important;
+            outline: none;
+            background: rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 0 15px rgba(225, 29, 72, 0.2) !important;
+        }
+        select option {
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .btn-grad {
+            background: linear-gradient(45deg, #e11d48, #9f1239);
+            transition: 0.3s;
+        }
+        .btn-grad:hover {
+            box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+        }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e11d48; }
+        
+        .entry-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.3s;
+        }
+        .entry-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .calendar-day:hover {
+            z-index: 10;
+        }
+        .has-booking::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 4px;
+            height: 4px;
+            background-color: #e11d48;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4 hidden">
+        <div class="glass p-8 w-full max-w-md text-center card-shadow">
+            <div class="mb-6 flex justify-center">
+                <div class="bg-cinema-red p-4 rounded-full">
+                    <i data-lucide="camera" class="w-10 h-10 text-white"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold mb-2">Cinema Studio <span class="cinema-red">Pro</span></h1>
+            <p class="text-zinc-400 mb-8">نظام الإدارة السينمائي المتكامل</p>
+            <div class="space-y-4">
+                <input type="password" id="loginPass" placeholder="كلمة المرور" class="w-full p-4 text-center text-xl">
+                <button onclick="window.checkLogin()" class="w-full p-4 btn-grad rounded-xl font-bold text-lg">دخول النظام</button>
+            </div>
+            <p id="loginError" class="text-red-500 mt-4 hidden text-sm">كلمة المرور غير صحيحة</p>
+        </div>
+    </div>
+
+    <!-- Device Locked Error for Photographer -->
+    <div id="deviceLockedError" class="fixed inset-0 z-[200] bg-black flex items-center justify-center p-4 hidden">
+        <div class="glass p-8 w-full max-w-md text-center border border-red-500/50">
+            <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-bold text-white mb-2">غير مصرح بالدخول</h2>
+            <p class="text-zinc-400">لقد تم ربط حسابك بجهاز آخر مسبقاً. يرجى التواصل مع إدارة الاستوديو لإعادة تعيين جهازك.</p>
+        </div>
+    </div>
+
+    <!-- Stats Details Modal -->
+    <div id="statsModal" class="fixed inset-0 z-[250] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="glass p-6 w-full max-w-2xl max-h-[85vh] flex flex-col border border-white/10 card-shadow">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
+                <h2 id="statsModalTitle" class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-400"></i> <span id="statsModalTitleText">التفاصيل</span>
+                </h2>
+                <button onclick="window.closeStatsModal()" class="text-zinc-400 hover:text-white transition p-1 hover:scale-110"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div id="statsModalContent" class="overflow-y-auto pr-2 space-y-3 flex-grow"></div>
+        </div>
+    </div>
+
+    <!-- 2. WhatsApp Templates Modal -->
+    <div id="whatsappModal" class="fixed inset-0 z-[300] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="glass p-6 w-full max-w-md card-shadow border border-white/10">
+            <h3 class="text-xl font-bold mb-4 text-white flex items-center gap-2"><i data-lucide="message-circle" class="text-green-500"></i> قوالب رسائل واتساب</h3>
+            <div class="space-y-3">
+                <button onclick="window.sendTemplate('confirm')" class="w-full text-right p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10">
+                    <p class="font-bold text-emerald-400 text-sm mb-1 flex items-center gap-2"><i data-lucide="send" class="w-4 h-4"></i> رسالة تأكيد الحجز + التتبع</p>
+                    <p class="text-[10px] text-zinc-400">ترحيب وشكر للعميل، تفاصيل الحساب المالية، ورابط متابعة حالة العمل الحية.</p>
+                </button>
+                <button onclick="window.sendTemplate('payment')" class="w-full text-right p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10">
+                    <p class="font-bold text-yellow-400 text-sm mb-1 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> مطالبة بالمتبقي (دفع إلكتروني)</p>
+                    <p class="text-[10px] text-zinc-400">طلب تحويل المبلغ المتبقي باحترافية عبر فودافون كاش أو InstaPay.</p>
+                </button>
+                <button onclick="window.sendTemplate('ready')" class="w-full text-right p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10">
+                    <p class="font-bold text-blue-400 text-sm mb-1 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> إشعار جاهزية الاستلام</p>
+                    <p class="text-[10px] text-zinc-400">إبلاغ العميل بانتهاء المونتاج وجاهزية العمل للاستلام في الاستوديو.</p>
+                </button>
+            </div>
+            <button onclick="document.getElementById('whatsappModal').classList.add('hidden')" class="w-full mt-4 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm font-bold transition">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- Client Tracking Portal View -->
+    <div id="clientTrackingPortal" class="hidden min-h-screen bg-black flex flex-col items-center p-4 sm:p-8">
+        <div class="glass w-full max-w-md p-6 sm:p-8 card-shadow space-y-6 animate-in fade-in duration-500">
+            <div class="text-center mb-6">
+                <div class="bg-cinema-red p-4 rounded-full inline-block mb-4 shadow-[0_0_20px_rgba(225,29,72,0.4)]">
+                    <i data-lucide="clapperboard" class="w-8 h-8 text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-1">المراكبى لخدمات الفيديو</h2>
+                <p class="text-emerald-400 text-sm font-bold">بوابة متابعة العملاء</p>
+            </div>
+            
+            <div class="bg-white/5 p-5 rounded-xl space-y-4 border border-white/5 shadow-lg">
+                <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="user" class="w-4 h-4 text-blue-400"></i> العميل:</span>
+                    <span id="trackClientName" class="font-bold text-white text-sm"></span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i> تاريخ الحجز:</span>
+                    <span id="trackDate" class="font-bold text-white text-sm"></span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4 text-pink-400"></i> الخدمات المطلوبة:</span>
+                    <span id="trackServices" class="font-bold text-white text-[11px] max-w-[60%] text-left"></span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="receipt" class="w-4 h-4 text-zinc-300"></i> الإجمالي:</span>
+                    <span id="trackTotal" class="font-bold text-white text-sm"></span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> تم دفع (عربون):</span>
+                    <span id="trackDeposit" class="font-bold text-emerald-400 text-sm"></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i> المتبقي للاستلام:</span>
+                    <span id="trackBalance" class="font-bold text-red-400 text-sm"></span>
+                </div>
+            </div>
+
+            <!-- New Payment / Receipt Upload Section -->
+            <div id="trackPaymentSection" class="hidden mt-6 bg-white/5 p-4 rounded-xl border border-yellow-500/30">
+                <h3 class="text-yellow-400 font-bold mb-2 flex items-center gap-2"><i data-lucide="credit-card" class="w-5 h-5"></i> سداد إلكتروني</h3>
+                <p class="text-xs text-zinc-300 mb-3">متبقي على الحساب: <span id="trackPaymentAmount" class="font-bold text-red-400 text-lg"></span> ج.م</p>
+                <div class="bg-black/50 p-3 rounded-lg mb-4 text-xs text-zinc-400 text-center border border-white/5">
+                    <p class="mb-1">للتحويل عبر فودافون كاش أو إنستاباي:</p>
+                    <button onclick="window.copyPaymentNumber()" class="font-bold text-white text-xl tracking-widest my-2 select-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition border border-white/10 flex items-center justify-center gap-2 mx-auto cursor-pointer">
+                        01126810107 <i data-lucide="copy" class="w-4 h-4 text-emerald-400"></i>
+                    </button>
+                    <p class="text-emerald-400 mt-2">تأكيد الاسم المحول له: <span class="font-bold text-white">محمود م أ</span></p>
+                </div>
+                
+                <div id="trackReceiptContainer">
+                    <label class="block text-xs text-zinc-400 mb-2 font-bold"><i data-lucide="upload-cloud" class="w-3 h-3 inline"></i> إرفاق صورة إيصال التحويل:</label>
+                    <input type="file" id="receiptUpload" accept="image/*" class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 cursor-pointer" onchange="window.handleReceiptUpload(event)">
+                    <input type="hidden" id="trackCurrentBookingId">
+                </div>
+                <div id="trackReceiptPreviewContainer" class="hidden mt-4 text-center">
+                    <p class="text-xs text-emerald-400 mb-2"><i data-lucide="check-circle" class="w-4 h-4 inline"></i> تم استلام إيصال الدفع، جاري مراجعته من قبل الإدارة.</p>
+                    <img id="trackReceiptImage" src="" class="mx-auto rounded-lg border border-white/10 max-h-40 object-contain shadow-lg" alt="إيصال الدفع">
+                </div>
+            </div>
+
+            <!-- Tracking Timeline -->
+            <div class="mt-8 px-4 glass p-6 border-white/5">
+                <h3 class="text-white font-bold mb-6 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-blue-400"></i> حالة العمل الحالية:</h3>
+                <div class="relative border-r-2 border-white/10 pr-6 space-y-8">
+                    <!-- Confirmed -->
+                    <div class="relative transition-all duration-300">
+                        <div id="trackDotConfirmed" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
+                        <p id="trackTextConfirmed" class="font-bold text-zinc-500 text-sm">تم تأكيد الحجز</p>
+                    </div>
+                    <!-- Shooting -->
+                    <div class="relative transition-all duration-300">
+                        <div id="trackDotShooting" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
+                        <p id="trackTextShooting" class="font-bold text-zinc-500 text-sm">قيد التصوير والتجهيز</p>
+                    </div>
+                    <!-- Editing -->
+                    <div class="relative transition-all duration-300">
+                        <div id="trackDotEditing" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
+                        <p id="trackTextEditing" class="font-bold text-zinc-500 text-sm">جاري عمل المونتاج</p>
+                    </div>
+                    <!-- Ready -->
+                    <div class="relative transition-all duration-300">
+                        <div id="trackDotReady" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
+                        <p id="trackTextReady" class="font-bold text-zinc-500 text-sm">جاهز للاستلام</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-center text-[10px] text-zinc-500 pt-6">تتحدث هذه الصفحة تلقائياً لتوافيكم بآخر تطورات حجزكم.</p>
+        </div>
+    </div>
+
+    <!-- Photographer Portal View -->
+    <div id="photogPortal" class="hidden min-h-screen bg-black pb-20">
+        <nav class="glass m-4 mb-8 flex items-center justify-between px-6 py-4">
+            <div class="flex items-center gap-3"><i data-lucide="camera" class="cinema-red w-6 h-6"></i><h2 class="text-lg font-bold">بوابة المصورين</h2></div>
+            <p id="portalPhotogName" class="text-blue-400 font-bold text-sm"></p>
+        </nav>
+        <div class="container mx-auto px-4 space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass p-6 border-t-4 border-blue-500 flex flex-col">
+                    <h3 class="text-xl font-bold mb-2 flex items-center gap-2 text-white"><i data-lucide="bell-ring" class="text-yellow-500"></i> الحجوزات الجديدة</h3>
+                    <p class="text-xs text-zinc-400 mb-6">قائمة بمواعيد العمل الخاصة بك القادمة</p>
+                    <div id="photogAssignmentsList" class="space-y-4 overflow-y-auto max-h-[400px] pr-2"></div>
+                </div>
+                <div class="glass p-6 border-t-4 border-yellow-500 flex flex-col">
+                    <h3 class="text-xl font-bold mb-3 text-white flex items-center gap-2"><i data-lucide="message-circle" class="text-green-500"></i> مراسلة الإدارة</h3>
+                    <p class="text-xs text-zinc-400 mb-4">أرسل رسالة للإدارة للإبلاغ عن عذر أو تفاصيل أخرى.</p>
+                    <textarea id="photogMsgToAdmin" class="w-full p-3 min-h-[120px] flex-grow text-sm mb-4 rounded-lg bg-black/50 border border-white/10 text-white" placeholder="اكتب عذرك أو رسالتك هنا..."></textarea>
+                    <button onclick="window.sendMsgToAdmin()" class="w-full bg-green-600 hover:bg-green-700 p-4 rounded-xl font-bold flex items-center justify-center gap-2 transition mt-auto">إرسال عبر واتساب <i data-lucide="send" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+            <div class="glass p-6 border-t-4 border-emerald-500">
+                <h3 class="text-xl font-bold mb-4 text-white">إحصائياتك المالية</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition"><p class="text-xs text-zinc-400 mb-1">إجمالي الأجور</p><p class="text-lg font-bold text-blue-400" id="photogTotalWages">0 ج.م</p></div>
+                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition"><p class="text-xs text-zinc-400 mb-1">مكافآت إضافية</p><p class="text-lg font-bold text-yellow-400" id="photogTotalBonuses">0 ج.م</p></div>
+                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition"><p class="text-xs text-zinc-400 mb-1">المسحوبات</p><p class="text-lg font-bold text-red-400" id="photogTotalWithdrawals">0 ج.م</p></div>
+                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition border-emerald-500/20"><p class="text-xs text-zinc-400 mb-1">الرصيد المستحق</p><p class="text-2xl font-bold text-emerald-400" id="photogBalance">0 ج.م</p></div>
+                </div>
+                <h4 class="text-sm font-bold text-zinc-300 mb-3">أماكن العمل:</h4>
+                <div id="photogLocationsList" class="space-y-2 mb-6 text-xs"></div>
+                <div class="p-4 border border-dashed border-white/20 rounded-xl bg-white/5">
+                    <h4 class="text-sm font-bold mb-3 text-white flex items-center gap-2"><i data-lucide="wallet" class="w-4 h-4 text-red-400"></i> سحب مبلغ مالي</h4>
                     <div class="flex gap-2 flex-col sm:flex-row">
                         <input type="number" id="photogWithdrawAmount" placeholder="المبلغ (ج.م)" class="w-full sm:w-1/3 p-3 text-sm rounded-lg">
                         <input type="text" id="photogWithdrawNote" placeholder="تفاصيل السحب (اختياري)..." class="w-full sm:flex-grow p-3 text-sm rounded-lg">
