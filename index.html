@@ -311,7 +311,7 @@
                         <h3 class="text-xl font-bold mb-1 flex items-center gap-2 text-white"><i data-lucide="bell-ring" class="text-yellow-500"></i> الحجوزات الجديدة</h3>
                         <p class="text-xs text-zinc-400">قائمة بمواعيد العمل الخاصة بك القادمة</p>
                     </div>
-                    <button id="btnEnableNotif" onclick="window.requestNotificationPerm()" class="hidden bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/50 text-xs px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1"><i data-lucide="bell" class="w-3 h-3"></i> تفعيل الإشعارات</button>
+                    <button id="btnEnableNotif" onclick="window.requestNotificationPerm()" class="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/50 text-xs px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1"><i data-lucide="bell" class="w-3 h-3"></i> تفعيل الإشعارات</button>
                 </div>
                 <div id="photogAssignmentsList" class="space-y-4 overflow-y-auto max-h-[500px] pr-2"></div>
             </div>
@@ -613,6 +613,7 @@
 
         // --- Core Global Utility Functions ---
         window.arToEn = function(str) {
+            if(!str) return '';
             const map = {'ا':'a','أ':'a','إ':'e','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh','د':'d','ذ':'z','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'a','غ':'gh','ف':'f','ق':'k','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','و':'w','ي':'y','ى':'y','ة':'h','ء':'a','ؤ':'o','ئ':'e',' ':'-'};
             return str.split('').map(c => map[c] || c).join('').toLowerCase();
         };
@@ -1278,23 +1279,30 @@
 
         window.bootApp = function() {
             if (isAppBooted) return; isAppBooted = true; window.isAppBooted = true;
-            const uP = new URLSearchParams(window.location.search), pN = uP.get('photog'), trackPhone = uP.get('phone');
-            
-            if (trackPhone) {
-                window.initClientTracking(trackPhone);
-            } else if (pN) {
-                // If it's a photog link, map the english name back if needed.
-                let matchedPhotog = state.photographers.find(x => window.arToEn(x.name) === pN || x.name === pN);
-                if(matchedPhotog) window.initPhotogPortal(matchedPhotog.name);
-                else { alert("المصور غير موجود"); document.getElementById('loginOverlay').classList.remove('hidden'); }
-            } else {
-                document.getElementById('loginOverlay').classList.remove('hidden');
+            try {
+                const uP = new URLSearchParams(window.location.search), pN = uP.get('photog'), trackPhone = uP.get('phone');
+                
+                if (trackPhone) {
+                    window.initClientTracking(trackPhone);
+                } else if (pN) {
+                    // If it's a photog link, map the english name back if needed.
+                    let matchedPhotog = state.photographers.find(x => window.arToEn(x.name||'') === pN || x.name === pN);
+                    if(matchedPhotog) window.initPhotogPortal(matchedPhotog.name);
+                    else { alert("المصور غير موجود"); document.getElementById('loginOverlay').classList.remove('hidden'); }
+                } else {
+                    document.getElementById('loginOverlay').classList.remove('hidden');
+                }
+                lucide.createIcons();
+            } catch(e) {
+                console.error(e);
+            } finally {
+                const loader = document.getElementById('appLoader');
+                if(loader) { loader.classList.add('hidden-loader'); setTimeout(() => loader.remove(), 500); }
             }
-            lucide.createIcons();
-            
-            const loader = document.getElementById('appLoader');
-            if(loader) { loader.classList.add('hidden-loader'); setTimeout(() => loader.remove(), 500); }
         };
+        
+        // حماية إضافية لإخفاء شاشة التحميل إذا تعطل الاتصال
+        setTimeout(() => { const loader = document.getElementById('appLoader'); if(loader) { loader.classList.add('hidden-loader'); setTimeout(() => loader.remove(), 500); } }, 6000);
 
         window.checkLogin = function() { if (document.getElementById('loginPass').value === "271192@") { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('mainContent').classList.remove('hidden'); window.refreshAllViews(); } else { const e = document.getElementById('loginError'); if(e) { e.classList.remove('hidden'); setTimeout(() => e.classList.add('hidden'), 3000); } } };
         window.adminLogout = function() { location.href = window.location.origin + window.location.pathname; };
