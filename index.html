@@ -4,372 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cinema Studio Pro | نظام إدارة الاستوديو</title>
+    <!-- إضافة أيقونة الكاميرا لعلامة التبويب -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e11d48'><path d='M15 8V7a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1l7 4V4l-7 4z'/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #050505; color: #e5e5e5; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1.5rem; transition: 0.3s; }
-        .glass:hover { border-color: rgba(225, 29, 72, 0.3); box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7); }
-        .cinema-red { color: #e11d48; }
-        .bg-cinema-red { background-color: #e11d48; }
-        .btn-grad { background: linear-gradient(45deg, #e11d48, #9f1239); transition: 0.3s; }
-        input, select, textarea { background: rgba(255, 255, 255, 0.05) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: white !important; border-radius: 0.75rem !important; }
-        input:focus { border-color: #e11d48 !important; outline: none; box-shadow: 0 0 15px rgba(225, 29, 72, 0.2) !important; }
-        .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.2s; }
-        .has-booking::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background-color: #e11d48; border-radius: 50%; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
-</head>
-<body class="min-h-screen">
-
-    <div id="loginOverlay" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4">
-        <div class="glass p-8 w-full max-w-md text-center shadow-2xl border border-white/10">
-            <div class="mb-6 flex justify-center">
-                <div class="bg-cinema-red p-4 rounded-full shadow-lg shadow-red-900/20">
-                    <i data-lucide="camera" class="w-10 h-10 text-white"></i>
-                </div>
-            </div>
-            <h1 class="text-3xl font-bold mb-2">Cinema Studio <span class="cinema-red">Pro</span></h1>
-            <p class="text-zinc-400 mb-8">نظام الإدارة السينمائي المتكامل</p>
-            <div class="space-y-4">
-                <input type="password" id="loginPass" placeholder="كلمة المرور" class="w-full p-4 text-center text-xl">
-                <button onclick="window.checkLogin()" class="w-full p-4 btn-grad rounded-xl font-bold text-lg hover:opacity-90">دخول النظام</button>
-            </div>
-            <p id="loginError" class="text-red-500 mt-4 hidden text-sm font-bold">كلمة المرور غير صحيحة!</p>
-        </div>
-    </div>
-
-    <div id="mainContent" class="hidden opacity-0 transition-opacity duration-500">
-        <nav class="sticky top-0 z-50 glass m-4 mb-8 flex items-center justify-between px-4 sm:px-8 py-4">
-            <div class="flex items-center gap-3"><i data-lucide="clapperboard" class="cinema-red w-6 h-6 sm:w-8 sm:h-8"></i><h2 class="text-lg sm:text-xl font-bold hidden md:block">لوحة التحكم</h2></div>
-            <div class="flex gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
-                <button onclick="window.showTab('dashboard')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> الإحصائيات</button>
-                <button onclick="window.showTab('bookings')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="calendar-plus" class="w-4 h-4"></i> الحجوزات</button>
-                <button onclick="window.showTab('inventory')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="badge-dollar-sign" class="w-4 h-4"></i> اليومية</button>
-            </div>
-            <button onclick="window.adminLogout()" class="text-zinc-500 hover:text-white transition ml-2 sm:ml-0"><i data-lucide="log-out" class="w-5 h-5 sm:w-6 sm:h-6"></i></button>
-        </nav>
-
-        <div class="container mx-auto px-4 pb-20">
-            <div id="tab-dashboard" class="space-y-8 animate-in fade-in duration-500">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <button onclick="window.showTab('inventory')" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
-                        <i data-lucide="trending-up" class="w-6 h-6 mb-2 text-emerald-500"></i>
-                        <p class="text-xs sm:text-sm font-bold">تسجيل الدخل</p>
-                    </button>
-                    <button onclick="window.showTab('bookings')" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
-                        <i data-lucide="plus-circle" class="w-6 h-6 mb-2 cinema-red"></i>
-                        <p class="text-xs sm:text-sm font-bold">حجز جديد</p>
-                    </button>
-                    <button onclick="window.showTab('reports')" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
-                        <i data-lucide="pie-chart" class="w-6 h-6 mb-2 text-blue-400"></i>
-                        <p class="text-xs sm:text-sm font-bold">التقارير</p>
-                    </button>
-                    <button onclick="window.showStatsModal('مساعدة', '<p class=\'text-white py-6 text-center\'>كلمة المرور الحالية هي: 271192@</p>')" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
-                        <i data-lucide="help-circle" class="w-6 h-6 mb-2 text-yellow-500"></i>
-                        <p class="text-xs sm:text-sm font-bold">دعم</p>
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-                    <div class="glass p-6 border-r-4 border-r-emerald-500 cursor-pointer" onclick="window.showDashboardDetails('revenue')"><p class="text-zinc-400 text-sm">إجمالي الإيرادات</p><h3 class="text-3xl sm:text-4xl font-bold mt-2 text-emerald-400" id="stat-revenue">0</h3></div>
-                    <div class="glass p-6 border-r-4 border-r-red-500 cursor-pointer" onclick="window.showDashboardDetails('expenses')"><p class="text-zinc-400 text-sm">إجمالي المصروفات</p><h3 class="text-3xl sm:text-4xl font-bold mt-2 text-red-400" id="stat-expenses">0</h3></div>
-                    <div class="glass p-6 border-r-4 border-r-blue-500 cursor-pointer" onclick="window.showDashboardDetails('profit')"><p class="text-zinc-400 text-sm">صافي الأرباح</p><h3 class="text-3xl sm:text-4xl font-bold mt-2 text-blue-400" id="stat-profit">0</h3></div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="glass p-6"><h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="history" class="cinema-red"></i> آخر المعاملات</h3><div id="recentBookings" class="space-y-4 max-h-[400px] overflow-y-auto pr-2"></div></div>
-                    <div class="glass p-6">
-                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold flex items-center gap-2"><i data-lucide="calendar" class="cinema-red"></i> التقويم</h3>
-                            <div class="flex gap-2 bg-white/5 rounded-lg px-2 py-1"><button onclick="window.changeMonth(-1)"><i data-lucide="chevron-right" class="w-4 h-4"></i></button><span id="currentMonthYear" class="text-xs font-bold min-w-[60px] text-center"></span><button onclick="window.changeMonth(1)"><i data-lucide="chevron-left" class="w-4 h-4"></i></button></div>
-                        </div>
-                        <div id="dashboardCalendar" class="grid grid-cols-7 gap-1 text-xs font-bold"></div>
-                    </div>
-                </div>
-            </div>
-            <div id="tab-bookings" class="hidden space-y-8">
-                <div class="glass p-4 sm:p-8">
-                    <h3 class="text-xl font-bold mb-6 flex justify-between items-center">حجز جديد <button onclick="window.cancelEditBooking()" id="btnCancelEdit" class="hidden text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded">إلغاء التعديل</button></h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" id="clientName" placeholder="اسم العميل" class="w-full p-3">
-                        <input type="tel" id="clientPhone" placeholder="رقم الهاتف" class="w-full p-3 text-left" dir="ltr">
-                        <input type="date" id="bookingDate" class="w-full p-3">
-                        <textarea id="bookingDetails" placeholder="العنوان والتفاصيل" class="w-full p-3"></textarea>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 my-4" id="servicesGrid"></div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 my-4 border-t border-white/5 pt-4" id="bookingPhotographerList"></div>
-                    <div class="mt-6 flex flex-wrap items-center gap-4">
-                        <input type="number" id="depositAmount" placeholder="العربون" class="p-3 w-32" onchange="window.calcTotal()">
-                        <div class="text-sm">الإجمالي: <span id="totalCalc" class="font-bold">0</span></div>
-                        <div class="text-sm text-red-400">المتبقي: <span id="balanceCalc" class="font-bold">0</span></div>
-                        <button id="btnSaveBooking" onclick="window.saveBooking()" class="btn-grad px-8 py-3 rounded-xl font-bold mr-auto">حفظ الحجز</button>
-                    </div>
-                </div>
-                <div class="glass p-4 overflow-x-auto">
-                    <table class="w-full text-right"><thead class="text-xs text-zinc-500 border-b border-white/10"><th class="p-3">العميل</th><th class="p-3">التاريخ</th><th class="p-3">المصور</th><th class="p-3">الحالة</th><th class="p-3 text-center">إجراءات</th></thead><tbody id="bookingsTable"></tbody></table>
-                </div>
-            </div>
-            
-            <div id="tab-inventory" class="hidden space-y-6">
-                <div class="glass p-6 space-y-4">
-                    <h4 class="font-bold text-emerald-400">تسجيل دخل (قاعات / شارع)</h4>
-                    <div id="templatesGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/5">
-                        <input type="text" id="incomeNote" placeholder="بيان الدخل" class="p-3">
-                        <input type="number" id="incomeAmount" placeholder="المبلغ" class="p-3">
-                        <input type="date" id="dailyEntryDate" class="p-3">
-                    </div>
-                    <div id="dailyPhotographerList" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-                    <button onclick="window.recordUnifiedTransaction()" class="w-full btn-grad p-4 rounded-xl font-bold">تنفيذ وحفظ</button>
-                </div>
-                <div class="glass p-4 flex flex-col h-[500px]">
-                    <h4 class="mb-4 pb-2 border-b border-white/10">سجل اليومية</h4>
-                    <div id="dailyEntryLog" class="space-y-3 overflow-y-auto flex-grow"></div>
-                </div>
-            </div>
-
-            <div id="tab-reports" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="glass p-6"><h4 class="mb-6 font-bold text-blue-400">إحصائيات المصورين</h4><div id="reportPhotographers" class="space-y-3"></div></div>
-                <div class="glass p-6"><h4 class="mb-6 font-bold text-emerald-400">إحصائيات القاعات</h4><div id="reportHalls" class="space-y-3"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="photogPortal" class="hidden p-4"></div>
-    <div id="clientTrackingPortal" class="hidden p-4"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = { apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4", authDomain: "video-c59af.firebaseapp.com", databaseURL: "https://video-c59af-default-rtdb.firebaseio.com", projectId: "video-c59af", storageBucket: "video-c59af.firebasestorage.app", messagingSenderId: "418823882244", appId: "1:418823882244:web:a3b858a11bc191032a5751" };
-        const appId = 'video-c59af-studio-main';
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'studio_state', 'main_database');
-                onSnapshot(stateRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        window.state = { ...window.defaultState, ...docSnap.data() };
-                        if (!window.isAppBooted) window.bootApp();
-                        else window.refreshAllViews();
-                    } else {
-                        setDoc(stateRef, window.state).then(() => window.bootApp());
-                    }
-                });
-                window.saveStateToFirebase = () => setDoc(stateRef, window.state);
-            } else { signInAnonymously(auth); }
-        });
-    </script>
-
-    <script>
-        // --- Core Application Logic ---
-        var defaultState = {
-            isLoggedIn: false, bookings: [], dailyEntries: [], finances: { revenue: 0, expenses: 0 },
-            inventory: { flashesCount: 0, flashesTotalValue: 0 }, selectedServices: [],
-            services: [{ id: 1, name: 'جلسة تصوير', price: 1000 }, { id: 2, name: 'مونتاج فيديو', price: 2500 }, { id: 3, name: 'مكياج', price: 800 }, { id: 4, name: 'طباعة', price: 400 }],
-            templates: [{ id: 1, name: 'قاعة 1', price: 150 }, { id: 2, name: 'شغل الشارع', price: 300 }],
-            photographers: [{ id: 1, name: 'أحمد', fee: 300 }, { id: 2, name: 'سارة', fee: 400 }, { id: 3, name: 'محمد', fee: 350 }]
-        };
-        var state = JSON.parse(JSON.stringify(defaultState));
-        var isAppBooted = false, currentCalMonth = new Date().getMonth(), currentCalYear = new Date().getFullYear();
-        window.state = state; window.defaultState = defaultState;
-
-        // --- All Essential Functions ---
-        window.showTab = function(id) {
-            ['dashboard', 'bookings', 'inventory', 'reports'].forEach(t => { 
-                const el = document.getElementById(`tab-${t}`);
-                if(el) el.classList.add('hidden');
-            });
-            const sel = document.getElementById(`tab-${id}`);
-            if(sel) sel.classList.remove('hidden');
-            if(id === 'dashboard') window.renderCalendar();
-            lucide.createIcons();
-        };
-
-        window.checkLogin = function() {
-            const pass = document.getElementById('loginPass').value;
-            if (pass === "271192@") {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
-                document.getElementById('mainContent').classList.add('opacity-100');
-                window.refreshAllViews();
-                window.showToast("أهلاً بك يا مدير!");
-            } else {
-                const err = document.getElementById('loginError');
-                err.classList.remove('hidden');
-                setTimeout(() => err.classList.add('hidden'), 3000);
-            }
-        };
-
-        window.refreshAllViews = function() {
-            window.updateDashboard();
-            window.renderCalendar();
-            window.renderBookings();
-            window.renderServices();
-            window.renderTemplates();
-            window.renderPhotographers();
-            window.renderReports();
-            window.updateEntryLog();
-            window.updateFiltersUI();
-            lucide.createIcons();
-        };
-
-        window.bootApp = function() {
-            if (isAppBooted) return; isAppBooted = true; window.isAppBooted = true;
-            const uP = new URLSearchParams(window.location.search);
-            if (uP.get('phone')) window.initClientTracking(uP.get('phone'));
-            else if (uP.get('photog')) window.initPhotogPortal(uP.get('photog'));
-            lucide.createIcons();
-        };
-
-        // ... (Remaining logic functions like updateDashboard, renderCalendar, etc. from previous code)
-        window.updateDashboard = function() {
-            let r=0, e=0;
-            state.bookings.forEach(b => { if(b.status==='completed') r += b.total; else r += b.deposit; });
-            state.dailyEntries.forEach(d => { r += d.income; e += d.totalExpenses; });
-            document.getElementById('stat-revenue').innerText = r;
-            document.getElementById('stat-expenses').innerText = e;
-            document.getElementById('stat-profit').innerText = r-e;
-        };
-
-        window.renderCalendar = function() {
-            const cal = document.getElementById('dashboardCalendar'); if(!cal) return;
-            cal.innerHTML = '';
-            const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-            document.getElementById('currentMonthYear').innerText = `${monthNames[currentCalMonth]} ${currentCalYear}`;
-            const first = new Date(currentCalYear, currentCalMonth, 1).getDay(), days = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
-            for(let i=0; i<first; i++) cal.innerHTML += '<div></div>';
-            const counts = {}; state.bookings.forEach(b => { if(b.date) counts[b.date] = (counts[b.date]||0)+1; });
-            for(let i=1; i<=days; i++) {
-                const dStr = `${currentCalYear}-${String(currentCalMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const has = counts[dStr] ? 'has-booking' : '';
-                cal.innerHTML += `<div class="calendar-day glass text-[10px] ${has}">${i}</div>`;
-            }
-        };
-
-        window.updateFiltersUI = () => {}; window.renderBookings = () => {}; window.renderServices = () => {}; window.renderTemplates = () => {}; window.renderPhotographers = () => {}; window.renderReports = () => {}; window.updateEntryLog = () => {}; window.showToast = (m) => alert(m);
-        window.adminLogout = () => location.reload();
-        window.closeStatsModal = () => document.getElementById('statsModal').classList.add('hidden');
-        window.changeMonth = (v) => { currentCalMonth += v; if(currentCalMonth<0){currentCalMonth=11;currentCalYear--;} if(currentCalMonth>11){currentCalMonth=0;currentCalYear++;} window.renderCalendar(); };
-
-    </script>
-</body>
-</html>   <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i> تاريخ الحجز:</span>
-                    <span id="trackDate" class="font-bold text-white text-sm"></span>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="layers" class="w-4 h-4 text-pink-400"></i> الخدمات المطلوبة:</span>
-                    <span id="trackServices" class="font-bold text-white text-[11px] max-w-[60%] text-left"></span>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="receipt" class="w-4 h-4 text-zinc-300"></i> الإجمالي:</span>
-                    <span id="trackTotal" class="font-bold text-white text-sm"></span>
-                </div>
-                <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i> تم دفع (عربون):</span>
-                    <span id="trackDeposit" class="font-bold text-emerald-400 text-sm"></span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-zinc-400 text-xs flex items-center gap-2"><i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i> المتبقي للاستلام:</span>
-                    <span id="trackBalance" class="font-bold text-red-400 text-sm"></span>
-                </div>
-            </div>
-
-            <!-- New Payment / Receipt Upload Section -->
-            <div id="trackPaymentSection" class="hidden mt-6 bg-white/5 p-4 rounded-xl border border-yellow-500/30">
-                <h3 class="text-yellow-400 font-bold mb-2 flex items-center gap-2"><i data-lucide="credit-card" class="w-5 h-5"></i> سداد إلكتروني</h3>
-                <p class="text-xs text-zinc-300 mb-3">متبقي على الحساب: <span id="trackPaymentAmount" class="font-bold text-red-400 text-lg"></span> ج.م</p>
-                <div class="bg-black/50 p-3 rounded-lg mb-4 text-xs text-zinc-400 text-center border border-white/5">
-                    <p class="mb-1">للتحويل عبر فودافون كاش أو إنستاباي:</p>
-                    <button onclick="window.copyPaymentNumber()" class="font-bold text-white text-xl tracking-widest my-2 select-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition border border-white/10 flex items-center justify-center gap-2 mx-auto cursor-pointer">
-                        01126810107 <i data-lucide="copy" class="w-4 h-4 text-emerald-400"></i>
-                    </button>
-                    <p class="text-emerald-400 mt-2">تأكيد الاسم المحول له: <span class="font-bold text-white">محمود م أ</span></p>
-                </div>
-                
-                <div id="trackReceiptContainer">
-                    <label class="block text-xs text-zinc-400 mb-2 font-bold"><i data-lucide="upload-cloud" class="w-3 h-3 inline"></i> إرفاق صورة إيصال التحويل:</label>
-                    <input type="file" id="receiptUpload" accept="image/*" class="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 cursor-pointer" onchange="window.handleReceiptUpload(event)">
-                    <input type="hidden" id="trackCurrentBookingId">
-                </div>
-                <div id="trackReceiptPreviewContainer" class="hidden mt-4 text-center">
-                    <p class="text-xs text-emerald-400 mb-2"><i data-lucide="check-circle" class="w-4 h-4 inline"></i> تم استلام إيصال الدفع، جاري مراجعته من قبل الإدارة.</p>
-                    <img id="trackReceiptImage" src="" class="mx-auto rounded-lg border border-white/10 max-h-40 object-contain shadow-lg" alt="إيصال الدفع">
-                </div>
-            </div>
-
-            <!-- Tracking Timeline -->
-            <div class="mt-8 px-4 glass p-6 border-white/5">
-                <h3 class="text-white font-bold mb-6 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-blue-400"></i> حالة العمل الحالية:</h3>
-                <div class="relative border-r-2 border-white/10 pr-6 space-y-8">
-                    <!-- Confirmed -->
-                    <div class="relative transition-all duration-300">
-                        <div id="trackDotConfirmed" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
-                        <p id="trackTextConfirmed" class="font-bold text-zinc-500 text-sm">تم تأكيد الحجز</p>
-                    </div>
-                    <!-- Shooting -->
-                    <div class="relative transition-all duration-300">
-                        <div id="trackDotShooting" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
-                        <p id="trackTextShooting" class="font-bold text-zinc-500 text-sm">قيد التصوير والتجهيز</p>
-                    </div>
-                    <!-- Editing -->
-                    <div class="relative transition-all duration-300">
-                        <div id="trackDotEditing" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
-                        <p id="trackTextEditing" class="font-bold text-zinc-500 text-sm">جاري عمل المونتاج</p>
-                    </div>
-                    <!-- Ready -->
-                    <div class="relative transition-all duration-300">
-                        <div id="trackDotReady" class="absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black"></div>
-                        <p id="trackTextReady" class="font-bold text-zinc-500 text-sm">جاهز للاستلام</p>
-                    </div>
-                </div>
-            </div>
-            
-            <p class="text-center text-[10px] text-zinc-500 pt-6">تتحدث هذه الصفحة تلقائياً لتوافيكم بآخر تطورات حجزكم.</p>
-        </div>
-    </div>
-
-    <!-- Photographer Portal View -->
-    <div id="photogPortal" class="hidden min-h-screen bg-black pb-20">
-        <nav class="glass m-4 mb-8 flex items-center justify-between px-6 py-4">
-            <div class="flex items-center gap-3"><i data-lucide="camera" class="cinema-red w-6 h-6"></i><h2 class="text-lg font-bold">بوابة المصورين</h2></div>
-            <p id="portalPhotogName" class="text-blue-400 font-bold text-sm"></p>
-        </nav>
-        <div class="container mx-auto px-4 space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="glass p-6 border-t-4 border-blue-500 flex flex-col">
-                    <h3 class="text-xl font-bold mb-2 flex items-center gap-2 text-white"><i data-lucide="bell-ring" class="text-yellow-500"></i> الحجوزات الجديدة</h3>
-                    <p class="text-xs text-zinc-400 mb-6">قائمة بمواعيد العمل الخاصة بك القادمة</p>
-                    <div id="photogAssignmentsList" class="space-y-4 overflow-y-auto max-h-[400px] pr-2"></div>
-                </div>
-                <div class="glass p-6 border-t-4 border-yellow-500 flex flex-col">
-                    <h3 class="text-xl font-bold mb-3 text-white flex items-center gap-2"><i data-lucide="message-circle" class="text-green-500"></i> مراسلة الإدارة</h3>
-                    <p class="text-xs text-zinc-400 mb-4">أرسل رسالة للإدارة للإبلاغ عن عذر أو تفاصيل أخرى.</p>
-                    <textarea id="photogMsgToAdmin" class="w-full p-3 min-h-[120px] flex-grow text-sm mb-4 rounded-lg bg-black/50 border border-white/10 text-white" placeholder="اكتب عذرك أو رسالتك هنا..."></textarea>
-                    <button onclick="window.sendMsgToAdmin()" class="w-full bg-green-600 hover:bg-green-700 p-4 rounded-xl font-bold flex items-center justify-center gap-2 transition mt-auto">إرسال عبر واتساب <i data-lucide="send" class="w-4 h-4"></i></button>
-                </div>
-            </div>
-            <div class="glass p-6 border-t-4 border-emerald-500">
-                <h3 class="text-xl font-bold mb-4 text-white">إحصائياتك المالية</h3>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition"><p class="text-xs text-zinc-400 mb-1">إجمالي الأجور</p><p class="text-lg font-bold text-blue-400" id="photogTotalWages">0 ج.م</p></div>
-                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition"><p class="text-xs text-zinc-400 mb-1">مكافآت إضافية</p><p class="text-lg font-bold text-yellow-400" id="photogTotalBonuses">0 ج.م</p></div>
-                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition"><p class="text-xs text-zinc-400 mb-1">المسحوبات</p><p class="text-lg font-bold text-red-400" id="photogTotalWithdrawals">0 ج.م</p></div>
-                    <div class="bg-white/5 p-4 rounded-xl text-center border border-white/5 transition border-emerald-500/20"><p class="text-xs text-zinc-400 mb-1">الرصيد المستحق</p><p class="text-2xl font-bold text-emerald-400" id="photogBalance">0 ج.م</p></div>
-                </div>
-                <h4 class="text-sm font-bold text-zinc-300 mb-3">أماكن العمل:</h4>
-                <div id="photogLocationsList" class="space-y-2 mb-6 text-xs"></div>
-                <div class="p-4 border border-dashed border-white/20 rounded-xl bg-white/5">
-                    <h4 class="text-sm font-bold mb-3 text-white flex items-center gap-2"><i data-lucide="wallet" class="w-4 h-4 text-red-400"></i> سحب مبلغ مالي</h4>
-                    <div class="flex gap-2 flex-col sm        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #050505;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+        /* الأساس الجمالي للزجاج بدون زوم */
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(225, 29, 72, 0.3);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
+        }
+        .cinema-red {
+            color: #e11d48;
+        }
+        .bg-cinema-red {
+            background-color: #e11d48;
+        }
         .bg-cinema-red:hover {
             background-color: #be123c;
         }
@@ -731,8 +396,8 @@
                         <h3 class="text-xl font-bold">الحجوزات النشطة</h3>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto"><input type="date" id="filterBookingDate" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><input type="text" id="filterBookingName" placeholder="بحث..." oninput="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><select id="filterBookingPhotog" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><option value="">كل المصورين</option></select></div>
                     </div>
-                    <div class="min-w-[750px]">
-                        <table class="w-full text-right"><thead class="text-zinc-500 text-xs border-b border-white/10"><th class="p-3">العميل</th><th class="p-3">التاريخ</th><th class="p-3">المصورين</th><th class="p-3">حالة العمل / الدفع</th><th class="p-3 text-center">إجراءات</th></thead><tbody id="bookingsTable"></tbody></table>
+                    <div class="min-w-[850px]">
+                        <table class="w-full text-right"><thead class="text-zinc-500 text-xs border-b border-white/10"><th class="p-3">العميل</th><th class="p-3">التاريخ</th><th class="p-3">المصورين</th><th class="p-3">حالة العمل / الدفع</th><th class="p-3 text-center">إجراءات إضافية</th></thead><tbody id="bookingsTable"></tbody></table>
                     </div>
                 </div>
             </div>
@@ -872,6 +537,21 @@
             return count;
         };
 
+        window.getGoogleCalendarLink = function(b) {
+            if(!b || !b.date) return '#';
+            const d = new Date(b.date);
+            const start = d.toISOString().split('T')[0].replace(/-/g, '');
+            const nextD = new Date(d);
+            nextD.setDate(nextD.getDate() + 1);
+            const end = nextD.toISOString().split('T')[0].replace(/-/g, '');
+            
+            const title = encodeURIComponent(`🎥 حجز تصوير: ${b.name}`);
+            const svcs = b.services?.map(s=>s.name).join('، ') || 'غير محدد';
+            const details = encodeURIComponent(`👤 العميل: ${b.name}\n📞 رقم الهاتف: ${b.phone||'لا يوجد'}\n📋 الخدمات: ${svcs}\n📍 العنوان/التفاصيل: ${b.details||'لا توجد'}\n\n✨ تمت الإضافة بواسطة نظام المراكبى`);
+            
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
+        };
+
         // --- Renderers ---
         window.updateFiltersUI = function() { 
             const bP = document.getElementById('filterBookingPhotog'), dP = document.getElementById('filterDailyPhotog'), aB = document.getElementById('adminBonusPhotog'); 
@@ -914,7 +594,7 @@
             const log = document.getElementById('recentBookings'); if(!log) return;
             log.innerHTML = '';
             state.dailyEntries.slice(-5).reverse().forEach(act => {
-                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:scale-[1.03]";
+                const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:bg-white/5";
                 d.onclick = () => window.showEntryDetails(act.id);
                 d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[9px] text-zinc-500">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</p></div><span class="text-emerald-400 font-bold text-xs">+${act.income}</span>`;
                 log.appendChild(d);
@@ -948,6 +628,7 @@
                         </div>
                     </td>
                     <td class="p-3 flex gap-2 justify-center items-center h-full" onclick="event.stopPropagation()">
+                        <a href="${window.getGoogleCalendarLink(b)}" target="_blank" class="p-2 text-indigo-400 bg-indigo-500/10 rounded-lg transition flex items-center justify-center hover:bg-indigo-500/20" title="إضافة للتقويم"><i data-lucide="calendar-plus" class="w-4 h-4"></i></a>
                         <button onclick="window.openWhatsAppModal(${b.id})" class="p-2 text-green-500 bg-green-500/10 rounded-lg transition flex items-center justify-center hover:bg-green-500/20" title="قوالب واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
                         <button onclick="window.editBooking(${b.id})" class="p-2 text-blue-400 bg-blue-500/10 rounded-lg transition flex items-center justify-center hover:bg-blue-500/20" title="تعديل الحجز"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
                         <button onclick="window.deleteBooking(${b.id})" class="p-2 text-red-500 bg-red-500/10 rounded-lg transition flex items-center justify-center hover:bg-red-500/20" title="حذف الحجز"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -1016,10 +697,36 @@
             state.dailyEntries.forEach(e => {
                 if(e.note.startsWith('سحب مالي للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[n].withdrawals += e.totalExpenses; tE += e.totalExpenses; return; }
                 if(e.note.startsWith('مكافأة إضافية للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[n].bonuses += e.totalExpenses; tE += e.totalExpenses; return; }
-                if(!hS[e.note]) hS[e.note] = { jobs: 0, income: 0 }; hS[e.note].jobs++; hS[e.note].income += e.income; tI += e.income; tE += e.totalExpenses;
-                e.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[p.name].jobs++; pS[p.name].wages += p.totalFee; pS[p.name].locs[e.note] = (pS[p.name].locs[e.note] || 0) + 1; tW += p.totalFee; });
+                
+                if(!hS[e.note]) hS[e.note] = { jobs: 0, income: 0, expenses: 0, photogs: {} };
+                hS[e.note].jobs++; hS[e.note].income += e.income; hS[e.note].expenses += e.totalExpenses;
+                tI += e.income; tE += e.totalExpenses;
+                
+                e.photographers?.forEach(p => { 
+                    if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; 
+                    pS[p.name].jobs++; pS[p.name].wages += p.totalFee; pS[p.name].locs[e.note] = (pS[p.name].locs[e.note] || 0) + 1; 
+                    tW += p.totalFee; 
+                    hS[e.note].photogs[p.name] = (hS[e.note].photogs[p.name] || 0) + 1;
+                });
             });
-            state.bookings.forEach(bk => { if(bk.status==='completed') { const l = 'حجوزات الاستوديو'; if(!hS[l]) hS[l] = { jobs: 0, income: 0 }; hS[l].jobs++; hS[l].income += bk.total; tI += bk.total; bk.photographers?.forEach(p => { if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[p.name].jobs++; pS[p.name].wages += p.fee; pS[p.name].locs[l] = (pS[p.name].locs[l] || 0) + 1; tW += p.fee; tE += p.fee; }); }});
+            
+            state.bookings.forEach(bk => { 
+                if(bk.status==='completed') { 
+                    const l = 'حجوزات الاستوديو'; 
+                    if(!hS[l]) hS[l] = { jobs: 0, income: 0, expenses: 0, photogs: {} }; 
+                    hS[l].jobs++; hS[l].income += bk.total; 
+                    tI += bk.total; 
+                    
+                    bk.photographers?.forEach(p => { 
+                        if(!pS[p.name]) pS[p.name] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; 
+                        pS[p.name].jobs++; pS[p.name].wages += p.fee; pS[p.name].locs[l] = (pS[p.name].locs[l] || 0) + 1; 
+                        tW += p.fee; tE += p.fee; 
+                        
+                        hS[l].expenses += p.fee;
+                        hS[l].photogs[p.name] = (hS[l].photogs[p.name] || 0) + 1;
+                    }); 
+                }
+            });
             
             const wL = document.getElementById('reportTotalWages'), nL = document.getElementById('reportNetProfit');
             if(wL) wL.innerText = tW + " ج.م"; if(nL) nL.innerText = (tI - tE) + " ج.م";
@@ -1063,8 +770,58 @@
             
             const hR = document.getElementById('reportHalls'); 
             if(hR) {
-                hR.innerHTML = Object.keys(hS).map(n => `<div onclick="window.showHallDetails('${n}')" class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition cursor-pointer mb-2"><div><p class="font-bold text-xs text-white">${n}</p><p class="text-[8px] text-zinc-400">مرات التسجيل: ${hS[n].jobs}</p></div><p class="font-bold text-xs text-emerald-400">${hS[n].income} ج.م</p></div>`).join('');
+                hR.innerHTML = Object.keys(hS).map(n => {
+                    const net = hS[n].income - hS[n].expenses;
+                    const photogsHtml = Object.keys(hS[n].photogs).map(pn =>
+                        `<span class="inline-block bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 rounded-lg text-[9px] font-bold ml-1 mb-1">${pn} <span class="bg-blue-500 text-white rounded px-1 mr-1">${hS[n].photogs[pn]}</span></span>`
+                    ).join('');
+
+                    return `
+                    <div onclick="window.showHallDetails('${n}')" class="glass p-4 rounded-xl border-r-4 border-emerald-500 hover:bg-white/5 transition cursor-pointer mb-3">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="bg-emerald-500/20 p-2 rounded-full"><i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i></div>
+                                <h5 class="font-bold text-white text-sm">${n}</h5>
+                            </div>
+                            <div class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-500/30">
+                                ${hS[n].jobs} تسجيلات
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <p class="text-[10px] text-zinc-400 mb-1">المصورين:</p>
+                            <div class="flex flex-wrap">${photogsHtml || '<span class="text-[9px] text-zinc-500">لا يوجد مصورين</span>'}</div>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-white/5">
+                            <span class="text-xs text-zinc-400">صافي الإيراد:</span>
+                            <span class="font-bold text-sm ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span>
+                        </div>
+                    </div>`;
+                }).join('');
             }
+        };
+
+        window.showBookingDetails = function(id) {
+            const b = state.bookings.find(x => x.id === id); if(!b) return;
+            const receiptHtml = b.paymentReceipt ? `<div class="glass p-3 rounded-lg mt-4 border border-blue-500/30"><p class="text-xs text-blue-400 mb-2 font-bold"><i data-lucide="receipt" class="w-4 h-4 inline"></i> إيصال سداد إلكتروني مرفق</p><img src="${b.paymentReceipt}" class="w-full rounded-lg max-h-64 object-contain mb-3 bg-black/50 p-2"><button onclick="window.completePayment(${b.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg text-sm font-bold transition">تأكيد الدفع وتحصيل المبلغ المتبقي</button></div>` : '';
+            
+            const html = `<div class="space-y-4 text-white"><div class="grid grid-cols-2 gap-4"><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">العميل</p><p class="font-bold text-sm">${b.name}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">التاريخ</p><p class="font-bold text-sm">${new Date(b.date).toLocaleDateString('ar-EG')}</p></div></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الخدمات</p><p class="text-sm font-bold">${b.services?.map(s=>s.name).join('، ')||'لا يوجد'}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المصورين</p><p class="text-sm font-bold">${b.photographers?.map(p=>p.name).join('، ')||'لا يوجد'}</p></div><div class="grid grid-cols-3 gap-2 mt-4 text-center"><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الإجمالي</p><p class="font-bold">${b.total}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المقدم</p><p class="text-emerald-400 font-bold">${b.deposit}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الباقي</p><p class="text-red-400 font-bold">${b.balance}</p></div></div>${receiptHtml}</div>`;
+            window.showStatsModal(`كشف حجز: ${b.name}`, html);
+        };
+
+        window.showEntryDetails = function(id) {
+            const e = state.dailyEntries.find(x => x.id === id); if(!e) return;
+            const html = `<div class="space-y-4 text-white"><div class="glass p-4 rounded-xl border-r-4 border-emerald-500"><div class="flex justify-between border-b border-white/5 pb-2"><span class="text-zinc-400">دخل العملية</span><span class="font-bold text-emerald-400">+${e.income} ج.م</span></div><div class="mt-2"><p class="text-[10px] text-zinc-500 mb-2">مصروفات وتكاليف:</p>${e.photographers?.map(p=>`<div class="flex justify-between text-[11px]"><span class="text-blue-300">${p.name}</span><span class="text-red-400">-${p.totalFee}</span></div>`).join('')||''}${e.gear?`<div class="flex justify-between text-[11px]"><span class="text-indigo-400">${e.gear.note}</span><span class="text-red-400">-${e.gear.amount}</span></div>`:''}${e.flash?`<div class="flex justify-between text-[11px]"><span class="text-yellow-400">فلاشة</span><span class="text-red-400">-50</span></div>`:''}</div><div class="mt-3 pt-3 border-t border-white/5 flex justify-between font-bold text-sm"><span>الصافي</span><span class="text-white">${e.income - e.totalExpenses} ج.م</span></div></div></div>`;
+            window.showStatsModal(`تفاصيل: ${e.note}`, html);
+        };
+
+        window.showDashboardDetails = function(type) {
+            let title = '', items = [];
+            if(type === 'revenue') { title = 'كشف الإيرادات'; state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); state.dailyEntries.forEach(d => d.income > 0 && items.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date||d.id})); }
+            else if(type === 'expenses') { title = 'كشف المصروفات'; state.bookings.forEach(b => b.status === 'completed' && b.photographers?.forEach(p => items.push({id:b.id, type:'booking', text:`أجر: ${p.name}`, val:p.fee, c:'text-red-400', s:'-', date:b.date}))); state.dailyEntries.forEach(d => d.totalExpenses > 0 && items.push({id:d.id, type:'entry', text:d.note, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date||d.id})); }
+            else { title = 'كشف الأرباح'; state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); state.dailyEntries.forEach(d => { if(d.income>0) items.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date}); if(d.totalExpenses>0) items.push({id:d.id, type:'entry', text:`مصاريف: ${d.note}`, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date}); }); }
+            items.sort((a,b) => new Date(b.date) - new Date(a.date));
+            const html = items.length ? items.map(i => `<div onclick="window.closeStatsModal(); ${i.type==='booking' ? `window.showBookingDetails(${i.id})` : `window.showEntryDetails(${i.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="font-bold text-xs text-white">${i.text}</p><p class="text-[9px] text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="font-bold text-xs ${i.c}">${i.s}${i.val}</span></div>`).join('') : '<p class="text-zinc-500 text-center py-4">لا يوجد</p>';
+            window.showStatsModal(title, html);
         };
 
         window.showPhotogDetails = function(name) {
@@ -1364,7 +1121,7 @@
             let msg = '';
             const svcs = b.services?.length ? b.services.map(s=>s.name).join('، ') : 'غير محدد';
             const dateStr = new Date(b.date).toLocaleDateString('ar-EG');
-            const trackUrl = window.location.origin + window.location.pathname + '?phone=' + cleanPhone;
+            const trackUrl = window.location.href.split('?')[0] + '?phone=' + cleanPhone;
 
             if (type === 'confirm') {
                 msg = `مرحباً أ. ${b.name} ✨\n\nشكراً لاختياركم المراكبى لخدمات الفيديو 🎥\nتم تأكيد حجزكم بنجاح.\n\n📅 التاريخ: ${dateStr}\n📋 الخدمات: ${svcs}\n💰 الإجمالي: ${b.total} ج.م\n💸 العربون: ${b.deposit} ج.م\n💳 المتبقي: ${b.balance} ج.م\n\n📍 يمكنك متابعة حالة حجزك ومراحل العمل عبر الرابط التالي:\n${trackUrl}\n\nنسعد بخدمتكم! 🎬`;
@@ -1398,6 +1155,129 @@
             document.getElementById('adminBonusAmount').value='';
         };
         window.deleteEntry = function(id) { const i = state.dailyEntries.findIndex(x=>x.id===id); if(i>-1) { state.dailyEntries.splice(i,1); window.saveState(); window.refreshAllViews(); window.showToast("تم الحذف"); } };
+
+        window.initClientTracking = function(phoneStr) {
+            const cleanTarget = phoneStr.replace(/\D/g, '');
+            const clientBookings = state.bookings.filter(x => (x.phone || '').replace(/\D/g, '') === cleanTarget);
+            
+            if(clientBookings.length === 0) { 
+                alert("عفواً، لا يوجد حجز مسجل بهذا الرقم أو تم إدخاله بشكل خاطئ."); 
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                return; 
+            }
+            
+            const b = clientBookings[clientBookings.length - 1]; // Get latest
+            
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('photogPortal').classList.add('hidden');
+            document.getElementById('clientTrackingPortal').classList.remove('hidden');
+
+            document.getElementById('trackClientName').innerText = b.name;
+            document.getElementById('trackDate').innerText = new Date(b.date).toLocaleDateString('ar-EG');
+            document.getElementById('trackTotal').innerText = b.total + " ج.م";
+            document.getElementById('trackDeposit').innerText = b.deposit + " ج.م";
+            document.getElementById('trackBalance').innerText = b.balance + " ج.م";
+            document.getElementById('trackServices').innerText = b.services?.map(s=>s.name).join('، ') || 'غير محدد';
+
+            // Payment Section Logic
+            const paySec = document.getElementById('trackPaymentSection');
+            const prevCont = document.getElementById('trackReceiptPreviewContainer');
+            const uploadCont = document.getElementById('trackReceiptContainer');
+            document.getElementById('trackCurrentBookingId').value = b.id;
+
+            if (b.balance > 0) {
+                paySec.classList.remove('hidden');
+                document.getElementById('trackPaymentAmount').innerText = b.balance;
+                if (b.paymentReceipt) {
+                    uploadCont.classList.add('hidden');
+                    prevCont.classList.remove('hidden');
+                    document.getElementById('trackReceiptImage').src = b.paymentReceipt;
+                } else {
+                    uploadCont.classList.remove('hidden');
+                    prevCont.classList.add('hidden');
+                }
+            } else {
+                paySec.classList.add('hidden');
+            }
+
+            // Reset Timeline Visuals
+            const cDot = document.getElementById('trackDotConfirmed'), cTxt = document.getElementById('trackTextConfirmed');
+            const sDot = document.getElementById('trackDotShooting'), sTxt = document.getElementById('trackTextShooting');
+            const eDot = document.getElementById('trackDotEditing'), eTxt = document.getElementById('trackTextEditing');
+            const rDot = document.getElementById('trackDotReady'), rTxt = document.getElementById('trackTextReady');
+
+            cDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black";
+            sDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black";
+            eDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black";
+            rDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-zinc-700 border-4 border-black";
+            
+            cTxt.className = "font-bold text-zinc-500 text-sm";
+            sTxt.className = "font-bold text-zinc-500 text-sm";
+            eTxt.className = "font-bold text-zinc-500 text-sm";
+            rTxt.className = "font-bold text-zinc-500 text-sm";
+
+            const stat = b.trackingStatus || 'confirmed';
+
+            if(stat === 'confirmed' || stat === 'shooting' || stat === 'editing' || stat === 'ready') {
+                cDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-emerald-500 border-4 border-black shadow-[0_0_10px_rgba(16,185,129,0.5)]";
+                cTxt.className = "font-bold text-emerald-400 text-sm";
+            }
+            if(stat === 'shooting' || stat === 'editing' || stat === 'ready') {
+                sDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-emerald-500 border-4 border-black shadow-[0_0_10px_rgba(16,185,129,0.5)]";
+                sTxt.className = "font-bold text-emerald-400 text-sm";
+            }
+            if(stat === 'editing' || stat === 'ready') {
+                eDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-emerald-500 border-4 border-black shadow-[0_0_10px_rgba(16,185,129,0.5)]";
+                eTxt.className = "font-bold text-emerald-400 text-sm";
+            }
+            if(stat === 'ready') {
+                rDot.className = "absolute -right-[31px] top-1 w-5 h-5 rounded-full bg-emerald-500 border-4 border-black shadow-[0_0_10px_rgba(16,185,129,0.5)]";
+                rTxt.className = "font-bold text-emerald-400 text-sm";
+            }
+
+            lucide.createIcons();
+        };
+
+        window.handleReceiptUpload = function(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const bId = parseInt(document.getElementById('trackCurrentBookingId').value);
+            const reader = new FileReader();
+            
+            window.showToast("جاري تحميل الإيصال...");
+            
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800; // Compress image to fit Firebase limits easily
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.6); // 60% quality jpeg
+                    
+                    const b = state.bookings.find(x => x.id === bId);
+                    if(b) {
+                        b.paymentReceipt = base64;
+                        window.saveState();
+                        window.showToast("تم إرفاق وإرسال الإيصال بنجاح", "success");
+                        document.getElementById('trackReceiptContainer').classList.add('hidden');
+                        document.getElementById('trackReceiptPreviewContainer').classList.remove('hidden');
+                        document.getElementById('trackReceiptImage').src = base64;
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
 
         window.initPhotogPortal = function(name) {
             currentPhotogName = name; const pObj = state.photographers.find(x=>x.name===name); if(!pObj) return alert("المصور غير موجود");
@@ -1434,6 +1314,7 @@
                             <p class="text-[11px] text-white"><span class="text-emerald-400 font-bold">الخدمات المطلوبة:</span> ${svcs}</p>
                             <p class="text-[11px] text-white whitespace-pre-wrap"><span class="text-blue-400 font-bold">العنوان والتفاصيل:</span> ${details}</p>
                         </div>
+                        <a href="${window.getGoogleCalendarLink(bk)}" target="_blank" class="w-full mt-3 p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition flex items-center justify-center gap-1 text-[11px] font-bold"><i data-lucide="calendar-plus" class="w-3 h-3"></i> إضافة إلى تقويم جوجل</a>
                     </div>`;
                 }).join('') || '<p class="text-zinc-500 text-sm text-center py-4">لا يوجد مهام جديدة</p>';
             }
