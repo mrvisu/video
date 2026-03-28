@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cinema Studio Pro | نظام إدارة الاستوديو</title>
+    <!-- تسريع الاتصال بالخوادم لتقليل وقت التحميل -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    
+    <!-- إضافة أيقونة الكاميرا لعلامة التبويب -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e11d48'><path d='M15 8V7a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1l7 4V4l-7 4z'/></svg>">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -15,6 +25,32 @@
             color: #e5e5e5;
             overflow-x: hidden;
         }
+        
+        /* شاشة التحميل الفورية */
+        #appLoader {
+            position: fixed;
+            inset: 0;
+            background-color: #050505;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(225, 29, 72, 0.2);
+            border-top-color: #e11d48;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden-loader { opacity: 0; pointer-events: none; }
+
+        /* الأساس الجمالي للزجاج بدون زوم */
         .glass {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
@@ -72,6 +108,12 @@
     </style>
 </head>
 <body class="min-h-screen">
+
+    <!-- شاشة التحميل الفورية لتغطية التأخير -->
+    <div id="appLoader">
+        <div class="spinner"></div>
+        <p style="color: #a1a1aa; font-weight: bold; font-size: 14px; margin-top: 10px;">جاري تحميل Cinema Studio Pro...</p>
+    </div>
 
     <!-- Login Overlay -->
     <div id="loginOverlay" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4 hidden">
@@ -281,11 +323,11 @@
             <div id="tab-dashboard" class="space-y-8 animate-in fade-in duration-500">
                 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <button onclick="window.showTab('inventory')" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
+                    <button onclick="window.showTab('inventory'); window.toggleDailyEntryForm(true);" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
                         <i data-lucide="trending-up" class="w-6 h-6 mb-2 text-emerald-500 transition"></i>
                         <p class="text-xs sm:text-sm font-bold">تسجيل الدخل</p>
                     </button>
-                    <button onclick="window.showTab('bookings')" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
+                    <button onclick="window.showTab('bookings'); window.toggleBookingForm(true);" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
                         <i data-lucide="plus-circle" class="w-6 h-6 mb-2 cinema-red transition"></i>
                         <p class="text-xs sm:text-sm font-bold">حجز جديد</p>
                     </button>
@@ -320,7 +362,7 @@
             </div>
 
             <div id="tab-bookings" class="hidden space-y-8 animate-in fade-in duration-500">
-                <div class="glass p-4 sm:p-8">
+                <div id="bookingFormContainer" class="hidden glass p-4 sm:p-8">
                     <h3 class="text-xl sm:text-2xl font-bold mb-6 sm:mb-8 flex items-center justify-between">
                         <span>نموذج الحجز المتكامل</span>
                         <button onclick="window.cancelEditBooking()" id="btnCancelEdit" class="hidden text-[12px] bg-zinc-800 text-white px-3 py-1 rounded-lg hover:bg-zinc-700 transition">إلغاء التعديل <i data-lucide="x" class="w-3 h-3 inline"></i></button>
@@ -353,7 +395,10 @@
                 </div>
                 <div class="glass p-4 sm:p-6 overflow-x-auto">
                     <div class="flex flex-col sm:flex-row justify-between mb-6 flex-wrap gap-4">
-                        <h3 class="text-xl font-bold">الحجوزات النشطة</h3>
+                        <div class="flex items-center gap-4">
+                            <h3 class="text-xl font-bold">الحجوزات النشطة</h3>
+                            <button onclick="window.toggleBookingForm()" class="bg-cinema-red text-white text-xs px-4 py-2 rounded-lg hover:bg-red-700 transition font-bold">+ حجز جديد</button>
+                        </div>
                         <div class="flex flex-wrap gap-2 w-full sm:w-auto"><input type="date" id="filterBookingDate" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><input type="text" id="filterBookingName" placeholder="بحث..." oninput="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><select id="filterBookingPhotog" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><option value="">كل المصورين</option></select></div>
                     </div>
                     <div class="min-w-[850px]">
@@ -379,9 +424,16 @@
                     <input type="number" id="editFlashPrice" placeholder="سعر البيع للعميل" class="p-2 text-xs w-full sm:w-28 border-yellow-500/50">
                     <button onclick="window.saveFlashInventory()" class="bg-yellow-600 text-xs px-4 py-2 w-full sm:w-auto rounded-lg transition">حفظ</button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="glass p-4 sm:p-6 space-y-6">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0"><h4 class="font-bold text-emerald-400">معاملة مالية موحدة</h4><div class="flex gap-1"><button onclick="window.toggleTemplateManager()" class="text-[9px] bg-white/5 px-2 py-1 rounded hover:bg-white/10 transition">القاعات</button><button onclick="window.togglePhotogManager()" class="text-[9px] bg-white/5 px-2 py-1 rounded hover:bg-white/10 transition">المصورين</button></div></div>
+                <div id="inventoryLayout" class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                    <div id="dailyEntryFormContainer" class="hidden glass p-4 sm:p-6 space-y-6">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0">
+                            <h4 class="font-bold text-emerald-400">معاملة مالية موحدة</h4>
+                            <div class="flex gap-1">
+                                <button onclick="window.toggleTemplateManager()" class="text-[9px] bg-white/5 px-2 py-1 rounded hover:bg-white/10 transition">القاعات</button>
+                                <button onclick="window.togglePhotogManager()" class="text-[9px] bg-white/5 px-2 py-1 rounded hover:bg-white/10 transition">المصورين</button>
+                                <button onclick="window.toggleDailyEntryForm(false)" class="text-[9px] bg-red-500/20 text-red-400 px-2 py-1 rounded hover:bg-red-500/30 transition"><i data-lucide="x" class="w-3 h-3 inline"></i> إغلاق</button>
+                            </div>
+                        </div>
                         <div id="templatesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
                         <div id="templateManager" class="hidden p-4 bg-zinc-900/50 rounded-xl border border-dashed border-white/20"><div id="templateEditList" class="space-y-2"></div><button onclick="window.addNewTemplate()" class="mt-2 w-full p-1 text-[9px] border border-white/10 hover:bg-white/5">+ قاعة</button></div>
                         <div id="photogManager" class="hidden p-4 bg-zinc-900/50 rounded-xl border border-dashed border-white/20"><div id="photogEditList" class="space-y-2"></div><button onclick="window.addNewPhotographer()" class="mt-2 w-full p-1 text-[9px] border border-white/10 hover:bg-white/5">+ مصور</button></div>
@@ -402,7 +454,13 @@
                         </div>
                     </div>
                     <div class="glass p-4 sm:p-6 flex flex-col h-full min-h-[400px]">
-                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10"><h4>سجل اليومية</h4><div class="flex gap-4"><span id="dailyIncomeLabel" class="text-xs text-emerald-400 font-bold">+0</span><span id="dailyExpenseLabel" class="text-xs text-red-400 font-bold">-0</span></div></div>
+                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+                            <div class="flex items-center gap-4">
+                                <h4>سجل اليومية</h4>
+                                <button onclick="window.toggleDailyEntryForm()" class="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition font-bold">+ معاملة جديدة</button>
+                            </div>
+                            <div class="flex gap-4"><span id="dailyIncomeLabel" class="text-xs text-emerald-400 font-bold">+0</span><span id="dailyExpenseLabel" class="text-xs text-red-400 font-bold">-0</span></div>
+                        </div>
                         <div class="flex flex-wrap sm:flex-nowrap gap-2 mb-4"><input type="date" id="filterDailyDate" onchange="window.updateEntryLog()" class="p-2 text-[10px] glass w-full sm:w-auto"><input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-2 text-[10px] glass flex-grow w-full sm:w-auto"><select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-2 text-[10px] glass w-full sm:w-auto"><option value="">المصور</option></select></div>
                         <div id="dailyEntryLog" class="space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-1"></div>
                     </div>
@@ -505,6 +563,26 @@
             lucide.createIcons(); 
         };
         window.closeStatsModal = function() { document.getElementById('statsModal').classList.add('hidden'); };
+
+        window.toggleBookingForm = function(forceShow = false) {
+            const el = document.getElementById('bookingFormContainer');
+            if (forceShow) el.classList.remove('hidden');
+            else el.classList.toggle('hidden');
+        };
+
+        window.toggleDailyEntryForm = function(forceShow = false) {
+            const el = document.getElementById('dailyEntryFormContainer');
+            const layout = document.getElementById('inventoryLayout');
+            if (forceShow || el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                layout.classList.remove('lg:grid-cols-1');
+                layout.classList.add('lg:grid-cols-2');
+            } else {
+                el.classList.add('hidden');
+                layout.classList.remove('lg:grid-cols-2');
+                layout.classList.add('lg:grid-cols-1');
+            }
+        };
 
         window.getPhotogJobCount = function(name) {
             let count = 0;
@@ -1046,6 +1124,9 @@
                 document.getElementById('loginOverlay').classList.remove('hidden');
             }
             lucide.createIcons();
+            
+            const loader = document.getElementById('appLoader');
+            if(loader) { loader.classList.add('hidden-loader'); setTimeout(() => loader.remove(), 500); }
         };
 
         window.checkLogin = function() { if (document.getElementById('loginPass').value === "271192@") { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('mainContent').classList.remove('hidden'); window.refreshAllViews(); } else { const e = document.getElementById('loginError'); if(e) { e.classList.remove('hidden'); setTimeout(() => e.classList.add('hidden'), 3000); } } };
@@ -1075,6 +1156,7 @@
         window.editBooking = function(id) {
             const b = state.bookings.find(x => x.id === id);
             if(!b) return;
+            window.toggleBookingForm(true);
             window.currentEditBookingId = id;
             document.getElementById('clientName').value = b.name;
             document.getElementById('clientPhone').value = b.phone || '';
@@ -1124,6 +1206,7 @@
                 btnSave.classList.add('btn-grad');
             }
             document.getElementById('btnCancelEdit').classList.add('hidden');
+            window.toggleBookingForm(false);
         };
 
         window.saveBooking = function() {
@@ -1152,6 +1235,7 @@
                 
                 document.getElementById('clientName').value=''; document.getElementById('clientPhone').value=''; document.getElementById('depositAmount').value='0'; document.getElementById('bookingDetails').value=''; state.selectedServices=[];
                 document.querySelectorAll('.booking-photog-check').forEach(cb => cb.checked = false);
+                window.toggleBookingForm(false);
             }
             
             window.saveState(); window.refreshAllViews();
@@ -1208,6 +1292,7 @@
             state.dailyEntries.push({id:Date.now(), note:n, income:inc, date:date, photographers:pgs, gear: g?{note:document.getElementById('gearRentalNote').value||'معدات', amount:g}:null, flash:useF?(state.inventory.flashPrice || 50):null, totalExpenses:exp, time: new Date().toLocaleTimeString('ar-EG')});
             window.saveState(); window.refreshAllViews(); window.showToast("تم التسجيل");
             document.getElementById('incomeNote').value=''; document.getElementById('incomeAmount').value='';
+            window.toggleDailyEntryForm(false);
         };
         
         window.adminAddBonus = function() {
@@ -1433,7 +1518,7 @@
         window.addNewTemplate = function() { state.templates.push({ id: Date.now(), name: 'قاعة جديدة', price: 0 }); window.saveState(); window.renderTemplates(); };
         window.addNewPhotographer = function() { state.photographers.push({ id: Date.now(), name: 'مصور جديد', fee: 0, deviceId: null }); window.saveState(); window.renderPhotographers(); };
         window.addNewService = function() { state.services.push({ id: Date.now(), name: 'خدمة جديدة', price: 0 }); window.saveState(); window.renderServices(); };
-        window.openBookingForDate = function(d) { window.showTab('bookings'); const bD = document.getElementById('bookingDate'); if(bD) bD.value = d; window.showToast("تم تحديد التاريخ"); };
+        window.openBookingForDate = function(d) { window.showTab('bookings'); window.toggleBookingForm(true); const bD = document.getElementById('bookingDate'); if(bD) bD.value = d; window.showToast("تم تحديد التاريخ"); };
         window.saveFlashInventory = function() { state.inventory.flashPrice = parseFloat(document.getElementById('editFlashPrice').value)||50; state.inventory.flashesCount = parseInt(document.getElementById('editFlashCount').value)||0; state.inventory.flashesTotalValue = parseFloat(document.getElementById('editFlashValue').value)||0; window.saveState(); window.updateFlashInventoryUI(); window.toggleFlashInventoryEdit(); };
         window.toggleFlashInventoryEdit = function() { const f = document.getElementById('flashInventoryEditForm'); if(f) { f.classList.toggle('hidden'); if(!f.classList.contains('hidden')){ document.getElementById('editFlashPrice').value = state.inventory.flashPrice || 50; } } };
     </script>
