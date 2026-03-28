@@ -132,6 +132,19 @@
         <p id="toastMessage" class="text-sm font-bold m-0 whitespace-nowrap"></p>
     </div>
 
+    <!-- شاشة تأكيد الحذف المخصصة -->
+    <div id="confirmModal" class="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="glass p-6 w-full max-w-sm card-shadow border border-white/10 text-center">
+            <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
+            <h3 class="text-xl font-bold mb-2 text-white">تأكيد الحذف</h3>
+            <p class="text-sm text-zinc-400 mb-6" id="confirmModalMessage">هل أنت متأكد من رغبتك في حذف هذا السجل بشكل نهائي؟</p>
+            <div class="flex gap-3 justify-center">
+                <button id="btnConfirmYes" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold transition">نعم، احذف</button>
+                <button onclick="document.getElementById('confirmModal').classList.add('hidden')" class="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-2 rounded-lg font-bold transition">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <div id="loginOverlay" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4 hidden">
         <div class="glass p-8 w-full max-w-md text-center card-shadow">
             <div class="mb-6 flex justify-center">
@@ -617,6 +630,16 @@
             setTimeout(() => ts.classList.add('translate-y-24', 'opacity-0'), 4000);
         };
 
+        window.showConfirm = function(msg, callback) {
+            document.getElementById('confirmModalMessage').innerText = msg;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            const btnYes = document.getElementById('btnConfirmYes');
+            btnYes.onclick = function() {
+                document.getElementById('confirmModal').classList.add('hidden');
+                callback();
+            };
+        };
+
         window.showStatsModal = function(title, html) { 
             const mT = document.getElementById('statsModalTitleText'); 
             const mC = document.getElementById('statsModalContent'); 
@@ -678,6 +701,10 @@
                 window.open(link, '_blank');
             }
         };
+
+        window.deleteService = function(i) { window.showConfirm("هل أنت متأكد من حذف هذه الخدمة؟", () => { state.services.splice(i,1); window.saveState(); window.renderServices(); }); };
+        window.deleteTemplate = function(i) { window.showConfirm("هل أنت متأكد من حذف هذه القاعة؟", () => { state.templates.splice(i,1); window.saveState(); window.renderTemplates(); }); };
+        window.deletePhotographer = function(i) { window.showConfirm("هل أنت متأكد من حذف هذا المصور؟", () => { state.photographers.splice(i,1); window.saveState(); window.renderPhotographers(); window.updateFiltersUI(); }); };
 
         // --- Renderers ---
         window.updateFiltersUI = function() { 
@@ -793,7 +820,7 @@
                 return `<button id="svc-btn-${i}" onclick="window.toggleService(${i})" class="service-btn glass p-3 text-sm text-right flex justify-between items-center transition rounded-xl hover:bg-white/5 ${btnClass}"><span>${s.name}</span><span class="text-xs text-zinc-400">${s.price}</span></button>`;
             }).join('');
             const eList = document.getElementById('serviceEditList');
-            if(eList) eList.innerHTML = state.services.map((s, i) => `<div class="flex gap-2 items-center"><input type="text" value="${s.name}" onchange="state.services[${i}].name=this.value;window.saveState();window.renderServices();" class="flex-grow p-1 text-xs"><input type="number" value="${s.price}" onchange="state.services[${i}].price=parseFloat(this.value);window.saveState();window.renderServices();" class="w-16 p-1 text-xs text-center"><button onclick="state.services.splice(${i},1);window.saveState();window.renderServices();" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
+            if(eList) eList.innerHTML = state.services.map((s, i) => `<div class="flex gap-2 items-center"><input type="text" value="${s.name}" onchange="state.services[${i}].name=this.value;window.saveState();window.renderServices();" class="flex-grow p-1 text-xs"><input type="number" value="${s.price}" onchange="state.services[${i}].price=parseFloat(this.value);window.saveState();window.renderServices();" class="w-16 p-1 text-xs text-center"><button onclick="window.deleteService(${i})" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
             lucide.createIcons();
         };
 
@@ -801,7 +828,7 @@
             const grid = document.getElementById('templatesGrid'); if(!grid) return;
             grid.innerHTML = state.templates.map((t, i) => `<button onclick="document.getElementById('incomeNote').value='${t.name}';document.getElementById('incomeAmount').value='${t.price}';" class="p-3 glass hover:bg-emerald-500/10 text-xs text-right border-r-2 border-r-emerald-500 rounded-xl flex justify-between transition"><span>${t.name}</span><span class="text-emerald-400">${t.price}</span></button>`).join('');
             const eList = document.getElementById('templateEditList');
-            if(eList) eList.innerHTML = state.templates.map((t, i) => `<div class="flex gap-2 items-center"><input type="text" value="${t.name}" onchange="state.templates[${i}].name=this.value;window.saveState();window.renderTemplates();" class="flex-grow p-1 text-xs"><input type="number" value="${t.price}" onchange="state.templates[${i}].price=parseFloat(this.value);window.saveState();window.renderTemplates();" class="w-16 p-1 text-xs"><button onclick="state.templates.splice(${i},1);window.saveState();window.renderTemplates();" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
+            if(eList) eList.innerHTML = state.templates.map((t, i) => `<div class="flex gap-2 items-center"><input type="text" value="${t.name}" onchange="state.templates[${i}].name=this.value;window.saveState();window.renderTemplates();" class="flex-grow p-1 text-xs"><input type="number" value="${t.price}" onchange="state.templates[${i}].price=parseFloat(this.value);window.saveState();window.renderTemplates();" class="w-16 p-1 text-xs"><button onclick="window.deleteTemplate(${i})" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`).join('');
             lucide.createIcons();
         };
 
@@ -821,7 +848,7 @@
                 
                 bL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 booking-photog-check" data-name="${p.name}" data-fee="${p.fee}" ${isSelectedInEdit}><div class="flex-grow flex items-center justify-between"><span class="text-[12px] font-bold">${p.name}</span><span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-bold">${count} عمل</span></div></label>`;
                 
-                eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="w-20 p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="window.copyPhotogLink('${p.name}')" class="text-blue-400 transition hover:bg-white/5 p-1 rounded"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="state.photographers[${i}].deviceId=null;window.saveState();window.showToast('تم فك القفل')" class="text-yellow-400 transition hover:bg-white/5 p-1 rounded"><i data-lucide="unlock" class="w-3 h-3"></i></button><button onclick="state.photographers.splice(${i},1);window.saveState();window.renderPhotographers();" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
+                eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="w-20 p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="window.copyPhotogLink('${p.name}')" class="text-blue-400 transition hover:bg-white/5 p-1 rounded"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="state.photographers[${i}].deviceId=null;window.saveState();window.showToast('تم فك القفل')" class="text-yellow-400 transition hover:bg-white/5 p-1 rounded"><i data-lucide="unlock" class="w-3 h-3"></i></button><button onclick="window.deletePhotographer(${i})" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
             });
             lucide.createIcons(); window.updateFiltersUI();
         };
@@ -840,6 +867,7 @@
         window.renderReports = function() {
             const pS = {}, hS = {}; let tW = 0, tI = 0, tE = 0;
             
+            // Build the statistics first
             state.dailyEntries.forEach(e => {
                 if(e.note.startsWith('سحب مالي للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[n].withdrawals += e.totalExpenses; tE += e.totalExpenses; return; }
                 if(e.note.startsWith('مكافأة إضافية للمصور: ')) { const parts = e.note.split(': ')[1].split(' - '); const n = parts[0]; if(!pS[n]) pS[n] = { jobs: 0, wages: 0, withdrawals: 0, bonuses: 0, locs: {} }; pS[n].bonuses += e.totalExpenses; tE += e.totalExpenses; return; }
@@ -1233,6 +1261,30 @@
         window.adminLogout = function() { location.href = window.location.origin + window.location.pathname; };
         window.showTab = function(id) { ['dashboard', 'bookings', 'inventory', 'reports'].forEach(t => { const el = document.getElementById(`tab-${t}`); if(el) el.classList.add('hidden'); }); const sel = document.getElementById(`tab-${id}`); if(sel) sel.classList.remove('hidden'); lucide.createIcons(); if(id === 'dashboard') window.renderCalendar(); };
 
+        window.deleteBooking = function(id) { 
+            window.showConfirm("هل أنت متأكد من رغبتك في حذف هذا الحجز بشكل نهائي؟", () => {
+                const i = state.bookings.findIndex(x=>x.id===id); 
+                if(i>-1) { 
+                    state.bookings.splice(i,1); 
+                    window.saveState(); 
+                    window.refreshAllViews(); 
+                    window.showToast("تم حذف الحجز بنجاح"); 
+                } 
+            });
+        };
+
+        window.deleteEntry = function(id) { 
+            window.showConfirm("هل أنت متأكد من رغبتك في حذف هذا السجل المالي بشكل نهائي؟", () => {
+                const i = state.dailyEntries.findIndex(x=>x.id===id); 
+                if(i>-1) { 
+                    state.dailyEntries.splice(i,1); 
+                    window.saveState(); 
+                    window.refreshAllViews(); 
+                    window.showToast("تم حذف السجل بنجاح"); 
+                } 
+            });
+        };
+
         // --- Interactions ---
         window.toggleService = function(idx) {
             const s = state.services[idx], btn = document.getElementById(`svc-btn-${idx}`);
@@ -1348,7 +1400,6 @@
         };
 
         window.completePayment = function(id) { const b = state.bookings.find(x=>x.id===id); if(b) { b.status='completed'; b.balance=0; window.saveState(); window.refreshAllViews(); window.showToast("تم تأكيد التحصيل بنجاح"); window.closeStatsModal(); }};
-        window.deleteBooking = function(id) { const i = state.bookings.findIndex(x=>x.id===id); if(i>-1) { state.bookings.splice(i,1); window.saveState(); window.refreshAllViews(); window.showToast("تم الحذف"); } };
         window.changeTrackingStatus = function(id, val) { const b = state.bookings.find(x => x.id === id); if(b) { b.trackingStatus = val; window.saveState(); window.showToast("تم تحديث حالة تتبع العمل"); } };
         
         // --- WhatsApp Logic & Templates ---
@@ -1408,7 +1459,6 @@
             window.saveState(); window.refreshAllViews(); window.showToast("تم منح المكافأة");
             document.getElementById('adminBonusAmount').value='';
         };
-        window.deleteEntry = function(id) { const i = state.dailyEntries.findIndex(x=>x.id===id); if(i>-1) { state.dailyEntries.splice(i,1); window.saveState(); window.refreshAllViews(); window.showToast("تم الحذف"); } };
 
         window.copyPhotogLink = function(name) { const url = window.location.href.split('?')[0] + '?photog=' + window.arToEn(name); const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); window.showToast("تم النسخ"); };
         window.copyPaymentNumber = function() { const t = document.createElement("textarea"); t.value = "01126810107"; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); window.showToast("تم نسخ رقم الدفع بنجاح"); };
