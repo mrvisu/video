@@ -149,6 +149,18 @@
         </div>
     </div>
 
+    <!-- شاشة الإجراءات عند الضغط على التقويم -->
+    <div id="calendarActionModal" class="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="glass p-6 w-full max-w-sm card-shadow border border-white/10 text-center">
+            <h3 class="text-lg font-bold mb-6 text-white" id="calendarActionDateText"></h3>
+            <div class="flex flex-col gap-3">
+                <button onclick="window.handleCalendarAction('booking')" class="bg-cinema-red hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2"><i data-lucide="calendar-plus" class="w-5 h-5"></i> تسجيل حجز جديد</button>
+                <button onclick="window.handleCalendarAction('entry')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-bold transition flex items-center justify-center gap-2"><i data-lucide="trending-up" class="w-5 h-5"></i> تسجيل دخل (يومية)</button>
+                <button onclick="document.getElementById('calendarActionModal').classList.add('hidden')" class="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-lg font-bold transition mt-2">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <div id="loginOverlay" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4 hidden">
         <div class="glass p-8 w-full max-w-md text-center card-shadow">
             <div class="mb-6 flex justify-center">
@@ -211,7 +223,7 @@
 
     <!-- Photographer Tracking View -->
     <div id="photographerTrackingView" class="hidden min-h-screen p-4 sm:p-8 space-y-6">
-        <div class="max-w-4xl mx-auto">
+        <div class="max-w-5xl mx-auto">
             <div class="glass p-6 mb-4 text-center flex flex-col items-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
                 <div class="bg-blue-500/20 p-4 rounded-full mb-4 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
@@ -233,47 +245,59 @@
             <!-- Notifications Section -->
             <div id="trackPhotogAlerts" class="mb-6 space-y-2"></div>
 
-            <!-- Upcoming Tasks (Moved to TOP) -->
-            <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="calendar-clock" class="text-yellow-400"></i> أعمال ومواعيد قادمة</h3>
-            <div id="trackPhotogUpcoming" class="space-y-4 mb-8"></div>
-
-            <!-- Unified Stats, Withdrawals, and Bonuses Card -->
-            <div class="glass p-6 mb-8 border border-white/10 rounded-2xl relative overflow-hidden card-shadow">
-                <div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500"></div>
-                <h3 class="text-lg font-bold mb-6 text-white flex items-center gap-2"><i data-lucide="wallet" class="text-emerald-400"></i> المحفظة والإحصائيات الشخصية</h3>
+            <!-- Main Split Layout (Upcoming vs Wallet) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-start">
                 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-3 gap-3 mb-6">
-                    <div class="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-center">
-                        <p class="text-[9px] text-emerald-200/70 mb-1">الرصيد المتاح</p>
-                        <h3 class="text-base sm:text-xl font-bold text-emerald-400 whitespace-nowrap" id="trackPhotogEarnings">0 ج.م</h3>
-                    </div>
-                    <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center">
-                        <p class="text-[9px] text-blue-200/70 mb-1">أيام العمل</p>
-                        <h3 class="text-base sm:text-xl font-bold text-blue-400" id="trackPhotogJobs">0</h3>
-                    </div>
-                    <div class="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20 text-center">
-                        <p class="text-[9px] text-purple-200/70 mb-1">المكافآت المكتسبة</p>
-                        <h3 class="text-base sm:text-xl font-bold text-purple-400 whitespace-nowrap" id="trackPhotogTotalBonuses">0 ج.م</h3>
-                    </div>
+                <!-- Column 1: Upcoming Tasks -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="calendar-clock" class="text-yellow-400"></i> أعمال ومواعيد قادمة</h3>
+                    <div id="trackPhotogUpcoming" class="space-y-4"></div>
                 </div>
+                
+                <!-- Column 2: Unified Stats, Withdrawals, and Bonuses Card -->
+                <div>
+                    <div class="glass p-6 border border-white/10 rounded-2xl relative overflow-hidden card-shadow">
+                        <div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500"></div>
+                        <h3 class="text-lg font-bold mb-6 text-white flex items-center gap-2"><i data-lucide="wallet" class="text-emerald-400"></i> المحفظة والإحصائيات الشخصية</h3>
+                        
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                            <div class="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-center flex flex-col justify-center">
+                                <p class="text-[9px] text-emerald-200/70 mb-1">الرصيد المتاح</p>
+                                <h3 class="text-base sm:text-lg font-bold text-emerald-400 whitespace-nowrap" id="trackPhotogEarnings">0 ج.م</h3>
+                            </div>
+                            <div class="bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center flex flex-col justify-center">
+                                <p class="text-[9px] text-red-200/70 mb-1">المسحوبات</p>
+                                <h3 class="text-base sm:text-lg font-bold text-red-400 whitespace-nowrap" id="trackPhotogTotalWithdrawals">0 ج.م</h3>
+                            </div>
+                            <div class="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20 text-center flex flex-col justify-center">
+                                <p class="text-[9px] text-purple-200/70 mb-1">المكافآت</p>
+                                <h3 class="text-base sm:text-lg font-bold text-purple-400 whitespace-nowrap" id="trackPhotogTotalBonuses">0 ج.م</h3>
+                            </div>
+                            <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center flex flex-col justify-center">
+                                <p class="text-[9px] text-blue-200/70 mb-1">أيام العمل</p>
+                                <h3 class="text-base sm:text-lg font-bold text-blue-400" id="trackPhotogJobs">0</h3>
+                            </div>
+                        </div>
 
-                <!-- Withdraw Section -->
-                <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center mb-6">
-                    <div class="flex-grow w-full text-right">
-                       <p class="text-sm font-bold text-red-400 mb-0.5">سحب مستحقات نقدية</p>
-                       <p class="text-[10px] text-red-200/70">سحب من الرصيد المتاح وإبلاغ الإدارة</p>
+                        <!-- Withdraw Section -->
+                        <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center mb-6">
+                            <div class="flex-grow w-full text-right">
+                               <p class="text-sm font-bold text-red-400 mb-0.5">سحب مستحقات نقدية</p>
+                               <p class="text-[10px] text-red-200/70">سحب من الرصيد المتاح وإبلاغ الإدارة</p>
+                            </div>
+                            <input type="number" id="withdrawAmount" placeholder="المبلغ (ج.م)" class="w-full sm:w-32 p-2.5 bg-black/50 text-white rounded-lg border border-red-500/30 text-center font-bold focus:border-red-500 outline-none transition-all">
+                            <button onclick="window.requestWithdrawal()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-2 whitespace-nowrap">
+                                <i data-lucide="hand-coins" class="w-4 h-4"></i> سحب
+                            </button>
+                        </div>
+
+                        <!-- Bonuses List within the unified card -->
+                        <div id="trackPhotogBonusesContainer" class="hidden">
+                            <h4 class="text-[11px] font-bold text-zinc-400 mb-3 flex items-center gap-1.5"><i data-lucide="award" class="w-3 h-3"></i> تفاصيل المكافآت المسجلة</h4>
+                            <div id="trackPhotogBonuses" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+                        </div>
                     </div>
-                    <input type="number" id="withdrawAmount" placeholder="المبلغ (ج.م)" class="w-full sm:w-32 p-2.5 bg-black/50 text-white rounded-lg border border-red-500/30 text-center font-bold focus:border-red-500 outline-none transition-all">
-                    <button onclick="window.requestWithdrawal()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-2 whitespace-nowrap">
-                        <i data-lucide="hand-coins" class="w-4 h-4"></i> سحب
-                    </button>
-                </div>
-
-                <!-- Bonuses List within the unified card -->
-                <div id="trackPhotogBonusesContainer" class="hidden">
-                    <h4 class="text-[11px] font-bold text-zinc-400 mb-3 flex items-center gap-1.5"><i data-lucide="award" class="w-3 h-3"></i> تفاصيل المكافآت المسجلة</h4>
-                    <div id="trackPhotogBonuses" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
                 </div>
             </div>
 
@@ -390,6 +414,15 @@
 
             <div id="tab-dashboard" class="space-y-8 animate-in fade-in duration-500">
                 
+                <!-- Interactive Calendar Moved to Top -->
+                <div class="glass p-6">
+                    <div class="flex justify-between items-center mb-4"><h3 class="font-bold flex items-center gap-2"><i data-lucide="calendar" class="cinema-red"></i> التقويم</h3>
+                        <div class="flex gap-2 bg-white/5 rounded-lg px-2 py-1"><button onclick="window.changeMonth(-1)" class="transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button><span id="currentMonthYear" class="text-xs font-bold min-w-[60px] text-center"></span><button onclick="window.changeMonth(1)" class="transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button></div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-zinc-500 mb-2"><div>أحد</div><div>إثنين</div><div>ثلاثاء</div><div>أربعاء</div><div>خميس</div><div>جمعة</div><div>سبت</div></div>
+                    <div id="dashboardCalendar" class="grid grid-cols-7 gap-1 text-xs font-bold"></div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <button onclick="window.showTab('inventory'); window.toggleDailyEntryForm(true);" class="glass p-4 text-center hover:bg-white/10 transition group flex flex-col items-center justify-center">
                         <i data-lucide="trending-up" class="w-6 h-6 mb-2 text-emerald-500 transition"></i>
@@ -411,17 +444,9 @@
                     <div class="glass p-6 border-r-4 border-r-blue-500 cursor-pointer" onclick="window.showDashboardDetails('profit')"><p class="text-zinc-400 text-sm">صافي الأرباح</p><h3 class="text-3xl sm:text-4xl font-bold mt-2 text-blue-400" id="stat-profit">0</h3></div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Transactions -->
+                <div class="grid grid-cols-1 gap-8">
+                    <!-- Transactions (Now Full Width) -->
                     <div class="glass p-6"><h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="history" class="cinema-red"></i> آخر المعاملات</h3><div id="recentBookings" class="space-y-4 max-h-[400px] overflow-y-auto pr-2"></div></div>
-                    <!-- Interactive Calendar -->
-                    <div class="glass p-6">
-                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold flex items-center gap-2"><i data-lucide="calendar" class="cinema-red"></i> التقويم</h3>
-                            <div class="flex gap-2 bg-white/5 rounded-lg px-2 py-1"><button onclick="window.changeMonth(-1)" class="transition"><i data-lucide="chevron-right" class="w-4 h-4"></i></button><span id="currentMonthYear" class="text-xs font-bold min-w-[60px] text-center"></span><button onclick="window.changeMonth(1)" class="transition"><i data-lucide="chevron-left" class="w-4 h-4"></i></button></div>
-                        </div>
-                        <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-zinc-500 mb-2"><div>أحد</div><div>إثنين</div><div>ثلاثاء</div><div>أربعاء</div><div>خميس</div><div>جمعة</div><div>سبت</div></div>
-                        <div id="dashboardCalendar" class="grid grid-cols-7 gap-1 text-xs font-bold"></div>
-                    </div>
                 </div>
             </div>
 
@@ -826,6 +851,29 @@
                 document.getElementById('withdrawAmount').value = '';
                 window.refreshAllViews(); // Reload ui to show new balance
             });
+        };
+
+        // --- Calendar Actions ---
+        let selectedCalendarDate = '';
+        window.openBookingForDate = function(d) {
+            selectedCalendarDate = d;
+            const dateStr = new Date(d).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('calendarActionDateText').innerText = dateStr;
+            document.getElementById('calendarActionModal').classList.remove('hidden');
+            lucide.createIcons();
+        };
+
+        window.handleCalendarAction = function(type) {
+            document.getElementById('calendarActionModal').classList.add('hidden');
+            if(type === 'booking') {
+                window.showTab('bookings');
+                window.toggleBookingForm(true);
+                const bD = document.getElementById('bookingDate'); if(bD) bD.value = selectedCalendarDate;
+            } else if (type === 'entry') {
+                window.showTab('inventory');
+                window.toggleDailyEntryForm(true);
+                const dD = document.getElementById('dailyEntryDate'); if(dD) dD.value = selectedCalendarDate;
+            }
         };
 
         // --- Renderers ---
@@ -1290,6 +1338,7 @@
             let totalEarnings = 0;
             let jobsCount = 0;
             let totalBonusesAmt = 0;
+            let totalWithdrawalsAmt = 0;
             
             let upcomingHtml = '';
             let historyHtml = '';
@@ -1356,7 +1405,12 @@
             dailyEntries.forEach(d => {
                 const fee = d.photographers.find(p=>p.name===name).totalFee; // This will be negative if it's a withdrawal
                 totalEarnings += fee; 
-                if (d.type !== 'withdrawal') jobsCount++;
+                
+                if (d.type !== 'withdrawal') {
+                    jobsCount++;
+                } else {
+                    totalWithdrawalsAmt += Math.abs(fee);
+                }
                 
                 historyHtml += `
                     <div class="glass p-4 rounded-xl border-r-4 ${d.type === 'withdrawal' ? 'border-red-500' : 'border-emerald-500'} flex justify-between items-center opacity-80 hover:opacity-100 transition">
@@ -1412,6 +1466,7 @@
 
             // Update Unified Stats Card
             document.getElementById('trackPhotogEarnings').innerText = totalEarnings + " ج.م";
+            document.getElementById('trackPhotogTotalWithdrawals').innerText = totalWithdrawalsAmt + " ج.م";
             document.getElementById('trackPhotogJobs').innerText = jobsCount;
             document.getElementById('trackPhotogTotalBonuses').innerText = totalBonusesAmt + " ج.م";
             
@@ -1794,7 +1849,6 @@
         window.addNewTemplate = function() { state.templates.push({ id: Date.now(), name: 'قاعة جديدة', price: 0 }); window.saveState(); window.renderTemplates(); };
         window.addNewPhotographer = function() { state.photographers.push({ id: Date.now(), name: 'مصور جديد', fee: 0 }); window.saveState(); window.renderPhotographers(); };
         window.addNewService = function() { state.services.push({ id: Date.now(), name: 'خدمة جديدة', price: 0 }); window.saveState(); window.renderServices(); };
-        window.openBookingForDate = function(d) { window.showTab('bookings'); window.toggleBookingForm(true); const bD = document.getElementById('bookingDate'); if(bD) bD.value = d; window.showToast("تم تحديد التاريخ"); };
         window.saveFlashInventory = function() { state.inventory.flashPrice = parseFloat(document.getElementById('editFlashPrice').value)||50; state.inventory.flashesCount = parseInt(document.getElementById('editFlashCount').value)||0; state.inventory.flashesTotalValue = parseFloat(document.getElementById('editFlashValue').value)||0; window.saveState(); window.updateFlashInventoryUI(); window.toggleFlashInventoryEdit(); };
         window.toggleFlashInventoryEdit = function() { const f = document.getElementById('flashInventoryEditForm'); if(f) { f.classList.toggle('hidden'); if(!f.classList.contains('hidden')){ document.getElementById('editFlashPrice').value = state.inventory.flashPrice || 50; } } };
     </script>
