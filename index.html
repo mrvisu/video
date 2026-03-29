@@ -177,6 +177,84 @@
         </div>
     </div>
 
+    <!-- نافذة دليل أرقام الإدارة -->
+    <div id="adminDirectoryModal" class="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="glass p-6 w-full max-w-2xl card-shadow border border-white/10 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="users-2" class="text-purple-400"></i> دليل المصورين والزملاء (للإدارة)</h3>
+                <button onclick="window.closeAdminDirectory()" class="text-zinc-400 hover:text-white transition p-1 hover:scale-110"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 mb-6 bg-white/5 p-4 rounded-xl border border-white/10">
+                <input type="text" id="adminContactName" placeholder="الاسم" class="p-2.5 text-sm w-full">
+                <select id="adminContactRole" class="p-2.5 text-sm w-full">
+                    <option value="" disabled selected>اختر التخصص</option>
+                    <option value="مصور">مصور</option>
+                    <option value="مخرج">مخرج</option>
+                    <option value="مصور كرين">مصور كرين</option>
+                    <option value="مصور ميديا">مصور ميديا</option>
+                    <option value="أخرى">أخرى</option>
+                </select>
+                <input type="tel" id="adminContactPhone" placeholder="رقم الهاتف" class="p-2.5 text-sm w-full" dir="ltr">
+                <button onclick="window.addEmergencyContact('admin')" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition whitespace-nowrap flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                    <i data-lucide="plus" class="w-4 h-4"></i> إضافة
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto pr-2 flex-grow">
+                <div id="adminEmergencyList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة دليل أرقام المصورين -->
+    <div id="photogDirectoryModal" class="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="glass p-6 w-full max-w-2xl card-shadow border border-white/10 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="book-open-check" class="text-blue-400"></i> دليل أرقام الزملاء والطوارئ</h3>
+                <button onclick="window.closePhotogDirectory()" class="text-zinc-400 hover:text-white transition p-1 hover:scale-110"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <!-- Filter & Add Section -->
+            <div class="mb-6 space-y-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                <div>
+                    <label class="text-xs text-zinc-400 mb-1.5 block font-bold">ابحث حسب التخصص (من تحتاج؟):</label>
+                    <select id="photogDirectoryFilter" onchange="window.renderEmergencyContacts()" class="w-full p-2.5 text-sm">
+                        <option value="">كل التخصصات والمصورين</option>
+                        <option value="مصور">مصور</option>
+                        <option value="مخرج">مخرج</option>
+                        <option value="مصور كرين">مصور كرين</option>
+                        <option value="مصور ميديا">مصور ميديا</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+                <hr class="border-white/5">
+                <div>
+                    <label class="text-xs text-zinc-400 mb-1.5 block font-bold">إضافة رقم زميل جديد (مشاركة مع الفريق):</label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="photogContactName" placeholder="الاسم" class="p-2.5 text-sm w-full">
+                        <select id="photogContactRole" class="p-2.5 text-sm w-full">
+                            <option value="" disabled selected>التخصص</option>
+                            <option value="مصور">مصور</option>
+                            <option value="مخرج">مخرج</option>
+                            <option value="مصور كرين">مصور كرين</option>
+                            <option value="مصور ميديا">مصور ميديا</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                        <input type="tel" id="photogContactPhone" placeholder="الهاتف" class="p-2.5 text-sm w-full" dir="ltr">
+                        <button onclick="window.addEmergencyContact('photog')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i> إضافة
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="overflow-y-auto pr-2 flex-grow">
+                <div id="photogEmergencyList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            </div>
+        </div>
+    </div>
+
     <div id="loginOverlay" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4 hidden">
         <div class="glass p-8 w-full max-w-md text-center card-shadow">
             <div class="mb-6 flex justify-center">
@@ -258,6 +336,13 @@
                 </div>
             </div>
 
+            <!-- Directory Button (Photog) -->
+            <div class="mb-6">
+                <button onclick="window.openPhotogDirectory()" class="w-full glass p-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-500/10 transition text-blue-400 font-bold border border-blue-500/30 shadow-[0_4px_20px_rgba(59,130,246,0.15)]">
+                    <i data-lucide="book-open-check" class="w-5 h-5"></i> دليل أرقام الطوارئ والزملاء (الكل)
+                </button>
+            </div>
+
             <!-- Notifications Section -->
             <div id="trackPhotogAlerts" class="mb-6 space-y-2"></div>
 
@@ -315,21 +400,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Emergency Directory (Photog) -->
-            <h3 class="text-xl font-bold mb-4 flex items-center gap-2 mt-2"><i data-lucide="users" class="text-blue-400"></i> دليل أرقام الطوارئ والزملاء</h3>
-            <div class="glass p-6 mb-8 card-shadow border border-white/10">
-                <p class="text-xs text-zinc-400 mb-4">يمكنك إضافة أرقام الزملاء (مصورين، مخرجين، كرين، إلخ) هنا للوصول السريع إليها وقت الحاجة.</p>
-                <div class="flex flex-col sm:flex-row gap-3 mb-6">
-                    <input type="text" id="photogContactName" placeholder="الاسم" class="p-2.5 text-sm w-full">
-                    <input type="text" id="photogContactRole" placeholder="التخصص (مثال: مصور كرين)" class="p-2.5 text-sm w-full">
-                    <input type="tel" id="photogContactPhone" placeholder="رقم الهاتف" class="p-2.5 text-sm w-full" dir="ltr">
-                    <button onclick="window.addEmergencyContact('photog')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition whitespace-nowrap flex items-center justify-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> إضافة رقم
-                    </button>
-                </div>
-                <div id="photogEmergencyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
             </div>
 
             <!-- Completed History -->
@@ -475,6 +545,10 @@
                             <div class="bg-blue-500/20 p-2 sm:p-3 rounded-xl"><i data-lucide="pie-chart" class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 transition"></i></div>
                             <div class="text-right"><p class="text-xs sm:text-sm font-bold text-white">التقارير المالية</p><p class="text-[9px] sm:text-[10px] text-zinc-400 mt-0.5">عرض إحصائيات الأرباح</p></div>
                         </button>
+                        <button onclick="window.openAdminDirectory()" class="glass p-3 sm:p-4 hover:bg-white/10 transition group flex items-center justify-start gap-3 sm:gap-4">
+                            <div class="bg-purple-500/20 p-2 sm:p-3 rounded-xl"><i data-lucide="users-2" class="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 transition"></i></div>
+                            <div class="text-right"><p class="text-xs sm:text-sm font-bold text-white">دليل المصورين</p><p class="text-[9px] sm:text-[10px] text-zinc-400 mt-0.5">أرقام الطوارئ والزملاء</p></div>
+                        </button>
                     </div>
                 </div>
 
@@ -487,22 +561,6 @@
                 <div class="grid grid-cols-1 gap-8">
                     <!-- Transactions (Now Full Width) -->
                     <div class="glass p-6"><h3 class="text-xl font-bold mb-6 flex items-center gap-2"><i data-lucide="history" class="cinema-red"></i> آخر المعاملات</h3><div id="recentBookings" class="space-y-4 max-h-[400px] overflow-y-auto pr-2"></div></div>
-                </div>
-
-                <!-- Emergency Directory (Admin) -->
-                <div class="glass p-6 mt-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold flex items-center gap-2"><i data-lucide="users" class="text-blue-400"></i> دليل أرقام الطوارئ والزملاء</h3>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3 mb-6">
-                        <input type="text" id="adminContactName" placeholder="الاسم" class="p-2.5 text-sm w-full">
-                        <input type="text" id="adminContactRole" placeholder="التخصص (مثال: مصور كرين)" class="p-2.5 text-sm w-full">
-                        <input type="tel" id="adminContactPhone" placeholder="رقم الهاتف" class="p-2.5 text-sm w-full" dir="ltr">
-                        <button onclick="window.addEmergencyContact('admin')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition whitespace-nowrap flex items-center justify-center gap-2">
-                            <i data-lucide="plus" class="w-4 h-4"></i> إضافة
-                        </button>
-                    </div>
-                    <div id="adminEmergencyList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                 </div>
             </div>
 
@@ -952,6 +1010,21 @@
         };
 
         // --- Emergency Contacts Logic ---
+        window.openAdminDirectory = function() {
+            document.getElementById('adminDirectoryModal').classList.remove('hidden');
+            window.renderEmergencyContacts();
+        };
+        window.closeAdminDirectory = function() {
+            document.getElementById('adminDirectoryModal').classList.add('hidden');
+        };
+        window.openPhotogDirectory = function() {
+            document.getElementById('photogDirectoryModal').classList.remove('hidden');
+            window.renderEmergencyContacts();
+        };
+        window.closePhotogDirectory = function() {
+            document.getElementById('photogDirectoryModal').classList.add('hidden');
+        };
+
         window.addEmergencyContact = function(context) {
             const nameEl = document.getElementById(context + 'ContactName');
             const roleEl = document.getElementById(context + 'ContactRole');
@@ -961,14 +1034,14 @@
             const role = roleEl.value.trim();
             const phone = phoneEl.value.trim();
             
-            if(!name || !phone) return window.showToast("يرجى إدخال الاسم ورقم الهاتف", "error");
+            if(!name || !phone || !role) return window.showToast("يرجى إدخال الاسم والتخصص ورقم الهاتف", "error");
             
             if(!state.emergencyContacts) state.emergencyContacts = [];
             
             state.emergencyContacts.push({
                 id: Date.now(),
                 name: name,
-                role: role || 'غير محدد',
+                role: role,
                 phone: phone
             });
             
@@ -998,17 +1071,18 @@
             
             const adminList = document.getElementById('adminEmergencyList');
             const photogList = document.getElementById('photogEmergencyList');
+            const photogFilter = document.getElementById('photogDirectoryFilter') ? document.getElementById('photogDirectoryFilter').value : '';
             
             const renderCard = (c, isAdmin) => `
                 <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex justify-between items-center hover:bg-white/10 transition group">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-blue-500/20 p-2 rounded-full group-hover:bg-blue-500/30 transition"><i data-lucide="phone-call" class="w-4 h-4 text-blue-400"></i></div>
-                        <div>
-                            <p class="font-bold text-sm text-white">${c.name}</p>
-                            <p class="text-[10px] text-blue-300 mt-0.5">${c.role}</p>
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="bg-blue-500/20 p-2 rounded-full group-hover:bg-blue-500/30 transition flex-shrink-0"><i data-lucide="phone-call" class="w-4 h-4 text-blue-400"></i></div>
+                        <div class="truncate">
+                            <p class="font-bold text-sm text-white truncate" title="${c.name}">${c.name}</p>
+                            <p class="text-[10px] text-blue-300 mt-0.5 truncate">${c.role}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-shrink-0">
                         <a href="tel:${c.phone}" class="bg-green-500/20 hover:bg-green-500/40 text-green-400 p-1.5 rounded-lg transition" title="اتصال">
                             <i data-lucide="phone" class="w-4 h-4"></i>
                         </a>
@@ -1025,7 +1099,8 @@
                 adminList.innerHTML = state.emergencyContacts.map(c => renderCard(c, true)).join('') || '<p class="text-zinc-500 text-xs col-span-full">لا توجد أرقام مسجلة.</p>';
             }
             if(photogList) {
-                photogList.innerHTML = state.emergencyContacts.map(c => renderCard(c, false)).join('') || '<p class="text-zinc-500 text-xs col-span-full text-center p-4 glass rounded-xl">لا توجد أرقام مسجلة حتى الآن.</p>';
+                const filteredContacts = state.emergencyContacts.filter(c => !photogFilter || c.role === photogFilter);
+                photogList.innerHTML = filteredContacts.map(c => renderCard(c, false)).join('') || '<p class="text-zinc-500 text-xs col-span-full text-center p-4 glass rounded-xl">لا توجد أرقام مطابقة للبحث.</p>';
             }
             
             if(window.lucide) lucide.createIcons();
@@ -1689,6 +1764,7 @@
 
             let totalEarnings = 0;
             let jobsCount = 0;
+            let upcomingCount = 0;
             let totalBonusesAmt = 0;
             let totalWithdrawalsAmt = 0;
             
@@ -1705,6 +1781,7 @@
             const bonusEntries = state.dailyEntries.filter(d => d.type === 'bonus' && d.photographers?.some(p => p.name === name));
 
             upcoming.forEach(b => {
+                upcomingCount++;
                 const fee = b.photographers.find(p=>p.name===name).fee;
                 const calLink = window.getGoogleCalendarLink(b);
                 upcomingHtml += `
@@ -1801,7 +1878,6 @@
             window.checkAndSendNotification(name);
 
             // Header Upcoming Badge Logic
-            let upcomingCount = upcoming.length;
             if(upcomingCount > 0) {
                 document.getElementById('headerUpcomingBadge').classList.remove('hidden');
                 document.getElementById('headerUpcomingCount').innerText = upcomingCount;
@@ -1823,7 +1899,6 @@
             
             let totalDaysCount = jobsCount + upcomingCount;
             document.getElementById('trackPhotogJobs').innerText = totalDaysCount;
-            // Removed specific details for actual vs upcoming from here as they're now summarized in tracking list
             
             document.getElementById('trackPhotogTotalBonuses').innerText = totalBonusesAmt + " ج.م";
             
