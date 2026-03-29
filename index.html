@@ -291,7 +291,7 @@
                                 <h3 class="text-base sm:text-lg font-bold text-purple-400 whitespace-nowrap" id="trackPhotogTotalBonuses">0 ج.م</h3>
                             </div>
                             <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center flex flex-col justify-center">
-                                <p class="text-[9px] text-blue-200/70 mb-1">أيام العمل</p>
+                                <p class="text-[9px] text-blue-200/70 mb-1">إجمالي أيام العمل</p>
                                 <h3 class="text-base sm:text-lg font-bold text-blue-400" id="trackPhotogJobs">0</h3>
                             </div>
                         </div>
@@ -1073,7 +1073,7 @@
                 });
 
                 const isSelectedInEdit = currentEditingBooking && currentEditingBooking.photographers?.some(x => x.name === p.name) ? 'checked' : '';
-                const countBadge = `<span class="flex gap-1 mt-1"><span class="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[9px] font-bold" title="أيام فعلية منجزة">${completedCount} فعلي</span><span class="bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded text-[9px] font-bold" title="حجوزات قادمة">${upcomingCount} قادم</span></span>`;
+                const countBadge = `<span class="flex gap-1 mt-1"><span class="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[9px] font-bold" title="إجمالي عدد الأيام">${completedCount + upcomingCount} إجمالي</span><span class="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[9px] font-bold" title="أيام فعلية منجزة">${completedCount} فعلي</span><span class="bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded text-[9px] font-bold" title="حجوزات قادمة">${upcomingCount} قادم</span></span>`;
 
                 dL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 daily-photog-check" data-name="${p.name}" data-fee="${p.fee}"><div class="flex-grow flex flex-col justify-center"><span class="text-[12px] font-bold">${p.name}</span>${countBadge}</div><span class="text-[10px] text-red-400 font-bold">${p.fee}</span></label>`;
                 
@@ -1096,7 +1096,8 @@
                                 ${p.deviceId ? `<button onclick="window.resetPhotogDevice(${i})" class="text-red-500 hover:text-red-400 transition ml-2" title="إعادة تعيين جهاز المصور (إلغاء القفل)"><i data-lucide="smartphone-nfc" class="w-3 h-3"></i></button>` : ''}
                             </div>
                             <div class="flex gap-2 mt-2 mb-1.5">
-                                <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold">أيام فعلية: ${completedCount}</span>
+                                <span class="text-[10px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg font-bold">إجمالي الأيام: ${completedCount + upcomingCount}</span>
+                                <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold">فعلي: ${completedCount}</span>
                                 <span class="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-lg font-bold">حجوزات: ${upcomingCount}</span>
                             </div>
                             ${p.deviceId ? '<span class="text-[9px] text-emerald-500"><i data-lucide="lock" class="w-2 h-2 inline"></i> مقفل بجهاز</span>' : '<span class="text-[9px] text-yellow-500"><i data-lucide="unlock" class="w-2 h-2 inline"></i> غير مقفل</span>'}
@@ -1438,20 +1439,24 @@
         };
 
         window.showPhotogDetails = function(name) {
-            let totalEarnings = 0, jobsCount = 0, totalBonusesAmt = 0, totalWithdrawalsAmt = 0;
+            let totalEarnings = 0, jobsCount = 0, upcomingCount = 0, totalBonusesAmt = 0, totalWithdrawalsAmt = 0;
             let items = [];
 
             state.bookings.forEach(b => {
-                if(b.status === 'completed' && b.photographers?.some(p => p.name === name)) {
-                    const fee = b.photographers.find(p=>p.name===name).fee;
-                    totalEarnings += fee;
-                    let existingItem = items.find(i => i.date === b.date && i.type === 'job');
-                    if (existingItem) {
-                        existingItem.val += fee;
-                        existingItem.text += ` و ${b.name}`;
+                if(b.photographers?.some(p => p.name === name)) {
+                    if (b.status === 'completed') {
+                        const fee = b.photographers.find(p=>p.name===name).fee;
+                        totalEarnings += fee;
+                        let existingItem = items.find(i => i.date === b.date && i.type === 'job');
+                        if (existingItem) {
+                            existingItem.val += fee;
+                            existingItem.text += ` و ${b.name}`;
+                        } else {
+                            jobsCount++;
+                            items.push({ date: b.date, text: `حجز استوديو: ${b.name}`, val: fee, type: 'job' });
+                        }
                     } else {
-                        jobsCount++;
-                        items.push({ date: b.date, text: `حجز استوديو: ${b.name}`, val: fee, type: 'job' });
+                        upcomingCount++; // Track upcoming jobs
                     }
                 }
             });
@@ -1481,13 +1486,15 @@
 
             items.sort((a,b) => new Date(b.date) - new Date(a.date));
             let netBalance = totalEarnings - totalWithdrawalsAmt;
+            let totalDaysCount = jobsCount + upcomingCount;
 
             let statsHtml = `
                 <div class="glass p-5 rounded-xl mb-6 border border-blue-500/20 shadow-lg">
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 text-center">
                         <div class="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20 flex flex-col justify-center">
-                            <p class="text-[10px] text-blue-300 mb-1">أيام العمل الفعلية</p>
-                            <p class="font-bold text-blue-400 text-lg">${jobsCount}</p>
+                            <p class="text-[10px] text-blue-300 mb-1">إجمالي أيام العمل</p>
+                            <p class="font-bold text-blue-400 text-lg">${totalDaysCount}</p>
+                            <p class="text-[8px] text-blue-300/70 mt-1 font-bold">${jobsCount} فعلي | ${upcomingCount} قادم</p>
                         </div>
                         <div class="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 flex flex-col justify-center">
                             <p class="text-[10px] text-emerald-300 mb-1">إجمالي المستحقات</p>
@@ -1700,7 +1707,11 @@
             // Update Unified Stats Card
             document.getElementById('trackPhotogEarnings').innerText = totalEarnings + " ج.م";
             document.getElementById('trackPhotogTotalWithdrawals').innerText = totalWithdrawalsAmt + " ج.م";
-            document.getElementById('trackPhotogJobs').innerText = jobsCount;
+            
+            let totalDaysCount = jobsCount + upcomingCount;
+            document.getElementById('trackPhotogJobs').innerText = totalDaysCount;
+            // Removed specific details for actual vs upcoming from here as they're now summarized in tracking list
+            
             document.getElementById('trackPhotogTotalBonuses').innerText = totalBonusesAmt + " ج.م";
             
             const bonusesContainer = document.getElementById('trackPhotogBonusesContainer');
