@@ -126,8 +126,23 @@
 
     <div id="appLoader">
         <div class="spinner"></div>
-        <p style="color: #a1a1aa; font-weight: bold; font-size: 14px; margin-top: 10px;">جاري تحميل Cinema Studio Pro...</p>
+        <div class="text-center mt-3 px-4">
+            <p id="loaderTitle" class="text-zinc-300 font-bold text-sm tracking-wide">جاري إنشاء الاتصال الآمن ومزامنة البيانات...</p>
+            <p id="loaderSub" class="text-zinc-500 text-xs mt-1">يرجى الانتظار قليلاً لتهيئة لوحة التحكم 🎬</p>
+        </div>
     </div>
+
+    <script>
+        // تخصيص رسالة التحميل المسبق بناءً على نوع الزائر (عميل أم مصور)
+        const initUrlParams = new URLSearchParams(window.location.search);
+        if (initUrlParams.get('phone')) {
+            document.getElementById('loaderTitle').innerText = "جاري جلب تفاصيل حجزك بأمان...";
+            document.getElementById('loaderSub').innerText = "نسعد بخدمتك في Cinema Studio Pro 🎬";
+        } else if (initUrlParams.get('photographer')) {
+            document.getElementById('loaderTitle').innerText = "جاري تجهيز مساحة عمل المصور...";
+            document.getElementById('loaderSub').innerText = "يتم الآن جلب أحدث المهام والإحصائيات الخاصة بك 📸";
+        }
+    </script>
 
     <!-- نظام التنبيهات المنبثقة (Toast) -->
     <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 translate-y-24 opacity-0 transition-all duration-300 z-[1000] flex items-center gap-3 bg-zinc-900 border border-white/10 text-white px-4 py-3 rounded-2xl shadow-2xl">
@@ -1036,13 +1051,27 @@
             let totalWagesReport = 0;
 
             state.photographers.forEach((p, i) => {
-                const count = window.getPhotogJobCount(p.name);
-                const isSelectedInEdit = currentEditingBooking && currentEditingBooking.photographers?.some(x => x.name === p.name) ? 'checked' : '';
-                const countBadge = `<span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[9px] font-bold" title="عدد أيام العمل">${count} عمل</span>`;
-
-                dL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 daily-photog-check" data-name="${p.name}" data-fee="${p.fee}"><div class="flex-grow flex items-center gap-1.5"><span class="text-[12px] font-bold">${p.name}</span>${countBadge}</div><span class="text-[10px] text-red-400 font-bold">${p.fee}</span></label>`;
+                let completedCount = 0;
+                let upcomingCount = 0;
                 
-                bL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 booking-photog-check" data-name="${p.name}" data-fee="${p.fee}" ${isSelectedInEdit}><div class="flex-grow flex items-center justify-between"><span class="text-[12px] font-bold">${p.name}</span><span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-bold">${count} عمل</span></div></label>`;
+                state.bookings.forEach(b => { 
+                    if(b.photographers?.some(px=>px.name===p.name)) {
+                        if (b.status === 'completed') completedCount++;
+                        else upcomingCount++;
+                    }
+                });
+                state.dailyEntries.forEach(d => { 
+                    if(d.type !== 'withdrawal' && d.type !== 'bonus' && d.photographers?.some(px=>px.name===p.name)) {
+                        completedCount++;
+                    }
+                });
+
+                const isSelectedInEdit = currentEditingBooking && currentEditingBooking.photographers?.some(x => x.name === p.name) ? 'checked' : '';
+                const countBadge = `<span class="flex gap-1 mt-1"><span class="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[9px] font-bold" title="أيام فعلية منجزة">${completedCount} فعلي</span><span class="bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded text-[9px] font-bold" title="حجوزات قادمة">${upcomingCount} قادم</span></span>`;
+
+                dL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 daily-photog-check" data-name="${p.name}" data-fee="${p.fee}"><div class="flex-grow flex flex-col justify-center"><span class="text-[12px] font-bold">${p.name}</span>${countBadge}</div><span class="text-[10px] text-red-400 font-bold">${p.fee}</span></label>`;
+                
+                bL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 booking-photog-check" data-name="${p.name}" data-fee="${p.fee}" ${isSelectedInEdit}><div class="flex-grow flex flex-col justify-center"><span class="text-[12px] font-bold">${p.name}</span>${countBadge}</div></label>`;
                 
                 if(eL) eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="flex-grow p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="window.deletePhotographer(${i})" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
             
@@ -1060,8 +1089,11 @@
                                 <button onclick="window.copyPhotogLink('${p.name}')" class="text-zinc-500 hover:text-blue-400 transition" title="نسخ رابط التتبع الشخصي"><i data-lucide="link" class="w-3 h-3"></i></button>
                                 ${p.deviceId ? `<button onclick="window.resetPhotogDevice(${i})" class="text-red-500 hover:text-red-400 transition ml-2" title="إعادة تعيين جهاز المصور (إلغاء القفل)"><i data-lucide="smartphone-nfc" class="w-3 h-3"></i></button>` : ''}
                             </div>
-                            <span class="text-[10px] text-zinc-400">عدد الأعمال: ${count}</span>
-                            ${p.deviceId ? '<span class="text-[9px] text-emerald-500 ml-2"><i data-lucide="lock" class="w-2 h-2 inline"></i> مقفل بجهاز</span>' : '<span class="text-[9px] text-yellow-500 ml-2"><i data-lucide="unlock" class="w-2 h-2 inline"></i> غير مقفل</span>'}
+                            <div class="flex gap-2 mt-2 mb-1.5">
+                                <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold">أيام فعلية: ${completedCount}</span>
+                                <span class="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-lg font-bold">حجوزات: ${upcomingCount}</span>
+                            </div>
+                            ${p.deviceId ? '<span class="text-[9px] text-emerald-500"><i data-lucide="lock" class="w-2 h-2 inline"></i> مقفل بجهاز</span>' : '<span class="text-[9px] text-yellow-500"><i data-lucide="unlock" class="w-2 h-2 inline"></i> غير مقفل</span>'}
                         </div>
                         <span class="font-bold text-sm text-red-400">${wages} ج.م</span>
                     </div>
@@ -1319,6 +1351,11 @@
                     </div>
                     
                     <div class="pt-4 border-t border-white/10 flex justify-between items-center font-bold">
+                        <span class="text-zinc-300">${e.type === 'withdrawal' ? 'تم الخصم من درج الاستوديو' : 'الصافي للمعاملة الحالية'}</span>
+                        <span class="text-xl text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10">${e.type === 'withdrawal' ? '-' + e.totalExpenses : (e.income - e.totalExpenses)} ج.م</span>
+                    </div>
+
+                    ${aggregateHtml}
                 </div>
             </div>`;
             window.showStatsModal(`تفاصيل السجل المالي`, html);
@@ -1401,8 +1438,15 @@
             state.bookings.forEach(b => {
                 if(b.status === 'completed' && b.photographers?.some(p => p.name === name)) {
                     const fee = b.photographers.find(p=>p.name===name).fee;
-                    totalEarnings += fee; jobsCount++;
-                    items.push({ date: b.date, text: `حجز استوديو: ${b.name}`, val: fee, type: 'job' });
+                    totalEarnings += fee;
+                    let existingItem = items.find(i => i.date === b.date && i.type === 'job');
+                    if (existingItem) {
+                        existingItem.val += fee;
+                        existingItem.text += ` و ${b.name}`;
+                    } else {
+                        jobsCount++;
+                        items.push({ date: b.date, text: `حجز استوديو: ${b.name}`, val: fee, type: 'job' });
+                    }
                 }
             });
 
@@ -1416,8 +1460,15 @@
                         totalEarnings += fee; totalBonusesAmt += fee;
                         items.push({ date: d.date || d.id, text: `مكافأة: ${d.note}`, val: fee, type: 'bonus', id: d.id });
                     } else {
-                        totalEarnings += fee; jobsCount++;
-                        items.push({ date: d.date || d.id, text: `يومية/خارجي: ${d.note}`, val: fee, type: 'job', id: d.id });
+                        totalEarnings += fee;
+                        let existingItem = items.find(i => i.date === (d.date || d.id) && i.type === 'job');
+                        if (existingItem) {
+                            existingItem.val += fee;
+                            existingItem.text += ` و ${d.note}`;
+                        } else {
+                            jobsCount++;
+                            items.push({ date: d.date || d.id, text: `يومية/خارجي: ${d.note}`, val: fee, type: 'job', id: d.id });
+                        }
                     }
                 }
             });
@@ -1429,7 +1480,7 @@
                 <div class="glass p-5 rounded-xl mb-6 border border-blue-500/20 shadow-lg">
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 text-center">
                         <div class="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20 flex flex-col justify-center">
-                            <p class="text-[10px] text-blue-300 mb-1">أيام العمل</p>
+                            <p class="text-[10px] text-blue-300 mb-1">أيام العمل الفعلية</p>
                             <p class="font-bold text-blue-400 text-lg">${jobsCount}</p>
                         </div>
                         <div class="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 flex flex-col justify-center">
