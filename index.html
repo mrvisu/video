@@ -136,11 +136,11 @@
         // تخصيص رسالة التحميل المسبق بناءً على نوع الزائر (عميل أم مصور)
         const initUrlParams = new URLSearchParams(window.location.search);
         if (initUrlParams.get('phone')) {
-            document.getElementById('loaderTitle').innerText = "جاري جلب تفاصيل حجزك بأمان...";
-            document.getElementById('loaderSub').innerText = "نسعد بخدمتك في Cinema Studio Pro 🎬";
+            document.getElementById('loaderTitle').innerText = "جاري تجهيز تفاصيل حجزك بأمان...";
+            document.getElementById('loaderSub').innerText = "نسعد بخدمتكم.. المراكبى لخدمات الفيديو 🎬";
         } else if (initUrlParams.get('photographer')) {
-            document.getElementById('loaderTitle').innerText = "جاري تجهيز مساحة عمل المصور...";
-            document.getElementById('loaderSub').innerText = "يتم الآن جلب أحدث المهام والإحصائيات الخاصة بك 📸";
+            document.getElementById('loaderTitle').innerText = "جاري إعداد مساحة العمل الخاصة بك...";
+            document.getElementById('loaderSub').innerText = "يرجى الانتظار، يتم الآن مزامنة أحدث المهام والإحصائيات 📸";
         }
     </script>
 
