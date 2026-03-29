@@ -333,6 +333,12 @@
                 <p class="text-zinc-400 text-sm">العميل: <span id="trackClientName" class="font-bold text-white"></span></p>
             </div>
 
+            <!-- Booking Other Details (Client Only) -->
+            <div id="trackClientDetailsSection" class="bg-white/5 p-4 rounded-xl border border-white/10 mb-6 hidden">
+                <h3 class="text-sm font-bold text-zinc-300 mb-2 flex items-center gap-2"><i data-lucide="info" class="text-blue-400 w-4 h-4"></i> تفاصيل الحجز</h3>
+                <p id="trackClientDetailsText" class="text-sm text-zinc-400 whitespace-pre-wrap leading-relaxed"></p>
+            </div>
+
             <!-- Booking Services Details (Client Only) -->
             <div id="trackClientServicesSection" class="bg-white/5 p-4 rounded-xl border border-white/10 mb-6 hidden">
                 <h3 class="text-sm font-bold text-zinc-300 mb-3 flex items-center gap-2"><i data-lucide="list-checks" class="text-emerald-400 w-4 h-4"></i> تفاصيل الخدمات</h3>
@@ -1729,6 +1735,7 @@
                 document.getElementById('trackClientMessage').classList.add('hidden');
                 document.getElementById('trackClientPaymentSection').classList.add('hidden');
                 document.getElementById('trackClientServicesSection').classList.add('hidden');
+                document.getElementById('trackClientDetailsSection').classList.add('hidden');
                 return;
             }
 
@@ -1740,6 +1747,14 @@
             document.getElementById('trackClientTotal').innerText = b.total + " ج.م";
             document.getElementById('trackClientPaid').innerText = b.deposit + " ج.م";
             document.getElementById('trackClientBalance').innerText = b.balance + " ج.م";
+
+            // Other Details Section Logic
+            if (b.details && b.details.trim() !== '') {
+                document.getElementById('trackClientDetailsSection').classList.remove('hidden');
+                document.getElementById('trackClientDetailsText').innerText = b.details;
+            } else {
+                document.getElementById('trackClientDetailsSection').classList.add('hidden');
+            }
 
             // Services Details Section Logic
             if (b.services && b.services.length > 0) {
