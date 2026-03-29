@@ -697,9 +697,17 @@
             let b = state.bookings.find(x => x.id === bookingId);
             if(b) {
                 let pObj = b.photographers?.find(x => x.name === photogName);
-                if(pObj) { pObj.calendar = true; window.saveState(); }
+                if(pObj) { pObj.calendar = true; window.saveState(); window.renderPhotogDashboard(); }
                 const link = window.getGoogleCalendarLink(b);
                 window.open(link, '_blank');
+            }
+        };
+
+        window.markPhotogSeen = function(bookingId, photogName) {
+            let b = state.bookings.find(x => x.id === bookingId);
+            if(b) {
+                let pObj = b.photographers?.find(x => x.name === photogName);
+                if(pObj && !pObj.seen) { pObj.seen = true; window.saveState(); }
             }
         };
 
@@ -772,7 +780,7 @@
                 }
 
                 let photogsHtml = b.photographers?.map(p => {
-                    let seenBadge = p.seen ? `<span class="text-blue-400" title="تمت المشاهدة"><i data-lucide="eye" class="w-3 h-3 inline"></i></span>` : `<span class="text-zinc-600" title="لم يشاهده بعد"><i data-lucide="eye-off" class="w-3 h-3 inline"></i></span>`;
+                    let seenBadge = p.seen ? `<span class="text-blue-400" title="شاهد الحجز"><i data-lucide="eye" class="w-3 h-3 inline"></i></span>` : `<span class="text-zinc-600" title="لم يشاهد الحجز"><i data-lucide="eye-off" class="w-3 h-3 inline"></i></span>`;
                     let calBadge = p.calendar ? `<span class="text-emerald-400" title="تمت الإضافة للتقويم"><i data-lucide="calendar-check" class="w-3 h-3 inline"></i></span>` : `<span class="text-zinc-600" title="لم يضف للتقويم"><i data-lucide="calendar" class="w-3 h-3 inline"></i></span>`;
                     return `<div class="flex items-center justify-between bg-black/30 p-1.5 rounded border border-white/5 w-full mb-1">
                                 <span class="font-bold">${p.name}</span>
