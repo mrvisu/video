@@ -115,6 +115,10 @@
             content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px;
             background-color: #e11d48; border-radius: 50%;
         }
+
+        /* Tracker specific styles */
+        .step-active { background-color: #10b981 !important; border-color: #10b981 !important; color: white !important; }
+        .step-active-line { background-color: #10b981 !important; }
     </style>
 </head>
 <body class="min-h-screen relative">
@@ -136,10 +140,10 @@
     <div id="confirmModal" class="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
         <div class="glass p-6 w-full max-w-sm card-shadow border border-white/10 text-center">
             <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
-            <h3 class="text-xl font-bold mb-2 text-white">تأكيد الحذف</h3>
-            <p class="text-sm text-zinc-400 mb-6" id="confirmModalMessage">هل أنت متأكد من رغبتك في حذف هذا السجل بشكل نهائي؟</p>
+            <h3 class="text-xl font-bold mb-2 text-white">تأكيد الإجراء</h3>
+            <p class="text-sm text-zinc-400 mb-6" id="confirmModalMessage">هل أنت متأكد من رغبتك في الاستمرار؟</p>
             <div class="flex gap-3 justify-center">
-                <button id="btnConfirmYes" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold transition">نعم، احذف</button>
+                <button id="btnConfirmYes" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold transition">نعم، متأكد</button>
                 <button onclick="document.getElementById('confirmModal').classList.add('hidden')" class="bg-zinc-700 hover:bg-zinc-600 text-white px-6 py-2 rounded-lg font-bold transition">إلغاء</button>
             </div>
         </div>
@@ -179,8 +183,8 @@
             <h3 class="text-xl font-bold mb-4 text-white flex items-center gap-2"><i data-lucide="message-circle" class="text-green-500"></i> قوالب رسائل واتساب</h3>
             <div class="space-y-3">
                 <button onclick="window.sendTemplate('confirm')" class="w-full text-right p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10">
-                    <p class="font-bold text-emerald-400 text-sm mb-1 flex items-center gap-2"><i data-lucide="send" class="w-4 h-4"></i> رسالة تأكيد الحجز</p>
-                    <p class="text-[10px] text-zinc-400">ترحيب وشكر للعميل، وتفاصيل الحساب المالية.</p>
+                    <p class="font-bold text-emerald-400 text-sm mb-1 flex items-center gap-2"><i data-lucide="send" class="w-4 h-4"></i> رسالة تأكيد الحجز (مع رابط التتبع)</p>
+                    <p class="text-[10px] text-zinc-400">ترحيب وشكر للعميل، وتفاصيل الحساب المالية مع رابط تتبع مباشر.</p>
                 </button>
                 <button onclick="window.sendTemplate('payment')" class="w-full text-right p-4 bg-white/5 hover:bg-white/10 rounded-xl transition border border-white/10">
                     <p class="font-bold text-yellow-400 text-sm mb-1 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> مطالبة بالمتبقي (دفع إلكتروني)</p>
@@ -192,6 +196,176 @@
                 </button>
             </div>
             <button onclick="document.getElementById('whatsappModal').classList.add('hidden')" class="w-full mt-4 p-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm font-bold transition">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- Device Locked Screen -->
+    <div id="deviceLockedView" class="hidden min-h-screen p-4 flex items-center justify-center">
+        <div class="glass p-8 w-full max-w-md text-center card-shadow border border-red-500/30">
+            <i data-lucide="lock" class="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse"></i>
+            <h2 class="text-2xl font-bold mb-2 text-white">تم قفل الرابط</h2>
+            <p class="text-zinc-400 mb-6 text-sm leading-relaxed">هذا الرابط تم ربطه بجهاز آخر مسبقاً ولا يمكن فتحه إلا من خلال ذلك الجهاز، وذلك للحفاظ على سرية وحماية بياناتك.</p>
+            <p class="text-xs text-red-400 font-bold bg-red-500/10 p-3 rounded-lg border border-red-500/20">يرجى مراجعة إدارة الاستوديو لإعادة تعيين الجهاز إذا قمت بتغيير هاتفك.</p>
+        </div>
+    </div>
+
+    <!-- Photographer Tracking View -->
+    <div id="photographerTrackingView" class="hidden min-h-screen p-4 sm:p-8 space-y-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="glass p-6 mb-4 text-center flex flex-col items-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                <div class="bg-blue-500/20 p-4 rounded-full mb-4 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                    <i data-lucide="camera" class="w-12 h-12 text-blue-400"></i>
+                </div>
+                <h1 class="text-2xl font-bold mb-1">مرحباً <span id="trackPhotogName" class="text-blue-400"></span></h1>
+                <p class="text-zinc-400 text-sm mb-4">لوحة متابعة الأعمال والحسابات الشخصية</p>
+                <div class="flex flex-wrap justify-center items-center gap-3">
+                    <button id="btnEnableNotifications" onclick="window.requestPushPermissions()" class="hidden bg-white/10 hover:bg-white/20 border border-white/20 text-xs px-4 py-2 rounded-full transition flex items-center gap-2">
+                        <i data-lucide="bell" class="w-3 h-3"></i> تفعيل الإشعارات
+                    </button>
+                    <div id="headerUpcomingBadge" class="hidden bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs px-4 py-2 rounded-full transition flex items-center gap-2 font-bold shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                        <i data-lucide="calendar-clock" class="w-4 h-4 text-blue-400"></i>
+                        لديك <span id="headerUpcomingCount" class="text-blue-400 text-sm">0</span> أعمال مسندة قادمة
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Section -->
+            <div id="trackPhotogAlerts" class="mb-6 space-y-2"></div>
+
+            <!-- Upcoming Tasks (Moved to TOP) -->
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="calendar-clock" class="text-yellow-400"></i> أعمال ومواعيد قادمة</h3>
+            <div id="trackPhotogUpcoming" class="space-y-4 mb-8"></div>
+
+            <!-- Unified Stats, Withdrawals, and Bonuses Card -->
+            <div class="glass p-6 mb-8 border border-white/10 rounded-2xl relative overflow-hidden card-shadow">
+                <div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500"></div>
+                <h3 class="text-lg font-bold mb-6 text-white flex items-center gap-2"><i data-lucide="wallet" class="text-emerald-400"></i> المحفظة والإحصائيات الشخصية</h3>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-center">
+                        <p class="text-[9px] text-emerald-200/70 mb-1">الرصيد المتاح</p>
+                        <h3 class="text-base sm:text-xl font-bold text-emerald-400 whitespace-nowrap" id="trackPhotogEarnings">0 ج.م</h3>
+                    </div>
+                    <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center">
+                        <p class="text-[9px] text-blue-200/70 mb-1">أيام العمل</p>
+                        <h3 class="text-base sm:text-xl font-bold text-blue-400" id="trackPhotogJobs">0</h3>
+                    </div>
+                    <div class="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20 text-center">
+                        <p class="text-[9px] text-purple-200/70 mb-1">المكافآت المكتسبة</p>
+                        <h3 class="text-base sm:text-xl font-bold text-purple-400 whitespace-nowrap" id="trackPhotogTotalBonuses">0 ج.م</h3>
+                    </div>
+                </div>
+
+                <!-- Withdraw Section -->
+                <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center mb-6">
+                    <div class="flex-grow w-full text-right">
+                       <p class="text-sm font-bold text-red-400 mb-0.5">سحب مستحقات نقدية</p>
+                       <p class="text-[10px] text-red-200/70">سحب من الرصيد المتاح وإبلاغ الإدارة</p>
+                    </div>
+                    <input type="number" id="withdrawAmount" placeholder="المبلغ (ج.م)" class="w-full sm:w-32 p-2.5 bg-black/50 text-white rounded-lg border border-red-500/30 text-center font-bold focus:border-red-500 outline-none transition-all">
+                    <button onclick="window.requestWithdrawal()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-2 whitespace-nowrap">
+                        <i data-lucide="hand-coins" class="w-4 h-4"></i> سحب
+                    </button>
+                </div>
+
+                <!-- Bonuses List within the unified card -->
+                <div id="trackPhotogBonusesContainer" class="hidden">
+                    <h4 class="text-[11px] font-bold text-zinc-400 mb-3 flex items-center gap-1.5"><i data-lucide="award" class="w-3 h-3"></i> تفاصيل المكافآت المسجلة</h4>
+                    <div id="trackPhotogBonuses" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Completed History -->
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="check-circle-2" class="text-emerald-400"></i> سجل الأعمال المنجزة والمسحوبات</h3>
+            <div id="trackPhotogHistory" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Client Tracking View -->
+    <div id="clientTrackingView" class="hidden min-h-screen p-4 flex items-center justify-center">
+        <div class="glass p-6 sm:p-8 w-full max-w-md card-shadow border border-white/10 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-cinema-red"></div>
+            
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold mb-2">تتبع حالة الحجز</h2>
+                <p class="text-zinc-400 text-sm">العميل: <span id="trackClientName" class="font-bold text-white"></span></p>
+            </div>
+
+            <!-- Booking Services Details (Client Only) -->
+            <div id="trackClientServicesSection" class="bg-white/5 p-4 rounded-xl border border-white/10 mb-6 hidden">
+                <h3 class="text-sm font-bold text-zinc-300 mb-3 flex items-center gap-2"><i data-lucide="list-checks" class="text-emerald-400 w-4 h-4"></i> تفاصيل الخدمات</h3>
+                <div id="trackClientServicesList" class="space-y-2"></div>
+            </div>
+
+            <div class="bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-zinc-400">الإجمالي:</span>
+                    <span class="font-bold" id="trackClientTotal">0 ج.م</span>
+                </div>
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-zinc-400">المدفوع:</span>
+                    <span class="font-bold text-emerald-400" id="trackClientPaid">0 ج.م</span>
+                </div>
+                <div class="flex justify-between text-sm border-t border-white/10 pt-2 mt-2">
+                    <span class="text-zinc-400">المتبقي:</span>
+                    <span class="font-bold text-red-400" id="trackClientBalance">0 ج.م</span>
+                </div>
+            </div>
+
+            <!-- Electronic Payment Section (Visible only if balance > 0) -->
+            <div id="trackClientPaymentSection" class="hidden bg-blue-500/10 border border-blue-500/20 p-5 rounded-xl mb-6 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                <h4 class="font-bold text-blue-400 text-sm mb-2 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> طرق السداد الإلكتروني</h4>
+                <p class="text-xs text-blue-200/80 mb-3 leading-relaxed">لسهولة الإجراءات، يرجى سداد المبلغ المتبقي عبر <span class="font-bold text-white">فودافون كاش</span> أو <span class="font-bold text-white">إنستاباي (InstaPay)</span> على الرقم التالي:</p>
+                <div class="flex items-center gap-2 mb-3">
+                    <input type="text" readonly value="01126810107" class="bg-black/50 text-white font-bold p-2 rounded-lg w-full text-center text-lg tracking-widest border border-white/5" dir="ltr">
+                    <button onclick="window.copyToClipboard('01126810107', 'تم نسخ رقم الدفع بنجاح')" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+                <button onclick="window.openWhatsAppModalClient()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> إرسال إيصال الدفع عبر واتساب
+                </button>
+            </div>
+
+            <h3 class="text-sm font-bold text-zinc-300 mb-4">حالة العمل الحالية:</h3>
+            <div class="relative flex justify-between items-center mb-6">
+                <div class="absolute left-0 right-0 top-1/2 h-1 bg-white/10 -z-10 -translate-y-1/2 rounded"></div>
+                <div id="trackLineProg" class="absolute right-0 top-1/2 h-1 bg-emerald-500 -z-10 -translate-y-1/2 rounded transition-all duration-500" style="width: 0%;"></div>
+                
+                <div class="flex flex-col items-center gap-2 relative z-10 w-1/4">
+                    <div id="step-confirmed" class="w-8 h-8 rounded-full bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center text-zinc-400 transition-colors">
+                        <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[9px] text-center font-bold">تأكيد</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 relative z-10 w-1/4">
+                    <div id="step-shooting" class="w-8 h-8 rounded-full bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center text-zinc-400 transition-colors">
+                        <i data-lucide="video" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[9px] text-center font-bold">تصوير</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 relative z-10 w-1/4">
+                    <div id="step-editing" class="w-8 h-8 rounded-full bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center text-zinc-400 transition-colors">
+                        <i data-lucide="scissors" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[9px] text-center font-bold">مونتاج</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 relative z-10 w-1/4">
+                    <div id="step-ready" class="w-8 h-8 rounded-full bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center text-zinc-400 transition-colors">
+                        <i data-lucide="package-check" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[9px] text-center font-bold">جاهز</span>
+                </div>
+            </div>
+
+            <div id="trackClientMessage" class="text-center p-3 rounded-lg text-sm font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                جاري مراجعة البيانات...
+            </div>
+            
+            <div id="trackNoBooking" class="hidden text-center mt-8">
+                <i data-lucide="search-x" class="w-12 h-12 text-zinc-600 mx-auto mb-2"></i>
+                <p class="text-zinc-400">عذراً، لم نتمكن من العثور على حجوزات مرتبطة بهذا الرقم.</p>
+            </div>
         </div>
     </div>
 
@@ -261,7 +435,7 @@
                         <div class="space-y-4">
                             <label class="block text-sm text-zinc-400">اسم العميل</label><input type="text" id="clientName" class="w-full p-3">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div><label class="block text-sm text-zinc-400">الهاتف (يستخدم في رسائل الواتساب)</label><input type="tel" id="clientPhone" class="w-full p-3 text-left font-bold" dir="ltr" placeholder="01xxxxxxxxx"></div>
+                                <div><label class="block text-sm text-zinc-400">الهاتف (يستخدم في رابط التتبع)</label><input type="tel" id="clientPhone" class="w-full p-3 text-left font-bold" dir="ltr" placeholder="01xxxxxxxxx"></div>
                                 <div><label class="block text-sm text-zinc-400">التاريخ</label><input type="date" id="bookingDate" class="w-full p-3 text-sm"></div>
                             </div>
                             <label class="block text-sm text-zinc-400">تفاصيل أخرى</label><textarea id="bookingDetails" class="w-full p-3 min-h-[80px]"></textarea>
@@ -354,11 +528,11 @@
                             <label class="mt-3 flex items-center gap-2 p-2 glass cursor-pointer text-xs hover:bg-white/5 transition"><input type="checkbox" id="useFlashCheckbox" class="w-4 h-4"> سحب فلاشة للعميل (<span id="flashPriceLabelForm">50</span> ج.م)</label>
                         </div>
                         <button onclick="window.recordUnifiedTransaction()" class="w-full btn-grad p-4 rounded-xl font-bold">تنفيذ وحفظ</button>
-                        <div class="glass p-4 border border-yellow-500/20 rounded-xl space-y-3 transition hover:border-yellow-500/50">
-                            <h5 class="text-sm font-bold text-yellow-500">صرف مكافأة لمصور</h5>
+                        <div class="glass p-4 border border-purple-500/30 rounded-xl space-y-3 transition hover:border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                            <h5 class="text-sm font-bold text-purple-400 flex items-center gap-2"><i data-lucide="gift" class="w-4 h-4"></i> صرف مكافأة لمصور</h5>
                             <div class="flex flex-col sm:flex-row gap-2"><select id="adminBonusPhotog" class="flex-grow p-2 text-xs glass"><option value="">اختر المصور</option></select><input type="number" id="adminBonusAmount" placeholder="المبلغ" class="w-full sm:w-24 p-2 text-xs glass"></div>
-                            <input type="text" id="adminBonusNote" placeholder="السبب" class="w-full p-2 text-xs glass">
-                            <button onclick="window.adminAddBonus()" class="w-full bg-yellow-600 p-3 rounded-lg text-xs font-bold transition hover:bg-yellow-700">صرف المكافأة</button>
+                            <input type="text" id="adminBonusNote" placeholder="السبب (اختياري)" class="w-full p-2 text-xs glass">
+                            <button onclick="window.adminAddBonus()" class="w-full bg-purple-600 p-3 rounded-lg text-xs font-bold transition hover:bg-purple-700">تأكيد المكافأة</button>
                         </div>
                     </div>
                     <div class="glass p-4 sm:p-6 flex flex-col h-full min-h-[400px]">
@@ -434,7 +608,7 @@
             inventory: { flashesCount: 0, flashesTotalValue: 0, flashPrice: 50 }, selectedServices: [],
             services: [{ id: 1, name: 'جلسة تصوير', price: 1000 }, { id: 2, name: 'مونتاج فيديو', price: 2500 }, { id: 3, name: 'مكياج', price: 800 }, { id: 4, name: 'طباعة', price: 400 }],
             templates: [{ id: 1, name: 'قاعة 1', price: 150 }, { id: 2, name: 'شغل الشارع', price: 300 }],
-            photographers: [{ id: 1, name: 'أحمد', fee: 300 }, { id: 2, name: 'سارة', fee: 400 }, { id: 3, name: 'محمد', fee: 350 }]
+            photographers: [{ id: 1, name: 'أحمد', fee: 300, deviceId: null }, { id: 2, name: 'سارة', fee: 400, deviceId: null }, { id: 3, name: 'محمد', fee: 350, deviceId: null }]
         };
         var state = JSON.parse(JSON.stringify(defaultState));
         var currentWhatsAppBookingId = null, currentEditBookingId = null, currentCalMonth = new Date().getMonth(), currentCalYear = new Date().getFullYear(), isAppBooted = false;
@@ -527,7 +701,7 @@
 
         window.getPhotogJobCount = function(name) {
             let count = 0;
-            if (state.dailyEntries) count += state.dailyEntries.filter(e => e.photographers?.some(p => p.name === name)).length;
+            if (state.dailyEntries) count += state.dailyEntries.filter(e => e.type !== 'withdrawal' && e.photographers?.some(p => p.name === name)).length;
             if (state.bookings) count += state.bookings.filter(b => b.photographers?.some(p => p.name === name)).length;
             return count;
         };
@@ -540,16 +714,119 @@
             nextD.setDate(nextD.getDate() + 1);
             const end = nextD.toISOString().split('T')[0].replace(/-/g, '');
             
-            const title = encodeURIComponent(`🎥 حجز تصوير: ${b.name}`);
+            const title = encodeURIComponent(`🎥 حجز تصوير: ${b.name || b.note}`);
             const svcs = b.services?.map(s=>s.name).join('، ') || 'غير محدد';
-            const details = encodeURIComponent(`👤 العميل: ${b.name}\n📞 رقم الهاتف: ${b.phone||'لا يوجد'}\n📋 الخدمات: ${svcs}\n📍 العنوان/التفاصيل: ${b.details||'لا توجد'}\n\n✨ تمت الإضافة بواسطة نظام المراكبى`);
+            const details = encodeURIComponent(`👤 العميل/البيان: ${b.name || b.note}\n📞 رقم الهاتف: ${b.phone||'لا يوجد'}\n📋 الخدمات: ${svcs}\n📍 التفاصيل: ${b.details||'لا توجد'}\n\n✨ تمت الإضافة بواسطة نظام المراكبى`);
             
             return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
+        };
+
+        window.copyToClipboard = function(text, successMsg) {
+            navigator.clipboard.writeText(text).then(() => {
+                window.showToast(successMsg);
+            }).catch(() => {
+                const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); 
+                window.showToast(successMsg);
+            });
+        };
+
+        window.copyPhotogLink = function(name) {
+            const link = window.location.href.split('?')[0] + '?photographer=' + encodeURIComponent(name);
+            window.copyToClipboard(link, "تم نسخ رابط تتبع المصور بنجاح");
+        };
+
+        window.copyClientLink = function(phone) {
+            if(!phone) return window.showToast("لا يوجد رقم هاتف لهذا الحجز", "error");
+            const cleanPhone = phone.replace(/\D/g, '');
+            const link = window.location.href.split('?')[0] + '?phone=' + cleanPhone;
+            window.copyToClipboard(link, "تم نسخ رابط تتبع العميل بنجاح");
+        };
+
+        window.resetPhotogDevice = function(idx) {
+            window.showConfirm("هل أنت متأكد من إعادة تعيين الجهاز لهذا المصور؟ سيتمكن من فتح الرابط على جهاز جديد.", () => {
+                state.photographers[idx].deviceId = null;
+                window.saveState();
+                window.showToast("تم إعادة تعيين جهاز المصور بنجاح");
+                window.renderPhotographers();
+            });
         };
 
         window.deleteService = function(i) { window.showConfirm("هل أنت متأكد من حذف هذه الخدمة؟", () => { state.services.splice(i,1); window.saveState(); window.renderServices(); }); };
         window.deleteTemplate = function(i) { window.showConfirm("هل أنت متأكد من حذف هذه القاعة؟", () => { state.templates.splice(i,1); window.saveState(); window.renderTemplates(); }); };
         window.deletePhotographer = function(i) { window.showConfirm("هل أنت متأكد من حذف هذا المصور؟", () => { state.photographers.splice(i,1); window.saveState(); window.renderPhotographers(); window.updateFiltersUI(); }); };
+
+        window.openWhatsAppModalClient = function() {
+            const clientName = document.getElementById('trackClientName').innerText;
+            const text = encodeURIComponent(`مرحباً، مرفق إيصال سداد باقي حساب حجز باسم: ${clientName}`);
+            window.open(`https://wa.me/201126810107?text=${text}`, '_blank');
+        };
+
+        // --- Push Notification Logic ---
+        window.requestPushPermissions = function() {
+            if (!("Notification" in window)) {
+                window.showToast("هذا المتصفح لا يدعم الإشعارات", "error");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    window.showToast("تم تفعيل الإشعارات بنجاح");
+                    document.getElementById('btnEnableNotifications').classList.add('hidden');
+                }
+            });
+        };
+
+        window.checkAndSendNotification = function(currentPhotogName) {
+            if (!("Notification" in window) || Notification.permission !== "granted") return;
+            
+            let currentJobsCount = 0;
+            state.bookings.forEach(b => { if(b.photographers?.some(p => p.name === currentPhotogName)) currentJobsCount++; });
+            state.dailyEntries.forEach(e => { if(e.photographers?.some(p => p.name === currentPhotogName)) currentJobsCount++; });
+
+            if (window.lastKnownJobsCount !== undefined && currentJobsCount > window.lastKnownJobsCount) {
+                new Notification('Cinema Studio Pro', {
+                    body: '🎉 تم إسناد عمل أو مكافأة جديدة إليك! يرجى التحقق من لوحة التحكم.',
+                    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e11d48%22><path d=%22M15 8V7a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1l7 4V4l-7 4z%22/></svg>'
+                });
+            }
+            window.lastKnownJobsCount = currentJobsCount;
+        };
+
+        // --- Withdraw Logic ---
+        window.requestWithdrawal = function() {
+            const amt = parseFloat(document.getElementById('withdrawAmount').value);
+            const name = document.getElementById('trackPhotogName').innerText;
+            
+            if(!amt || amt <= 0) return window.showToast("الرجاء إدخال مبلغ صحيح", "error");
+
+            // Calculate current available balance
+            let available = 0;
+            state.bookings.forEach(b => { if(b.status === 'completed' && b.photographers?.some(px=>px.name===name)) available += b.photographers.find(x=>x.name===name).fee; });
+            state.dailyEntries.forEach(d => { const dP = d.photographers?.find(px=>px.name===name); if(dP) available += dP.totalFee; });
+
+            if(amt > available) {
+                return window.showToast("عذراً، الرصيد المتاح لا يكفي للسحب", "error");
+            }
+
+            window.showConfirm(`هل أنت متأكد من رغبتك في سحب مبلغ ${amt} ج.م من حسابك؟`, () => {
+                // We add it as an expense to the studio, but negative fee for the photog
+                state.dailyEntries.push({
+                    id: Date.now(),
+                    note: `سحب مستحقات مصور: ${name}`,
+                    income: 0,
+                    date: new Date().toISOString().split('T')[0],
+                    photographers: [{name: name, totalFee: -amt, isWithdrawal: true}],
+                    gear: null, flash: null,
+                    totalExpenses: amt, // Positive expense to reduce studio profit
+                    time: new Date().toLocaleTimeString('ar-EG'),
+                    type: 'withdrawal'
+                });
+                
+                window.saveState();
+                window.showToast("تم تسجيل طلب السحب بنجاح وتم خصم المبلغ");
+                document.getElementById('withdrawAmount').value = '';
+                window.refreshAllViews(); // Reload ui to show new balance
+            });
+        };
 
         // --- Renderers ---
         window.updateFiltersUI = function() { 
@@ -600,7 +877,7 @@
             state.dailyEntries.slice(-5).reverse().forEach(act => {
                 const d = document.createElement('div'); d.className = "flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:bg-white/5";
                 d.onclick = () => window.showEntryDetails(act.id);
-                d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[10px] text-zinc-400 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> <span class="bg-white/10 px-1.5 py-0.5 rounded border border-white/5 text-zinc-300">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</span></p></div><span class="text-emerald-400 font-bold text-xs">+${act.income}</span>`;
+                d.innerHTML = `<div><p class="font-bold text-sm text-white">${act.note}</p><p class="text-[10px] text-zinc-400 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> <span class="bg-white/10 px-1.5 py-0.5 rounded border border-white/5 text-zinc-300">${new Date(act.date||act.id).toLocaleDateString('ar-EG')}</span></p></div><span class="text-emerald-400 font-bold text-xs ${act.type === 'withdrawal' ? 'text-red-400' : ''}">${act.type === 'withdrawal' ? '-' : '+'}${act.type === 'withdrawal' ? act.totalExpenses : act.income}</span>`;
                 log.appendChild(d);
             });
         };
@@ -639,7 +916,8 @@
                         </div>
                     </td>
                     <td class="p-3 flex gap-2 justify-center items-center h-full" onclick="event.stopPropagation()">
-                        <a href="${window.getGoogleCalendarLink(b)}" target="_blank" class="p-2 text-indigo-400 bg-indigo-500/10 rounded-lg transition flex items-center justify-center hover:bg-indigo-500/20" title="إضافة للتقويم"><i data-lucide="calendar-plus" class="w-4 h-4"></i></a>
+                        <button onclick="window.copyClientLink('${b.phone}')" class="p-2 text-indigo-400 bg-indigo-500/10 rounded-lg transition flex items-center justify-center hover:bg-indigo-500/20" title="نسخ رابط تتبع العميل"><i data-lucide="link" class="w-4 h-4"></i></button>
+                        <a href="${window.getGoogleCalendarLink(b)}" target="_blank" class="p-2 text-zinc-400 bg-zinc-500/10 rounded-lg transition flex items-center justify-center hover:bg-zinc-500/20" title="إضافة للتقويم"><i data-lucide="calendar-plus" class="w-4 h-4"></i></a>
                         <button onclick="window.openWhatsAppModal(${b.id})" class="p-2 text-green-500 bg-green-500/10 rounded-lg transition flex items-center justify-center hover:bg-green-500/20" title="قوالب واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
                         <button onclick="window.editBooking(${b.id})" class="p-2 text-blue-400 bg-blue-500/10 rounded-lg transition flex items-center justify-center hover:bg-blue-500/20" title="تعديل الحجز"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
                         <button onclick="window.deleteBooking(${b.id})" class="p-2 text-red-500 bg-red-500/10 rounded-lg transition flex items-center justify-center hover:bg-red-500/20" title="حذف الحجز"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -670,11 +948,13 @@
         };
 
         window.renderPhotographers = function() {
-            const dL = document.getElementById('dailyPhotographerList'), bL = document.getElementById('bookingPhotographerList'), eL = document.getElementById('photogEditList');
+            const dL = document.getElementById('dailyPhotographerList'), bL = document.getElementById('bookingPhotographerList'), eL = document.getElementById('photogEditList'), rL = document.getElementById('reportPhotographers');
             if(!dL) return;
-            dL.innerHTML = ''; bL.innerHTML = ''; if(eL) eL.innerHTML = '';
+            dL.innerHTML = ''; bL.innerHTML = ''; if(eL) eL.innerHTML = ''; if(rL) rL.innerHTML = '';
             
             const currentEditingBooking = window.currentEditBookingId ? state.bookings.find(x => x.id === window.currentEditBookingId) : null;
+            let reportHtml = '';
+            let totalWagesReport = 0;
 
             state.photographers.forEach((p, i) => {
                 const count = window.getPhotogJobCount(p.name);
@@ -686,7 +966,35 @@
                 bL.innerHTML += `<label class="flex items-center gap-2 p-3 glass rounded-xl cursor-pointer hover:bg-white/5 transition-all"><input type="checkbox" class="w-4 h-4 booking-photog-check" data-name="${p.name}" data-fee="${p.fee}" ${isSelectedInEdit}><div class="flex-grow flex items-center justify-between"><span class="text-[12px] font-bold">${p.name}</span><span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-bold">${count} عمل</span></div></label>`;
                 
                 if(eL) eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="flex-grow p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="window.deletePhotographer(${i})" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
+            
+                // Reports Generation
+                let wages = 0;
+                state.bookings.forEach(b => { if(b.status === 'completed' && b.photographers?.some(px=>px.name===p.name)) wages += p.fee; });
+                state.dailyEntries.forEach(d => { const dP = d.photographers?.find(px=>px.name===p.name); if(dP) wages += dP.totalFee; });
+                totalWagesReport += wages;
+                
+                reportHtml += `
+                    <div class="glass p-4 rounded-xl border-r-4 border-blue-500 mb-3 hover:bg-white/5 transition flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h5 class="font-bold text-white text-sm">${p.name}</h5>
+                                <button onclick="window.copyPhotogLink('${p.name}')" class="text-zinc-500 hover:text-blue-400 transition" title="نسخ رابط التتبع الشخصي"><i data-lucide="link" class="w-3 h-3"></i></button>
+                                ${p.deviceId ? `<button onclick="window.resetPhotogDevice(${i})" class="text-red-500 hover:text-red-400 transition ml-2" title="إعادة تعيين جهاز المصور (إلغاء القفل)"><i data-lucide="smartphone-nfc" class="w-3 h-3"></i></button>` : ''}
+                            </div>
+                            <span class="text-[10px] text-zinc-400">عدد الأعمال: ${count}</span>
+                            ${p.deviceId ? '<span class="text-[9px] text-emerald-500 ml-2"><i data-lucide="lock" class="w-2 h-2 inline"></i> مقفل بجهاز</span>' : '<span class="text-[9px] text-yellow-500 ml-2"><i data-lucide="unlock" class="w-2 h-2 inline"></i> غير مقفل</span>'}
+                        </div>
+                        <span class="font-bold text-sm text-red-400">${wages} ج.م</span>
+                    </div>
+                `;
             });
+            
+            if(rL) {
+                rL.innerHTML = reportHtml;
+                const rW = document.getElementById('reportTotalWages');
+                if(rW) rW.innerText = totalWagesReport + " ج.م";
+            }
+
             lucide.createIcons(); window.updateFiltersUI();
         };
 
@@ -710,14 +1018,14 @@
             const logContainer = document.getElementById('dailyEntryLog'); if(!logContainer) return;
             
             logContainer.innerHTML = filtered.slice().reverse().map(e => `
-                <div onclick="window.showEntryDetails(${e.id})" class="glass p-4 rounded-xl border-r-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition hover:-translate-y-1 duration-300 flex flex-col gap-2 shadow-lg">
+                <div onclick="window.showEntryDetails(${e.id})" class="glass p-4 rounded-xl border-r-4 ${e.type === 'withdrawal' ? 'border-red-500' : 'border-emerald-500'} cursor-pointer hover:bg-white/5 transition hover:-translate-y-1 duration-300 flex flex-col gap-2 shadow-lg">
                     
                     <div class="flex justify-between items-start">
                         <div class="flex flex-col gap-1.5">
                             <div class="flex items-center gap-2">
-                                <div class="bg-emerald-500/20 p-1.5 rounded-full"><i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i></div>
+                                <div class="${e.type === 'withdrawal' ? 'bg-red-500/20' : 'bg-emerald-500/20'} p-1.5 rounded-full"><i data-lucide="${e.type === 'bonus' ? 'gift' : (e.type === 'withdrawal' ? 'wallet' : 'map-pin')}" class="w-4 h-4 ${e.type === 'withdrawal' ? 'text-red-400' : 'text-emerald-400'}"></i></div>
                                 <h4 class="font-bold text-sm text-white">${e.note}</h4>
-                                <span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">1 يوم عمل</span>
+                                <span class="${e.type === 'bonus' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : (e.type === 'withdrawal' ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-blue-500/20 text-blue-300 border-blue-500/30')} border px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">${e.type === 'bonus' ? 'مكافأة' : (e.type === 'withdrawal' ? 'سحب نقدي' : '1 يوم عمل')}</span>
                             </div>
                             <div class="flex items-center gap-1 text-[10px] text-zinc-400 w-fit">
                                 <i data-lucide="calendar" class="w-3 h-3"></i>
@@ -725,20 +1033,22 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
+                            ${e.type !== 'withdrawal' ? `
                             <div class="text-center bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
                                 <span class="block text-[8px] text-emerald-300 mb-0.5">الإيراد</span>
                                 <span class="text-emerald-400 font-bold text-xs">+${e.income}</span>
                             </div>
-                            <div class="text-center bg-white/10 border border-white/20 px-2 py-1 rounded-lg shadow-inner">
-                                <span class="block text-[8px] text-zinc-300 mb-0.5 font-bold">الصافي</span>
-                                <span class="text-white font-bold text-xs">${e.income - e.totalExpenses}</span>
+                            ` : ''}
+                            <div class="text-center ${e.type === 'withdrawal' ? 'bg-red-500/10 border-red-500/20' : 'bg-white/10 border-white/20'} border px-2 py-1 rounded-lg shadow-inner">
+                                <span class="block text-[8px] ${e.type === 'withdrawal' ? 'text-red-300' : 'text-zinc-300'} mb-0.5 font-bold">${e.type === 'withdrawal' ? 'تم سحب' : 'الصافي'}</span>
+                                <span class="text-white font-bold text-xs">${e.type === 'withdrawal' ? '-' + e.totalExpenses : (e.income - e.totalExpenses)}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex justify-between items-center mt-1 pt-2 border-t border-white/5">
                         <div class="flex flex-wrap items-center gap-1.5">
-                            ${e.photographers?.map(p=>`<span class="flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="camera" class="w-3 h-3 text-blue-400"></i> ${p.name} <span class="text-red-400 font-bold">-${p.totalFee}</span></span>`).join('')||''}
+                            ${e.photographers?.map(p=>`<span class="flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="${e.type === 'withdrawal' ? 'user' : 'camera'}" class="w-3 h-3 text-blue-400"></i> ${p.name} <span class="text-red-400 font-bold">${p.totalFee > 0 ? '-'+p.totalFee : p.totalFee}</span></span>`).join('')||''}
                             ${e.gear?`<span class="flex items-center gap-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="video" class="w-3 h-3 text-indigo-400"></i> ${e.gear.note} <span class="text-red-400 font-bold">-${e.gear.amount}</span></span>`:''}
                             ${e.flash?`<span class="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="usb" class="w-3 h-3 text-yellow-400"></i> فلاشة <span class="text-red-400 font-bold">-${state.inventory.flashPrice || 50}</span></span>`:''}
                             ${(!e.photographers?.length && !e.gear && !e.flash) ? '<span class="text-[9px] text-zinc-500">لا تكاليف مسجلة</span>' : ''}
@@ -757,6 +1067,10 @@
             
             // Build the statistics first
             state.dailyEntries.forEach(e => {
+                if (e.type === 'bonus' || e.type === 'withdrawal') {
+                    tE += e.totalExpenses;
+                    return; // Skip bonuses and withdrawals from hall stats
+                }
                 if(!hS[e.note]) hS[e.note] = { jobs: 0, income: 0, expenses: 0 };
                 hS[e.note].jobs++; hS[e.note].income += e.income; hS[e.note].expenses += e.totalExpenses;
                 tI += e.income; tE += e.totalExpenses;
@@ -803,7 +1117,9 @@
             const b = state.bookings.find(x => x.id === id); if(!b) return;
             const receiptHtml = b.paymentReceipt ? `<div class="glass p-3 rounded-lg mt-4 border border-blue-500/30"><p class="text-xs text-blue-400 mb-2 font-bold"><i data-lucide="receipt" class="w-4 h-4 inline"></i> إيصال سداد إلكتروني مرفق</p><img src="${b.paymentReceipt}" class="w-full rounded-lg max-h-64 object-contain mb-3 bg-black/50 p-2"><button onclick="window.completePayment(${b.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg text-sm font-bold transition">تأكيد الدفع وتحصيل المبلغ المتبقي</button></div>` : '';
             
-            const html = `<div class="space-y-4 text-white"><div class="grid grid-cols-2 gap-4"><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">العميل</p><p class="font-bold text-sm">${b.name}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">التاريخ</p><p class="font-bold text-sm">${new Date(b.date).toLocaleDateString('ar-EG')}</p></div></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الخدمات</p><p class="text-sm font-bold">${b.services?.map(s=>s.name).join('، ')||'لا يوجد'}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المصورين</p><p class="text-sm font-bold">${b.photographers?.map(p=>p.name).join('، ')||'لا يوجد'}</p></div><div class="grid grid-cols-3 gap-2 mt-4 text-center"><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الإجمالي</p><p class="font-bold">${b.total}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المقدم</p><p class="text-emerald-400 font-bold">${b.deposit}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الباقي</p><p class="text-red-400 font-bold">${b.balance}</p></div></div>${receiptHtml}</div>`;
+            const html = `<div class="space-y-4 text-white">
+                <div class="flex justify-end mb-2"><button onclick="window.copyClientLink('${b.phone}')" class="text-xs bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40 transition px-3 py-1.5 rounded-lg flex items-center gap-1"><i data-lucide="link" class="w-3 h-3"></i> نسخ رابط التتبع للعميل</button></div>
+                <div class="grid grid-cols-2 gap-4"><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">العميل</p><p class="font-bold text-sm">${b.name}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">التاريخ</p><p class="font-bold text-sm">${new Date(b.date).toLocaleDateString('ar-EG')}</p></div></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الخدمات</p><p class="text-sm font-bold">${b.services?.map(s=>s.name).join('، ')||'لا يوجد'}</p></div><div class="glass p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المصورين</p><p class="text-sm font-bold">${b.photographers?.map(p=>p.name).join('، ')||'لا يوجد'}</p></div><div class="grid grid-cols-3 gap-2 mt-4 text-center"><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الإجمالي</p><p class="font-bold">${b.total}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">المقدم</p><p class="text-emerald-400 font-bold">${b.deposit}</p></div><div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الباقي</p><p class="text-red-400 font-bold">${b.balance}</p></div></div>${receiptHtml}</div>`;
             window.showStatsModal(`كشف حجز: ${b.name}`, html);
         };
 
@@ -837,28 +1153,30 @@
 
             const html = `
             <div class="space-y-4 text-white">
-                <div class="glass p-5 rounded-xl border-r-4 border-emerald-500">
+                <div class="glass p-5 rounded-xl border-r-4 ${e.type === 'withdrawal' ? 'border-red-500' : 'border-emerald-500'}">
                     <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
                         <div>
-                            <span class="text-zinc-400 text-xs block mb-1">بيان الدخل</span>
+                            <span class="text-zinc-400 text-xs block mb-1">${e.type === 'bonus' ? 'سجل صرف مكافأة' : (e.type === 'withdrawal' ? 'سجل سحب نقدي للمصور' : 'بيان الدخل')}</span>
                             <span class="font-bold text-sm">${e.note}</span>
                         </div>
                         <div class="text-right">
-                            <span class="text-zinc-400 text-xs block mb-1">المبلغ الإجمالي</span>
-                            <span class="font-bold text-emerald-400 text-lg">+${e.income} ج.م</span>
+                            <span class="text-zinc-400 text-xs block mb-1">${e.type === 'withdrawal' ? 'المبلغ المسحوب' : 'المبلغ الإجمالي'}</span>
+                            <span class="font-bold ${e.type === 'withdrawal' ? 'text-red-400' : 'text-emerald-400'} text-lg">${e.type === 'withdrawal' ? '-' : '+'}${e.type === 'withdrawal' ? e.totalExpenses : e.income} ج.م</span>
                         </div>
                     </div>
                     
                     <div class="mb-4">
                         <p class="text-[11px] text-zinc-400 mb-3 font-bold flex items-center gap-1"><i data-lucide="receipt" class="w-3 h-3"></i> تفاصيل المصروفات والتكاليف:</p>
+                        ${e.type === 'withdrawal' ? `<div class="bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="bg-red-500/20 p-2 rounded-full"><i data-lucide="wallet" class="w-4 h-4 text-red-400"></i></div><div><p class="text-xs font-bold text-red-300">سحب بواسطة: ${e.photographers?.[0]?.name}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${e.totalExpenses} ج.م</span></div>` : ''}
+                        ${e.type === 'bonus' ? `<div class="bg-purple-500/10 border border-purple-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="bg-purple-500/20 p-2 rounded-full"><i data-lucide="gift" class="w-4 h-4 text-purple-400"></i></div><div><p class="text-xs font-bold text-purple-300">مكافأة مسجلة لـ ${e.photographers?.[0]?.name}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${e.totalExpenses} ج.م</span></div>` : ''}
                         ${gearHtml}
                         ${flashHtml}
-                        ${(!gearHtml && !flashHtml) ? '<p class="text-xs text-zinc-500 text-center py-2">لا توجد مصروفات مسجلة</p>' : ''}
+                        ${(!gearHtml && !flashHtml && e.type !== 'bonus' && e.type !== 'withdrawal') ? '<p class="text-xs text-zinc-500 text-center py-2">لا توجد مصروفات مسجلة</p>' : ''}
                     </div>
                     
                     <div class="pt-4 border-t border-white/10 flex justify-between items-center font-bold">
-                        <span class="text-zinc-300">الصافي لدرج الاستوديو</span>
-                        <span class="text-xl text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10">${e.income - e.totalExpenses} ج.م</span>
+                        <span class="text-zinc-300">${e.type === 'withdrawal' ? 'تم الخصم من درج الاستوديو' : 'الصافي لدرج الاستوديو'}</span>
+                        <span class="text-xl text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10">${e.type === 'withdrawal' ? '-' + e.totalExpenses : (e.income - e.totalExpenses)} ج.م</span>
                     </div>
                 </div>
             </div>`;
@@ -869,7 +1187,7 @@
             let title = '', items = [];
             if(type === 'revenue') { title = 'كشف الإيرادات'; state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); state.dailyEntries.forEach(d => d.income > 0 && items.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date||d.id})); }
             else if(type === 'expenses') { title = 'كشف المصروفات'; state.bookings.forEach(b => b.status === 'completed' && b.photographers?.forEach(p => items.push({id:b.id, type:'booking', text:`أجر: ${p.name}`, val:p.fee, c:'text-red-400', s:'-', date:b.date}))); state.dailyEntries.forEach(d => d.totalExpenses > 0 && items.push({id:d.id, type:'entry', text:d.note, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date||d.id})); }
-            else { title = 'كشف الأرباح'; state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); state.dailyEntries.forEach(d => { if(d.income>0) items.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date}); if(d.totalExpenses>0) items.push({id:d.id, type:'entry', text:`مصاريف: ${d.note}`, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date}); }); }
+            else { title = 'كشف الأرباح'; state.bookings.forEach(b => b.status === 'completed' && items.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); state.dailyEntries.forEach(d => { if(d.income>0) items.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date}); if(d.totalExpenses>0) items.push({id:d.id, type:'entry', text:`مصاريف/مسحوبات: ${d.note}`, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date}); }); }
             items.sort((a,b) => new Date(b.date) - new Date(a.date));
             const html = items.length ? items.map(i => `<div onclick="window.closeStatsModal(); ${i.type==='booking' ? `window.showBookingDetails(${i.id})` : `window.showEntryDetails(${i.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="font-bold text-xs text-white">${i.text}</p><p class="text-[9px] text-zinc-500">${new Date(i.date).toLocaleDateString('ar-EG')}</p></div><span class="font-bold text-xs ${i.c}">${i.s}${i.val}</span></div>`).join('') : '<p class="text-zinc-500 text-center py-4">لا يوجد</p>';
             window.showStatsModal(title, html);
@@ -894,7 +1212,7 @@
                 });
             } else {
                 state.dailyEntries.forEach(d => { 
-                    if(d.note === note) {
+                    if(d.note === note && d.type !== 'bonus' && d.type !== 'withdrawal') {
                         stats.jobs++;
                         stats.income += d.income;
                         stats.expenses += d.totalExpenses;
@@ -935,8 +1253,283 @@
             window.showStatsModal(`تفاصيل المكان/القاعة: ${note}`, statsHtml + historyHtml);
         };
 
+        // --- Tracking Logic ---
+        window.renderPhotogTracking = function(name) {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('clientTrackingView').classList.add('hidden');
+            document.getElementById('deviceLockedView').classList.add('hidden');
+
+            let p = state.photographers.find(x => x.name === name);
+            if (!p) {
+                document.getElementById('trackNoBooking').classList.remove('hidden');
+                return;
+            }
+
+            // Device Locking System
+            let localDeviceId = localStorage.getItem('photog_device_id_' + name);
+            if (!localDeviceId) {
+                localDeviceId = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('photog_device_id_' + name, localDeviceId);
+            }
+
+            if (!p.deviceId) {
+                p.deviceId = localDeviceId; // Bind device first time
+                window.saveState();
+            } else if (p.deviceId !== localDeviceId) {
+                // Wrong device -> Lock access
+                document.getElementById('deviceLockedView').classList.remove('hidden');
+                document.getElementById('photographerTrackingView').classList.add('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            document.getElementById('photographerTrackingView').classList.remove('hidden');
+            document.getElementById('trackPhotogName').innerText = name;
+
+            let totalEarnings = 0;
+            let jobsCount = 0;
+            let totalBonusesAmt = 0;
+            
+            let upcomingHtml = '';
+            let historyHtml = '';
+            let bonusesHtml = '';
+            let alertsHtml = '';
+
+            // Calculate upcoming (pending bookings)
+            const upcoming = state.bookings.filter(b => b.status !== 'completed' && b.photographers?.some(p => p.name === name));
+            // Calculate history (completed bookings + daily entries including withdrawals)
+            const completedBookings = state.bookings.filter(b => b.status === 'completed' && b.photographers?.some(p => p.name === name));
+            const dailyEntries = state.dailyEntries.filter(d => d.type !== 'bonus' && d.photographers?.some(p => p.name === name));
+            const bonusEntries = state.dailyEntries.filter(d => d.type === 'bonus' && d.photographers?.some(p => p.name === name));
+
+            upcoming.forEach(b => {
+                const calLink = window.getGoogleCalendarLink(b);
+                upcomingHtml += `
+                    <div class="glass p-4 rounded-xl border border-yellow-500/20 shadow-[0_4px_20px_rgba(234,179,8,0.05)] relative overflow-hidden transition-all hover:border-yellow-500/50">
+                        <div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-yellow-400 to-yellow-600"></div>
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded text-[9px] font-bold border border-yellow-500/20 animate-pulse">موعد قادم</span>
+                                    <span class="text-[10px] text-zinc-400 flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3 text-yellow-500"></i> ${new Date(b.date).toLocaleDateString('ar-EG')}</span>
+                                </div>
+                                <h4 class="font-bold text-base text-white flex items-center gap-1.5"><i data-lucide="user" class="w-3.5 h-3.5 text-yellow-400"></i> ${b.name}</h4>
+                            </div>
+                            <a href="${calLink}" target="_blank" class="flex items-center justify-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-1.5 rounded-lg transition border border-blue-500/20 text-[10px] font-bold whitespace-nowrap">
+                                <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> للتقويم
+                            </a>
+                        </div>
+                        
+                        ${b.phone || b.details || (b.services && b.services.length) ? `
+                        <div class="bg-black/20 rounded-lg p-2.5 border border-white/5">
+                            <div class="flex flex-wrap gap-x-4 gap-y-2">
+                                ${b.phone ? `<div class="text-xs text-zinc-300 flex items-center gap-1.5"><i data-lucide="phone" class="w-3 h-3 text-blue-400"></i> <a href="tel:${b.phone}" class="hover:text-blue-400 transition" dir="ltr">${b.phone}</a></div>` : ''}
+                                ${b.details ? `<div class="text-xs text-zinc-300 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3 h-3 text-red-400"></i> <span>${b.details}</span></div>` : ''}
+                            </div>
+                            ${b.services && b.services.length ? `
+                            <div class="mt-2 pt-2 border-t border-white/5 flex flex-wrap items-center gap-1.5">
+                                <span class="text-[9px] text-zinc-500 ml-1 font-bold">الخدمات:</span>
+                                ${b.services.map(s => `<span class="bg-white/5 text-zinc-300 border border-white/10 px-1.5 py-0.5 rounded text-[9px]">${s.name}</span>`).join('')}
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            completedBookings.forEach(b => {
+                const fee = b.photographers.find(p=>p.name===name).fee;
+                totalEarnings += fee; jobsCount++;
+                historyHtml += `
+                    <div class="glass p-4 rounded-xl border-r-4 border-emerald-500 flex justify-between items-center opacity-80 hover:opacity-100 transition">
+                        <div>
+                            <h4 class="font-bold text-sm text-white">${b.name} <span class="bg-emerald-500/20 text-emerald-400 text-[8px] px-1.5 py-0.5 rounded ml-1">حجز استوديو</span></h4>
+                            <p class="text-[11px] text-zinc-400 mt-1"><i data-lucide="check-circle" class="w-3 h-3 inline"></i> ${new Date(b.date).toLocaleDateString('ar-EG')}</p>
+                        </div>
+                        <span class="font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">+${fee} ج.م</span>
+                    </div>
+                `;
+            });
+
+            dailyEntries.forEach(d => {
+                const fee = d.photographers.find(p=>p.name===name).totalFee; // This will be negative if it's a withdrawal
+                totalEarnings += fee; 
+                if (d.type !== 'withdrawal') jobsCount++;
+                
+                historyHtml += `
+                    <div class="glass p-4 rounded-xl border-r-4 ${d.type === 'withdrawal' ? 'border-red-500' : 'border-emerald-500'} flex justify-between items-center opacity-80 hover:opacity-100 transition">
+                        <div>
+                            <h4 class="font-bold text-sm text-white">${d.note} <span class="${d.type === 'withdrawal' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'} text-[8px] px-1.5 py-0.5 rounded ml-1">${d.type === 'withdrawal' ? 'سحب نقدي' : 'يومية/خارجي'}</span></h4>
+                            <p class="text-[11px] text-zinc-400 mt-1"><i data-lucide="${d.type === 'withdrawal' ? 'wallet' : 'check-circle'}" class="w-3 h-3 inline"></i> ${new Date(d.date||d.id).toLocaleDateString('ar-EG')}</p>
+                        </div>
+                        <span class="font-bold ${d.type === 'withdrawal' ? 'text-red-400 bg-red-500/10' : 'text-emerald-400 bg-emerald-500/10'} px-2 py-1 rounded">${d.type === 'withdrawal' ? fee : '+' + fee} ج.م</span>
+                    </div>
+                `;
+            });
+
+            bonusEntries.forEach(b => {
+               const fee = b.photographers.find(x=>x.name===name).totalFee;
+               totalEarnings += fee;
+               totalBonusesAmt += fee;
+               bonusesHtml += `
+               <div class="bg-black/30 p-3 rounded-lg border border-purple-500/20 flex justify-between items-center hover:bg-white/5 transition">
+                   <div>
+                       <p class="text-xs font-bold text-white flex items-center gap-1.5"><i data-lucide="sparkles" class="w-3 h-3 text-purple-400"></i> ${b.note}</p>
+                       <p class="text-[9px] text-zinc-400 mt-1"><i data-lucide="clock" class="w-3 h-3 inline"></i> ${new Date(b.date).toLocaleDateString('ar-EG')}</p>
+                   </div>
+                   <span class="font-bold text-xs text-purple-400">+${fee} ج.م</span>
+               </div>`;
+            });
+
+            // Check Push Notification Permission UI
+            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                document.getElementById('btnEnableNotifications').classList.remove('hidden');
+            } else {
+                document.getElementById('btnEnableNotifications').classList.add('hidden');
+            }
+
+            // Trigger Push Notification if needed
+            window.checkAndSendNotification(name);
+
+            // Header Upcoming Badge Logic
+            let upcomingCount = upcoming.length;
+            if(upcomingCount > 0) {
+                document.getElementById('headerUpcomingBadge').classList.remove('hidden');
+                document.getElementById('headerUpcomingCount').innerText = upcomingCount;
+            } else {
+                document.getElementById('headerUpcomingBadge').classList.add('hidden');
+            }
+
+            // Notifications / Alerts Logic UI
+            if(bonusEntries.length > 0) {
+                alertsHtml += `<div class="bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl mb-3 flex items-center gap-3 animate-in slide-in-from-top duration-500 delay-100">
+                    <div class="bg-purple-500/20 p-2 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.3)]"><i data-lucide="gift" class="w-5 h-5 text-purple-400"></i></div>
+                    <div><p class="text-sm font-bold text-purple-100">مبارك! تمت إضافة مكافآت لحسابك</p><p class="text-[10px] text-purple-300">تم احتسابها ضمن إجمالي مستحقاتك</p></div>
+                </div>`;
+            }
+
+            // Update Unified Stats Card
+            document.getElementById('trackPhotogEarnings').innerText = totalEarnings + " ج.م";
+            document.getElementById('trackPhotogJobs').innerText = jobsCount;
+            document.getElementById('trackPhotogTotalBonuses').innerText = totalBonusesAmt + " ج.م";
+            
+            const bonusesContainer = document.getElementById('trackPhotogBonusesContainer');
+            if (bonusEntries.length > 0) {
+                bonusesContainer.classList.remove('hidden');
+                document.getElementById('trackPhotogBonuses').innerHTML = bonusesHtml;
+            } else {
+                bonusesContainer.classList.add('hidden');
+                document.getElementById('trackPhotogBonuses').innerHTML = '';
+            }
+            
+            document.getElementById('trackPhotogAlerts').innerHTML = alertsHtml;
+            document.getElementById('trackPhotogUpcoming').innerHTML = upcomingHtml || '<p class="text-zinc-500 text-sm p-4 glass rounded-lg text-center">لا توجد أعمال قادمة مسجلة باسمك.</p>';
+            document.getElementById('trackPhotogHistory').innerHTML = historyHtml || '<p class="text-zinc-500 text-sm p-4 glass rounded-lg text-center">لا توجد أعمال منجزة سابقة.</p>';
+            
+            lucide.createIcons();
+        };
+
+        window.renderClientTracking = function(phone) {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('photographerTrackingView').classList.add('hidden');
+            document.getElementById('deviceLockedView').classList.add('hidden');
+            document.getElementById('clientTrackingView').classList.remove('hidden');
+
+            // Find booking by phone (latest pending preferred, or latest completed)
+            const cleanPhone = phone.replace(/\D/g, '');
+            let bookings = state.bookings.filter(b => (b.phone || '').replace(/\D/g, '') === cleanPhone);
+            
+            if(!bookings.length) {
+                document.getElementById('trackNoBooking').classList.remove('hidden');
+                document.getElementById('trackClientMessage').classList.add('hidden');
+                document.getElementById('trackClientPaymentSection').classList.add('hidden');
+                document.getElementById('trackClientServicesSection').classList.add('hidden');
+                return;
+            }
+
+            // Get most recent or most active booking
+            bookings.sort((a,b) => b.id - a.id);
+            const b = bookings.find(x => x.status !== 'completed') || bookings[0];
+
+            document.getElementById('trackClientName').innerText = b.name;
+            document.getElementById('trackClientTotal').innerText = b.total + " ج.م";
+            document.getElementById('trackClientPaid').innerText = b.deposit + " ج.م";
+            document.getElementById('trackClientBalance').innerText = b.balance + " ج.م";
+
+            // Services Details Section Logic
+            if (b.services && b.services.length > 0) {
+                document.getElementById('trackClientServicesSection').classList.remove('hidden');
+                document.getElementById('trackClientServicesList').innerHTML = b.services.map(s => `
+                    <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-lg border border-white/5 text-sm">
+                        <span class="text-zinc-300 flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> ${s.name}</span>
+                        <span class="font-bold text-white">${s.price} ج.م</span>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('trackClientServicesSection').classList.add('hidden');
+            }
+
+            // Payment Section Logic
+            if (b.balance > 0) {
+                document.getElementById('trackClientPaymentSection').classList.remove('hidden');
+            } else {
+                document.getElementById('trackClientPaymentSection').classList.add('hidden');
+            }
+
+            // Track Steps
+            const statusLevels = { 'confirmed': 1, 'shooting': 2, 'editing': 3, 'ready': 4 };
+            const currentLevel = b.status === 'completed' ? 4 : (statusLevels[b.trackingStatus || 'confirmed'] || 1);
+            
+            const steps = ['confirmed', 'shooting', 'editing', 'ready'];
+            steps.forEach((step, idx) => {
+                const el = document.getElementById(`step-${step}`);
+                if(idx + 1 <= currentLevel) {
+                    el.classList.add('step-active');
+                    el.classList.remove('text-zinc-400', 'bg-zinc-800', 'border-zinc-600');
+                } else {
+                    el.classList.remove('step-active');
+                    el.classList.add('text-zinc-400', 'bg-zinc-800', 'border-zinc-600');
+                }
+            });
+
+            const progWidths = { 1: '0%', 2: '33%', 3: '66%', 4: '100%' };
+            document.getElementById('trackLineProg').style.width = progWidths[currentLevel];
+
+            // Messaging based on status
+            const msgEl = document.getElementById('trackClientMessage');
+            if(b.status === 'completed') {
+                msgEl.className = "text-center p-3 rounded-lg text-sm font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                msgEl.innerText = "تم تسليم العمل بنجاح. شكراً لثقتكم بنا! 🎬";
+            } else if(b.balance > 0 && currentLevel === 4) {
+                msgEl.className = "text-center p-3 rounded-lg text-sm font-bold bg-red-500/10 text-red-400 border border-red-500/20";
+                msgEl.innerHTML = `العمل جاهز للاستلام! <br><span class="text-xs font-normal">يرجى تحويل المتبقي (${b.balance} ج.م) لاستلام نسختك.</span>`;
+            } else if (currentLevel === 4) {
+                msgEl.className = "text-center p-3 rounded-lg text-sm font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                msgEl.innerText = "عملك جاهز الآن للاستلام في الاستوديو! 🎉";
+            } else if (currentLevel === 3) {
+                msgEl.className = "text-center p-3 rounded-lg text-sm font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20";
+                msgEl.innerText = "نعمل الآن على مونتاج وإخراج عملك بأفضل جودة ✂️";
+            } else {
+                msgEl.className = "text-center p-3 rounded-lg text-sm font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20";
+                msgEl.innerText = "تم تأكيد الحجز، نحن في انتظارك في الموعد المحدد 📸";
+            }
+
+            lucide.createIcons();
+        };
+
         window.refreshAllViews = function() {
-            if (!document.getElementById('mainContent').classList.contains('hidden')) { 
+            const urlParams = new URLSearchParams(window.location.search);
+            const phoneTrack = urlParams.get('phone');
+            const photogTrack = urlParams.get('photographer');
+
+            if (phoneTrack) {
+                window.renderClientTracking(phoneTrack);
+            } else if (photogTrack) {
+                window.renderPhotogTracking(photogTrack);
+            } else if (!document.getElementById('mainContent').classList.contains('hidden')) { 
                 window.updateFiltersUI(); 
                 window.updateDashboard(); 
                 window.updateFlashInventoryUI(); 
@@ -954,7 +1547,17 @@
         window.bootApp = function() {
             if (isAppBooted) return; isAppBooted = true; window.isAppBooted = true;
             try {
-                document.getElementById('loginOverlay').classList.remove('hidden');
+                const urlParams = new URLSearchParams(window.location.search);
+                const phoneTrack = urlParams.get('phone');
+                const photogTrack = urlParams.get('photographer');
+
+                if (phoneTrack) {
+                    window.renderClientTracking(phoneTrack);
+                } else if (photogTrack) {
+                    window.renderPhotogTracking(photogTrack);
+                } else {
+                    document.getElementById('loginOverlay').classList.remove('hidden');
+                }
                 lucide.createIcons();
             } catch(e) {
                 console.error(e);
@@ -1159,6 +1762,31 @@
             window.toggleDailyEntryForm(false);
         };
         
+        window.adminAddBonus = function() {
+            const photog = document.getElementById('adminBonusPhotog').value;
+            const amount = parseFloat(document.getElementById('adminBonusAmount').value) || 0;
+            const note = document.getElementById('adminBonusNote').value;
+            
+            if (!photog || amount <= 0) return window.showToast("يرجى اختيار المصور وإدخال مبلغ صحيح", "error");
+            
+            state.dailyEntries.push({
+                id: Date.now(), 
+                note: note ? `مكافأة: ${note}` : 'مكافأة أداء وتميز', 
+                income: 0, 
+                date: new Date().toISOString().split('T')[0], 
+                photographers: [{name: photog, totalFee: amount, isBonus: true}], 
+                gear: null, flash: null, 
+                totalExpenses: amount, 
+                time: new Date().toLocaleTimeString('ar-EG'),
+                type: 'bonus'
+            });
+            window.saveState(); window.refreshAllViews(); window.showToast("تم صرف المكافأة للمصور بنجاح");
+            
+            document.getElementById('adminBonusAmount').value = '';
+            document.getElementById('adminBonusNote').value = '';
+            document.getElementById('adminBonusPhotog').value = '';
+        };
+
         window.changeMonth = function(s) { currentCalMonth += s; if(currentCalMonth<0){currentCalMonth=11;currentCalYear--;} else if(currentCalMonth>11){currentCalMonth=0;currentCalYear++;} window.renderCalendar(); };
         window.toggleTemplateManager = function() { const el = document.getElementById('templateManager'); if(el) el.classList.toggle('hidden'); };
         window.togglePhotogManager = function() { const el = document.getElementById('photogManager'); if(el) el.classList.toggle('hidden'); };
