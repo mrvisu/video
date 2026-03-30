@@ -357,11 +357,6 @@
                 </button>
             </div>
 
-            <!-- شريط الذكر للمصور (مثبت أسفل الشاشة) -->
-            <div class="sticky bottom-4 z-[90] glass p-3 mb-6 rounded-xl text-center text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 border border-emerald-500/20 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl transition-all">
-                <i data-lucide="sparkles" class="w-4 h-4"></i> <span class="dhikr-text transition-opacity duration-500 text-sm">ألا بذكر الله تطمئن القلوب</span> <i data-lucide="sparkles" class="w-4 h-4"></i>
-            </div>
-
             <!-- Notifications Section -->
             <div id="trackPhotogAlerts" class="mb-6 space-y-2"></div>
 
@@ -424,12 +419,17 @@
             <!-- Completed History -->
             <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="check-circle-2" class="text-emerald-400"></i> سجل الأعمال المنجزة والمسحوبات</h3>
             <div id="trackPhotogHistory" class="space-y-3"></div>
+            
+            <!-- شريط الذكر للمصور (مثبت أسفل الشاشة) -->
+            <div class="sticky bottom-4 z-[90] glass p-3 mt-8 rounded-xl text-center text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 border border-emerald-500/20 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl transition-all w-fit mx-auto px-6">
+                <i data-lucide="sparkles" class="w-4 h-4"></i> <span class="dhikr-text transition-opacity duration-500 text-sm">ألا بذكر الله تطمئن القلوب</span> <i data-lucide="sparkles" class="w-4 h-4"></i>
+            </div>
         </div>
     </div>
 
     <!-- Client Tracking View -->
-    <div id="clientTrackingView" class="hidden min-h-screen p-4 flex items-center justify-center">
-        <div class="glass p-6 sm:p-8 w-full max-w-md card-shadow border border-white/10 relative overflow-hidden">
+    <div id="clientTrackingView" class="hidden min-h-screen p-4 flex flex-col items-center justify-center pb-24">
+        <div class="glass p-6 sm:p-8 w-full max-w-md card-shadow border border-white/10 relative overflow-hidden mb-6">
             <!-- شريط الذكر للعميل -->
             <div class="bg-white/5 p-2 mb-4 rounded-xl text-center text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 border border-white/10">
                 <i data-lucide="sparkles" class="w-3 h-3"></i> <span class="dhikr-text transition-opacity duration-500">ألا بذكر الله تطمئن القلوب</span> <i data-lucide="sparkles" class="w-3 h-3"></i>
@@ -455,9 +455,17 @@
             </div>
 
             <div class="bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
+                <div id="trackClientSubtotalSection" class="flex justify-between text-sm mb-2 hidden">
+                    <span class="text-zinc-400">الإجمالي قبل الخصم:</span>
+                    <span class="font-bold text-zinc-300 line-through" id="trackClientSubtotal">0 ج.م</span>
+                </div>
+                <div id="trackClientDiscountSection" class="flex justify-between text-sm mb-2 hidden">
+                    <span class="text-yellow-400 font-bold">الخصم:</span>
+                    <span class="font-bold text-yellow-400" id="trackClientDiscount">-0 ج.م</span>
+                </div>
                 <div class="flex justify-between text-sm mb-2">
-                    <span class="text-zinc-400">الإجمالي:</span>
-                    <span class="font-bold" id="trackClientTotal">0 ج.م</span>
+                    <span class="text-zinc-400" id="trackClientTotalLabel">الإجمالي:</span>
+                    <span class="font-bold text-white" id="trackClientTotal">0 ج.م</span>
                 </div>
                 <div class="flex justify-between text-sm mb-2">
                     <span class="text-zinc-400">المدفوع:</span>
@@ -612,10 +620,14 @@
                     </div>
                     <div class="mt-8 pt-8 border-t border-white/10 flex flex-wrap gap-4 items-end">
                         <div class="flex flex-col text-right w-full sm:w-auto">
-                            <label class="block text-[11px] text-zinc-400 mb-2 font-bold text-center">العربون المدفوع (ج.م)</label>
-                            <input type="number" id="depositAmount" value="0" class="w-full sm:w-40 p-3 bg-black/50 border border-white/10 rounded-xl text-center text-lg font-bold text-emerald-400" onchange="window.calcTotal()" oninput="window.calcTotal()">
+                            <label class="block text-[11px] text-zinc-400 mb-2 font-bold text-center">الخصم (ج.م)</label>
+                            <input type="number" id="discountAmount" value="0" class="w-full sm:w-32 p-3 bg-black/50 border border-white/10 rounded-xl text-center text-lg font-bold text-yellow-400" onchange="window.calcTotal()" oninput="window.calcTotal()">
                         </div>
-                        <div class="glass p-3 rounded-lg flex-grow sm:flex-grow-0 text-center"><p class="text-[10px] text-zinc-400">الإجمالي</p><p class="font-bold text-xl" id="totalCalc">0</p></div>
+                        <div class="flex flex-col text-right w-full sm:w-auto">
+                            <label class="block text-[11px] text-zinc-400 mb-2 font-bold text-center">العربون (ج.م)</label>
+                            <input type="number" id="depositAmount" value="0" class="w-full sm:w-32 p-3 bg-black/50 border border-white/10 rounded-xl text-center text-lg font-bold text-emerald-400" onchange="window.calcTotal()" oninput="window.calcTotal()">
+                        </div>
+                        <div class="glass p-3 rounded-lg flex-grow sm:flex-grow-0 text-center"><p class="text-[10px] text-zinc-400">الإجمالي بعد الخصم</p><p class="font-bold text-xl" id="totalCalc">0</p></div>
                         <div class="glass p-3 rounded-lg flex-grow sm:flex-grow-0 text-center"><p class="text-[10px] text-zinc-400">المتبقي</p><p class="font-bold text-xl text-red-500" id="balanceCalc">0</p></div>
                         <button id="btnSaveBooking" onclick="window.saveBooking()" class="btn-grad px-8 py-4 rounded-xl font-bold mr-auto w-full sm:w-auto">حفظ الحجز</button>
                     </div>
@@ -703,26 +715,25 @@
                             <div class="flex flex-col sm:flex-row gap-2"><select id="adminBonusPhotog" class="flex-grow p-2 text-xs glass"><option value="">اختر المصور</option></select><input type="number" id="adminBonusAmount" placeholder="المبلغ" class="w-full sm:w-24 p-2 text-xs glass"></div>
                             <input type="text" id="adminBonusNote" placeholder="السبب (اختياري)" class="w-full p-2 text-xs glass">
                             <button onclick="window.adminAddBonus()" class="w-full bg-purple-600 p-3 rounded-lg text-xs font-bold transition hover:bg-purple-700">تأكيد المكافأة</button>
-                        </div>
                     </div>
-                    <div class="glass p-4 sm:p-6 flex flex-col h-full min-h-[400px]">
-                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 pb-4 border-b border-white/10 gap-4">
-                            <div class="flex items-center gap-4 whitespace-nowrap">
-                                <h4 onclick="window.toggleDailyEntryForm()" class="cursor-pointer hover:text-emerald-400 transition flex items-center gap-2 font-bold" title="تسجيل يومية جديدة">سجل اليومية <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i></h4>
-                            </div>
-                            <div class="flex flex-wrap sm:flex-nowrap gap-2 flex-grow max-w-xl w-full">
-                                <input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-2 text-[10px] glass flex-grow w-full sm:w-auto">
-                                <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-2 text-[10px] glass w-full sm:w-auto min-w-[100px]"><option value="">المصور</option></select>
-                            </div>
-                            <div class="flex gap-2 w-full lg:w-auto">
-                                <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-center flex-1 lg:flex-none">
-                                    <span class="block text-[9px] text-emerald-300 mb-0.5">إجمالي الدخل</span>
-                                    <span id="dailyIncomeLabel" class="text-xs sm:text-sm text-emerald-400 font-bold">+0</span>
-                                </div>
+                </div>
+                <div class="glass p-4 sm:p-6 flex flex-col h-full min-h-[400px]">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-4 border-b border-white/10 gap-3">
+                        <div class="flex items-center gap-3 w-full sm:w-auto flex-grow">
+                            <h4 onclick="window.toggleDailyEntryForm()" class="cursor-pointer hover:text-emerald-400 transition flex items-center gap-1.5 font-bold whitespace-nowrap text-sm sm:text-base" title="تسجيل يومية جديدة">سجل اليومية <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i></h4>
+                            <div class="flex gap-2 flex-grow">
+                                <input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-1.5 px-3 text-[10px] sm:text-xs glass flex-grow w-full">
+                                <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-1.5 px-1 text-[10px] sm:text-xs glass w-auto min-w-[75px]"><option value="">المصور</option></select>
                             </div>
                         </div>
-                        <div id="dailyEntryLog" class="space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-1"></div>
+                        <div class="w-full sm:w-auto mt-2 sm:mt-0">
+                            <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex justify-between sm:flex-col items-center sm:justify-center">
+                                <span class="block text-[10px] text-emerald-300 sm:mb-0.5">إجمالي الدخل</span>
+                                <span id="dailyIncomeLabel" class="text-sm font-bold text-emerald-400">+0</span>
+                            </div>
+                        </div>
                     </div>
+                    <div id="dailyEntryLog" class="space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-1"></div>
                 </div>
             </div>
             <div id="tab-reports" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
@@ -766,21 +777,6 @@
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data();
                         
-                        // إشعار الإدارة بدخول مصورين جدد
-                        if (window.state && window.state.photographers && cloudData.photographers) {
-                            cloudData.photographers.forEach(newP => {
-                                const oldP = window.state.photographers.find(op => op.name === newP.name);
-                                if (newP.isOnline && (!oldP || !oldP.isOnline)) {
-                                    const mainContent = document.getElementById('mainContent');
-                                    if (mainContent && !mainContent.classList.contains('hidden')) {
-                                        setTimeout(() => {
-                                            window.showToast(`المصور ${newP.name} متصل الآن 🟢`, "success");
-                                        }, 500);
-                                    }
-                                }
-                            });
-                        }
-
                         window.state = { ...window.defaultState, ...cloudData };
                         if (!window.isAppBooted) window.bootApp();
                         else window.refreshAllViews();
@@ -915,7 +911,8 @@
             
             const title = encodeURIComponent(`🎥 حجز تصوير: ${b.name || b.note}`);
             const svcs = b.services?.map(s=>s.name).join('، ') || 'غير محدد';
-            const details = encodeURIComponent(`👤 العميل/البيان: ${b.name || b.note}\n📞 رقم الهاتف: ${b.phone||'لا يوجد'}\n📋 الخدمات: ${svcs}\n📍 التفاصيل: ${b.details||'لا توجد'}\n\n✨ تمت الإضافة بواسطة نظام المراكبى`);
+            const discountText = b.discount > 0 ? `\n🎁 الخصم المطبق: ${b.discount} ج.م` : '';
+            const details = encodeURIComponent(`👤 العميل/البيان: ${b.name || b.note}\n📞 رقم الهاتف: ${b.phone||'لا يوجد'}\n📋 الخدمات: ${svcs}${discountText}\n📍 التفاصيل: ${b.details||'لا توجد'}\n\n✨ تمت الإضافة بواسطة نظام المراكبى`);
             
             return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;
         };
@@ -1282,11 +1279,13 @@
                 let financialsHtml = `
                     <div class="flex flex-wrap gap-1.5 mt-2">
                         <span class="bg-white/5 text-zinc-300 px-2 py-0.5 rounded border border-white/10 text-[9px] font-bold">إجمالي: ${b.total}</span>
+                        ${b.discount ? `<span class="bg-yellow-500/10 text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/20 text-[9px] font-bold">خصم: ${b.discount}</span>` : ''}
                         <span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 text-[9px] font-bold">مدفوع: ${b.deposit}</span>
                         <span class="${b.balance > 0 ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'} px-2 py-0.5 rounded text-[9px] font-bold">متبقي: ${b.balance}</span>
                     </div>
                 `;
                 
+                // Fixed client name alignment: use justify-start (RTL right) instead of justify-end
                 let clientNameHtml = `<div class="font-bold text-sm text-white flex items-center justify-start gap-1.5">
                     ${b.name}
                     ${b.clientSeen ? '<i data-lucide="eye" class="w-4 h-4 text-emerald-400" title="شاهد العميل الرابط"></i>' : ''}
@@ -1562,6 +1561,9 @@
             const receiptHtml = b.paymentReceipt ? `<div class="glass p-3 rounded-lg mt-4 border border-blue-500/30"><p class="text-xs text-blue-400 mb-2 font-bold"><i data-lucide="receipt" class="w-4 h-4 inline"></i> إيصال سداد إلكتروني مرفق</p><img src="${b.paymentReceipt}" class="w-full rounded-lg max-h-64 object-contain mb-3 bg-black/50 p-2"><button onclick="window.completePayment(${b.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg text-sm font-bold transition">تأكيد الدفع وتحصيل المبلغ المتبقي</button></div>` : '';
             
             let servicesListHtml = b.services?.map(s => `<div class="flex justify-between items-center border-b border-white/5 py-1 last:border-0"><span class="text-sm text-zinc-300">${s.name}</span><span class="text-sm font-bold">${s.price} ج.م</span></div>`).join('') || '<p class="text-sm text-zinc-500">لا توجد خدمات</p>';
+            
+            const discountRow = b.discount > 0 ? `<div class="bg-white/5 p-3 rounded-lg"><p class="text-[9px] text-zinc-400">الخصم</p><p class="font-bold text-yellow-400">${b.discount}</p></div>` : '';
+            const gridClass = b.discount > 0 ? 'grid-cols-4' : 'grid-cols-3';
 
             const html = `
             <div class="space-y-4 text-white p-2">
@@ -1608,11 +1610,12 @@
                 </div>
 
                 <!-- الحسابات -->
-                <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="grid ${gridClass} gap-3 mb-4">
                     <div class="bg-white/5 border border-white/10 p-3 rounded-xl text-center">
                         <p class="text-[10px] text-zinc-400 mb-1">الإجمالي</p>
                         <p class="font-bold text-lg text-white">${b.total} ج.م</p>
                     </div>
+                    ${discountRow}
                     <div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-center">
                         <p class="text-[10px] text-emerald-300 mb-1">العربون المدفوع</p>
                         <p class="font-bold text-lg text-emerald-400">${b.deposit} ج.م</p>
@@ -2178,6 +2181,23 @@
             document.getElementById('trackClientPaid').innerText = b.deposit + " ج.م";
             document.getElementById('trackClientBalance').innerText = b.balance + " ج.م";
 
+            // Subtotal and Discount Logic
+            const subtotalEl = document.getElementById('trackClientSubtotalSection');
+            const discountEl = document.getElementById('trackClientDiscountSection');
+            const totalLabel = document.getElementById('trackClientTotalLabel');
+            
+            if (b.discount && b.discount > 0) {
+                subtotalEl.classList.remove('hidden');
+                discountEl.classList.remove('hidden');
+                document.getElementById('trackClientSubtotal').innerText = (b.subtotal || (b.total + b.discount)) + " ج.م";
+                document.getElementById('trackClientDiscount').innerText = "-" + b.discount + " ج.م";
+                totalLabel.innerText = "الإجمالي المستحق:";
+            } else {
+                subtotalEl.classList.add('hidden');
+                discountEl.classList.add('hidden');
+                totalLabel.innerText = "الإجمالي:";
+            }
+
             // Other Details Section Logic
             if (b.details && b.details.trim() !== '') {
                 document.getElementById('trackClientDetailsSection').classList.remove('hidden');
@@ -2337,10 +2357,15 @@
         };
 
         window.calcTotal = function() {
-            const t = state.selectedServices.reduce((a,c)=>a+c.price,0), d = parseFloat(document.getElementById('depositAmount').value)||0;
-            const tC = document.getElementById('totalCalc'), bC = document.getElementById('balanceCalc');
-            if(tC) tC.innerText = t + " ج.م"; if(bC) bC.innerText = (t - d) + " ج.م";
-            return {t, d, b:t-d};
+            const t = state.selectedServices.reduce((a,c)=>a+c.price,0);
+            const disc = parseFloat(document.getElementById('discountAmount').value)||0;
+            const finalTotal = Math.max(0, t - disc);
+            const d = parseFloat(document.getElementById('depositAmount').value)||0;
+            const tC = document.getElementById('totalCalc');
+            const bC = document.getElementById('balanceCalc');
+            if(tC) tC.innerText = finalTotal + " ج.م"; 
+            if(bC) bC.innerText = (finalTotal - d) + " ج.م";
+            return {t: finalTotal, d, b: finalTotal - d, subtotal: t, disc: disc};
         };
 
         window.editBooking = function(id) {
@@ -2353,6 +2378,7 @@
             document.getElementById('bookingDate').value = b.date;
             document.getElementById('bookingDetails').value = b.details || '';
             document.getElementById('depositAmount').value = b.deposit || 0;
+            document.getElementById('discountAmount').value = b.discount || 0;
 
             state.selectedServices = [...b.services];
             window.renderServices();
@@ -2382,6 +2408,7 @@
             document.getElementById('bookingDate').value = '';
             document.getElementById('bookingDetails').value = '';
             document.getElementById('depositAmount').value = '0';
+            document.getElementById('discountAmount').value = '0';
             
             state.selectedServices = [];
             window.renderServices();
@@ -2421,18 +2448,18 @@
                         ...state.bookings[idx],
                         name: n, date: d, phone: p, details: document.getElementById('bookingDetails').value, 
                         services: [...state.selectedServices], photographers: pgs, 
-                        total: fin.t, deposit: fin.d, balance: fin.b
+                        total: fin.t, deposit: fin.d, balance: fin.b, subtotal: fin.subtotal, discount: fin.disc
                     };
                     state.finances.revenue += (fin.d - oldDeposit);
                     window.showToast("تم تحديث الحجز بنجاح");
                 }
                 window.cancelEditBooking();
             } else {
-                state.bookings.push({id:Date.now(), name:n, date:d, phone:p, details:document.getElementById('bookingDetails').value, services:[...state.selectedServices], photographers:pgs, total:fin.t, deposit:fin.d, balance:fin.b, status:'pending', trackingStatus: 'confirmed'});
+                state.bookings.push({id:Date.now(), name:n, date:d, phone:p, details:document.getElementById('bookingDetails').value, services:[...state.selectedServices], photographers:pgs, total:fin.t, deposit:fin.d, balance:fin.b, subtotal:fin.subtotal, discount:fin.disc, status:'pending', trackingStatus: 'confirmed'});
                 state.finances.revenue += fin.d;
                 window.showToast("تم الحجز بنجاح");
                 
-                document.getElementById('clientName').value=''; document.getElementById('clientPhone').value=''; document.getElementById('depositAmount').value='0'; document.getElementById('bookingDetails').value=''; state.selectedServices=[];
+                document.getElementById('clientName').value=''; document.getElementById('clientPhone').value=''; document.getElementById('depositAmount').value='0'; document.getElementById('discountAmount').value='0'; document.getElementById('bookingDetails').value=''; state.selectedServices=[];
                 document.querySelectorAll('.booking-photog-check').forEach(cb => cb.checked = false);
                 window.toggleBookingForm(false);
             }
@@ -2459,9 +2486,10 @@
             const svcs = b.services?.length ? b.services.map(s=>s.name).join('، ') : 'غير محدد';
             const dateStr = new Date(b.date).toLocaleDateString('ar-EG');
             const trackUrl = window.location.href.split('?')[0] + '?phone=' + cleanPhone;
+            const discountText = b.discount > 0 ? `\n🎁 الخصم: ${b.discount} ج.م` : '';
 
             if (type === 'confirm') {
-                msg = `مرحباً أ. ${b.name} ✨\n\nشكراً لاختياركم المراكبى لخدمات الفيديو 🎥\nتم تأكيد حجزكم بنجاح.\n\n📅 التاريخ: ${dateStr}\n📋 الخدمات: ${svcs}\n💰 الإجمالي: ${b.total} ج.م\n💸 العربون: ${b.deposit} ج.م\n💳 المتبقي: ${b.balance} ج.م\n\n📍 يمكنك متابعة حالة حجزك ومراحل العمل عبر الرابط التالي:\n${trackUrl}\n\nنسعد بخدمتكم! 🎬`;
+                msg = `مرحباً أ. ${b.name} ✨\n\nشكراً لاختياركم المراكبى لخدمات الفيديو 🎥\nتم تأكيد حجزكم بنجاح.\n\n📅 التاريخ: ${dateStr}\n📋 الخدمات: ${svcs}\n💰 الإجمالي: ${b.total} ج.م${discountText}\n💸 العربون: ${b.deposit} ج.م\n💳 المتبقي: ${b.balance} ج.م\n\n📍 يمكنك متابعة حالة حجزك ومراحل العمل عبر الرابط التالي:\n${trackUrl}\n\nنسعد بخدمتكم! 🎬`;
             } else if (type === 'payment') {
                 if (b.balance <= 0) return window.showToast("لا يوجد مبلغ متبقي على هذا العميل", "error");
                 msg = `مرحباً أ. ${b.name} ✨\n\nنود تذكيركم بأنه يتبقى مبلغ ${b.balance} ج.م مستحق على حجزكم.\n\n💳 لتسهيل الإجراءات، يمكنكم تحويل المبلغ إلكترونياً عبر (فودافون كاش) أو (InstaPay) على الرقم:\n📞 01126810107\n\nيرجى إرسال إيصال التحويل أو لقطة الشاشة (سكرين شوت) داخل رابط التتبع الخاص بك هنا:\n${trackUrl}\n\nشكراً لتعاونكم! 🎬`;
