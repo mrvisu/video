@@ -715,25 +715,26 @@
                             <div class="flex flex-col sm:flex-row gap-2"><select id="adminBonusPhotog" class="flex-grow p-2 text-xs glass"><option value="">اختر المصور</option></select><input type="number" id="adminBonusAmount" placeholder="المبلغ" class="w-full sm:w-24 p-2 text-xs glass"></div>
                             <input type="text" id="adminBonusNote" placeholder="السبب (اختياري)" class="w-full p-2 text-xs glass">
                             <button onclick="window.adminAddBonus()" class="w-full bg-purple-600 p-3 rounded-lg text-xs font-bold transition hover:bg-purple-700">تأكيد المكافأة</button>
-                    </div>
-                </div>
-                <div class="glass p-4 sm:p-6 flex flex-col h-full min-h-[400px]">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-4 border-b border-white/10 gap-3">
-                        <div class="flex items-center gap-3 w-full sm:w-auto flex-grow">
-                            <h4 onclick="window.toggleDailyEntryForm()" class="cursor-pointer hover:text-emerald-400 transition flex items-center gap-1.5 font-bold whitespace-nowrap text-sm sm:text-base" title="تسجيل يومية جديدة">سجل اليومية <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i></h4>
-                            <div class="flex gap-2 flex-grow">
-                                <input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-1.5 px-3 text-[10px] sm:text-xs glass flex-grow w-full">
-                                <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-1.5 px-1 text-[10px] sm:text-xs glass w-auto min-w-[75px]"><option value="">المصور</option></select>
-                            </div>
-                        </div>
-                        <div class="w-full sm:w-auto mt-2 sm:mt-0">
-                            <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex justify-between sm:flex-col items-center sm:justify-center">
-                                <span class="block text-[10px] text-emerald-300 sm:mb-0.5">إجمالي الدخل</span>
-                                <span id="dailyIncomeLabel" class="text-sm font-bold text-emerald-400">+0</span>
-                            </div>
                         </div>
                     </div>
-                    <div id="dailyEntryLog" class="space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-1"></div>
+                    <div class="glass p-4 sm:p-6 flex flex-col h-full min-h-[400px]">
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 pb-4 border-b border-white/10 gap-4">
+                            <div class="flex items-center gap-4 whitespace-nowrap">
+                                <h4 onclick="window.toggleDailyEntryForm()" class="cursor-pointer hover:text-emerald-400 transition flex items-center gap-2 font-bold" title="تسجيل يومية جديدة">سجل اليومية <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i></h4>
+                            </div>
+                            <div class="flex flex-wrap sm:flex-nowrap gap-2 flex-grow max-w-xl w-full">
+                                <input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-2 text-[10px] glass flex-grow w-full sm:w-auto">
+                                <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-2 text-[10px] glass w-full sm:w-auto min-w-[100px]"><option value="">المصور</option></select>
+                            </div>
+                            <div class="flex gap-2 w-full lg:w-auto">
+                                <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg text-center flex-1 lg:flex-none">
+                                    <span class="block text-[9px] text-emerald-300 mb-0.5">إجمالي الدخل</span>
+                                    <span id="dailyIncomeLabel" class="text-xs sm:text-sm text-emerald-400 font-bold">+0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="dailyEntryLog" class="space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-1"></div>
+                    </div>
                 </div>
             </div>
             <div id="tab-reports" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-300">
