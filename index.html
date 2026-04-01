@@ -760,7 +760,12 @@
             inventory: { flashesCount: 0, flashesTotalValue: 0, flashPrice: 50 }, selectedServices: [],
             services: [{ id: 1, name: 'جلسة تصوير', price: 1000 }, { id: 2, name: 'مونتاج فيديو', price: 2500 }, { id: 3, name: 'مكياج', price: 800 }, { id: 4, name: 'طباعة', price: 400 }],
             templates: [{ id: 1, name: 'قاعة 1', price: 150 }, { id: 2, name: 'شغل الشارع', price: 300 }],
-            photographers: [{ id: 1, name: 'أحمد', fee: 300, token: null, isOnline: false }, { id: 2, name: 'سارة', fee: 400, token: null, isOnline: false }, { id: 3, name: 'محمد', fee: 350, token: null, isOnline: false }],
+            photographers: [
+                { id: 1, name: 'أحمد', fee: 300, token: null, isOnline: false }, 
+                { id: 2, name: 'سارة', fee: 400, token: null, isOnline: false }, 
+                { id: 3, name: 'محمد', fee: 350, token: null, isOnline: false },
+                { id: 4, name: 'محمود المراكبى', fee: 400, token: null, isOnline: false }
+            ],
             shiftSwaps: []
         };
         var state = JSON.parse(JSON.stringify(defaultState));
@@ -875,7 +880,7 @@
             if (isNaN(date.getTime())) return [];
 
             const epochDays = Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-            const dailyCount = Math.min(3, corePhotogs.length);
+            const dailyCount = Math.min(4, corePhotogs.length);
             const result = [];
             const startIndex = (epochDays * dailyCount) % corePhotogs.length;
 
@@ -992,7 +997,7 @@
                         <h4 class="text-xs font-bold text-zinc-300 flex items-center gap-1.5"><i data-lucide="sun" class="w-3.5 h-3.5 text-yellow-400"></i> فريق عمل اليوم:</h4>
                         <span class="text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-300 font-bold px-2 py-1 rounded">${todayDate.toLocaleDateString('ar-EG', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
             `;
 
             todayRotation.forEach(name => {
@@ -2063,7 +2068,7 @@
                     </div>
                     
                     <div class="mb-5 bg-black/20 p-4 rounded-xl border border-white/5">
-                        <h4 class="text-xs font-bold text-zinc-300 mb-3 flex items-center gap-1.5"><i data-lucide="sun" class="w-3.5 h-3.5 text-yellow-400"></i> مطلوبين للعمل اليوم:</h4>
+                        <h4 class="text-xs font-bold text-zinc-300 mb-3 flex items-center gap-1.5"><i data-lucide="sun" class="w-3.5 h-3.5 text-yellow-400"></i> فريق عمل اليوم:</h4>
                 `;
 
                 combinedHtml += `<div class="flex flex-wrap gap-2 mb-4">`;
