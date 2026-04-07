@@ -410,10 +410,10 @@
                         <div class="flex flex-col items-end gap-2"><span class="text-[10px] bg-white/5 px-2 py-1 rounded-lg text-yellow-300 border border-white/5">سعر البيع: <span id="flashPriceLabel" class="font-bold">50</span> ج.م</span><button onclick="window.toggleFlashInventoryEdit()" class="text-[10px] bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/10 transition">تعديل</button></div>
                     </div>
                     <div class="glass p-4 sm:p-5 border border-emerald-500/20 rounded-2xl flex flex-col xl:flex-row justify-between items-start xl:items-center transition-all hover:border-emerald-500/40 gap-4">
-                        <div class="flex items-center gap-3"><div class="bg-emerald-500/20 p-2 rounded-lg"><i data-lucide="wallet" class="text-emerald-500 w-4 h-4 sm:w-5 sm:h-5"></i></div><div><h4 class="font-bold text-sm">صافي الإيرادات</h4><p class="text-[10px] text-zinc-400">بعد خصم جميع المصروفات</p></div></div>
+                        <div class="flex items-center gap-3"><div class="bg-emerald-500/20 p-2 rounded-lg"><i data-lucide="wallet" class="text-emerald-500 w-4 h-4 sm:w-5 sm:h-5"></i></div><div><h4 class="font-bold text-sm">صافي الإيرادات</h4><p class="text-[10px] text-zinc-400">بعد خصم جميع المصروفات الفعلية</p></div></div>
                         <div class="flex items-center justify-between w-full xl:w-auto bg-black/30 p-3 rounded-xl xl:bg-transparent xl:p-0 border border-white/5 xl:border-none gap-4">
-                            <div class="text-center border-l border-white/10 pl-4 flex-1 xl:flex-auto"><p class="text-[9px] text-zinc-400 mb-1">مصاريف المصورين</p><span id="dailyPhotogTotalExpDisplay" class="text-sm text-red-400 font-bold whitespace-nowrap">0 ج.م</span></div>
-                            <div class="text-center flex-1 xl:flex-auto"><p class="text-[9px] text-zinc-400 mb-1">الصافي</p><span id="dailyTotalNetProfitDisplay" class="text-lg sm:text-xl text-emerald-400 font-bold whitespace-nowrap">0 ج.م</span></div>
+                            <div class="text-center border-l border-white/10 pl-4 flex-1 xl:flex-auto"><p class="text-[9px] text-zinc-400 mb-1">أجور مصورين (معلقة)</p><span id="dailyPhotogTotalExpDisplay" class="text-sm text-yellow-400 font-bold whitespace-nowrap">0 ج.م</span></div>
+                            <div class="text-center flex-1 xl:flex-auto"><p class="text-[9px] text-zinc-400 mb-1">الصافي بالخزنة</p><span id="dailyTotalNetProfitDisplay" class="text-lg sm:text-xl text-emerald-400 font-bold whitespace-nowrap">0 ج.م</span></div>
                         </div>
                     </div>
                 </div>
@@ -440,7 +440,13 @@
                         <div id="templateManager" class="hidden p-4 bg-zinc-900/50 rounded-xl border border-dashed border-white/20"><div id="templateEditList" class="space-y-2"></div><button onclick="window.addNewTemplate()" class="mt-2 w-full p-1 text-[9px] border border-white/10 hover:bg-white/5">+ قاعة</button></div>
                         <div id="photogManager" class="hidden p-4 bg-zinc-900/50 rounded-xl border border-dashed border-white/20"><div id="photogEditList" class="space-y-2"></div><button onclick="window.addNewPhotographer()" class="mt-2 w-full p-1 text-[9px] border border-white/10 hover:bg-white/5">+ مصور</button></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><input type="text" id="incomeNote" placeholder="بيان الدخل" class="p-3 text-sm"><input type="number" id="incomeAmount" placeholder="المبلغ" class="p-3 text-sm"></div>
-                        <div><input type="date" id="dailyEntryDate" class="w-full p-3 text-sm mb-1" onchange="window.updateRotationAlert('dailyEntryDate', 'dailyRotationAlert')"><div id="dailyRotationAlert"></div></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div><input type="date" id="dailyEntryDate" class="w-full p-3 text-sm mb-1" onchange="window.updateRotationAlert('dailyEntryDate', 'dailyRotationAlert')"><div id="dailyRotationAlert"></div></div>
+                            <div>
+                                <select id="dailyEntryHall" class="w-full p-3 text-sm bg-black/50 border border-white/10 rounded-xl focus:border-emerald-500 transition"></select>
+                                <p class="text-[9px] text-zinc-500 mt-1">تخصيص المصروفات (إن وجدت) لقاعة محددة</p>
+                            </div>
+                        </div>
                         <div class="bg-white/5 p-4 rounded-xl border border-white/10 transition hover:bg-white/[0.07]">
                             <h5 class="text-xs font-bold mb-3">المصورين والمعدات</h5>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="dailyPhotographerList"></div>
@@ -549,7 +555,18 @@
         window.showStatsModal = function(t, h) { const mT = el('statsModalTitleText'), mC = el('statsModalContent'); if(mT) mT.innerText = t; if(mC) mC.innerHTML = h; el('statsModal').classList.remove('hidden'); if(window.lucide) lucide.createIcons(); };
         window.closeStatsModal = function() { el('statsModal').classList.add('hidden'); };
         window.toggleBookingForm = function(f = false) { const e = el('bookingFormContainer'); if(f) e.classList.remove('hidden'); else e.classList.toggle('hidden'); };
-        window.toggleDailyEntryForm = function(f = false) { const e = el('dailyEntryFormContainer'), l = el('inventoryLayout'); if(f || e.classList.contains('hidden')){ e.classList.remove('hidden'); l.classList.replace('lg:grid-cols-1', 'lg:grid-cols-2'); }else{ e.classList.add('hidden'); l.classList.replace('lg:grid-cols-2', 'lg:grid-cols-1'); }};
+        window.toggleDailyEntryForm = function(f = false) { 
+            const e = el('dailyEntryFormContainer'), l = el('inventoryLayout'); 
+            if(f || e.classList.contains('hidden')){ 
+                const hSel = el('dailyEntryHall');
+                if(hSel) hSel.innerHTML = '<option value="">عام (بدون قاعة)</option>' + state.templates.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+                e.classList.remove('hidden'); 
+                l.classList.replace('lg:grid-cols-1', 'lg:grid-cols-2'); 
+            }else{ 
+                e.classList.add('hidden'); 
+                l.classList.replace('lg:grid-cols-2', 'lg:grid-cols-1'); 
+            }
+        };
 
         window.getPhotogFinances = function(name) {
             let tE = 0, tW = 0;
@@ -857,11 +874,14 @@
             
             let flash = null; if(el('useFlashCheckbox').checked) { const fp = state.inventory.flashPrice || 50; flash = fp; tEx += fp; if(state.inventory.flashesCount > 0) state.inventory.flashesCount--; }
             
-            state.dailyEntries.push({ id: Date.now(), note: n, income: a, date: d, photographers: ps, gear: gear, flash: flash, totalExpenses: tEx, type: 'entry' });
+            const h = el('dailyEntryHall') ? el('dailyEntryHall').value : '';
+
+            state.dailyEntries.push({ id: Date.now(), note: n, income: a, date: d, photographers: ps, gear: gear, flash: flash, totalExpenses: tEx, hall: h, type: 'entry' });
             if(a > 0) state.finances.revenue += a; if(tEx > 0) state.finances.expenses += tEx;
             
             window.saveState(); window.showToast("تم الحفظ بنجاح");
             el('incomeNote').value = ''; el('incomeAmount').value = ''; el('dailyEntryDate').value = ''; el('gearRentalNote').value = ''; el('gearRentalAmount').value = ''; el('useFlashCheckbox').checked = false; el('dailyRotationAlert').innerHTML = '';
+            if (el('dailyEntryHall')) el('dailyEntryHall').value = '';
             document.querySelectorAll('.daily-photog-check').forEach(cb => cb.checked = false);
             window.refreshAllViews(); window.toggleDailyEntryForm(false);
         };
@@ -941,10 +961,31 @@
         };
 
         window.updateDashboard = function() {
-            let r = 0, e = 0; state.bookings.forEach(b => { if(b.status==='completed') r += b.total; else r += b.deposit; }); state.dailyEntries.forEach(d => { r += d.income; e += d.totalExpenses; }); state.bookings.forEach(b => { if(b.status === 'completed') b.photographers?.forEach(p => e += p.fee); });
-            const sR = el('stat-revenue'), sE = el('stat-expenses'), sP = el('stat-profit'); if(sR) sR.innerText = r + " ج.م"; if(sE) sE.innerText = e + " ج.م"; if(sP) sP.innerText = (r - e) + " ج.م";
+            let r = 0, e = 0; 
+            state.bookings.forEach(b => { if(b.status==='completed') r += b.total; else r += b.deposit; }); 
+            state.dailyEntries.forEach(d => { 
+                r += (d.income || 0); 
+                if (d.type === 'withdrawal' || d.type === 'bonus' || d.type === 'expense') {
+                    e += (d.totalExpenses || 0);
+                } else if (d.type === 'entry') {
+                    // Do NOT deduct photographer fees from global expenses. They are accrued liabilities until withdrawn.
+                    if (d.gear) e += (d.gear.amount || 0);
+                    if (d.flash) e += (state.inventory.flashPrice || 50);
+                }
+            }); 
+            
+            const sR = el('stat-revenue'), sE = el('stat-expenses'), sP = el('stat-profit'); 
+            if(sR) sR.innerText = r + " ج.م"; 
+            if(sE) sE.innerText = e + " ج.م"; 
+            if(sP) sP.innerText = (r - e) + " ج.م";
+
             const log = el('recentBookings'); if(!log) return; let h = '';
-            state.dailyEntries.slice(-5).reverse().forEach(a => { h += `<div onclick="window.showEntryDetails(${a.id})" class="flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:bg-white/5"><div><p class="font-bold text-sm text-white">${a.note}</p><p class="text-[10px] text-zinc-400 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> <span class="bg-white/10 px-1.5 py-0.5 rounded border border-white/5 text-zinc-300">${new Date(a.date||a.id).toLocaleDateString('ar-EG')}</span></p></div><span class="text-emerald-400 font-bold text-xs ${a.type === 'withdrawal' || a.type === 'expense' ? 'text-red-400' : ''}">${a.type === 'withdrawal' || a.type === 'expense' ? '-' : '+'}${a.type === 'withdrawal' || a.type === 'expense' ? a.totalExpenses : a.income}</span></div>`; });
+            state.dailyEntries.slice(-5).reverse().forEach(a => { 
+                let cashOut = 0;
+                if (a.type === 'withdrawal' || a.type === 'bonus' || a.type === 'expense') cashOut = a.totalExpenses || 0;
+                else if (a.type === 'entry') { if (a.gear) cashOut += a.gear.amount; if (a.flash) cashOut += (state.inventory.flashPrice || 50); }
+                h += `<div onclick="window.showEntryDetails(${a.id})" class="flex justify-between items-center p-3 glass border-l-4 border-emerald-500 cursor-pointer transition hover:bg-white/5"><div><p class="font-bold text-sm text-white">${a.note}</p><p class="text-[10px] text-zinc-400 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> <span class="bg-white/10 px-1.5 py-0.5 rounded border border-white/5 text-zinc-300">${new Date(a.date||a.id).toLocaleDateString('ar-EG')}</span></p></div><span class="text-emerald-400 font-bold text-xs ${(a.type === 'withdrawal' || a.type === 'expense') ? 'text-red-400' : ''}">${(a.type === 'withdrawal' || a.type === 'expense') ? '-' : '+'}${(a.type === 'withdrawal' || a.type === 'expense') ? cashOut : a.income}</span></div>`; 
+            });
             log.innerHTML = h; window.renderAdminRotation();
         };
 
@@ -1007,17 +1048,33 @@
             const fN = el('filterDailyNote').value.toLowerCase(), fP = el('filterDailyPhotog').value, flt = state.dailyEntries.filter(e => (!fN || e.note.toLowerCase().includes(fN)) && (!fP || e.photographers?.some(p=>p.name===fP)));
             let r = 0, x = 0, tN = 0, pE = 0, sE = [...state.dailyEntries].sort((a,b) => new Date(a.date||a.id) - new Date(b.date||b.id) || a.id - b.id), cBN = {}, eC = {};
             sE.forEach(e => { if (e.type !== 'bonus' && e.type !== 'withdrawal' && e.type !== 'expense') { cBN[e.note] = (cBN[e.note] || 0) + 1; eC[e.id] = cBN[e.note]; } });
-            flt.forEach(e => { r += (e.income || 0); x += (e.totalExpenses || 0); tN += ((e.income || 0) - (e.totalExpenses || 0)); if (e.photographers) e.photographers.forEach(p => { if (p.totalFee > 0) pE += p.totalFee; }); });
+            flt.forEach(e => { 
+                r += (e.income || 0); 
+                let cashOut = 0;
+                if (e.type === 'withdrawal' || e.type === 'bonus' || e.type === 'expense') {
+                    cashOut = e.totalExpenses || 0;
+                } else if (e.type === 'entry') {
+                    if (e.gear) cashOut += e.gear.amount;
+                    if (e.flash) cashOut += (state.inventory.flashPrice || 50);
+                }
+                x += cashOut; 
+                tN += ((e.income || 0) - cashOut); 
+                if (e.photographers) e.photographers.forEach(p => { if (p.totalFee > 0 && e.type === 'entry') pE += p.totalFee; }); 
+            });
             
             const iL = el('dailyIncomeLabel'), nD = el('dailyTotalNetProfitDisplay'), pED = el('dailyPhotogTotalExpDisplay'), lC = el('dailyEntryLog');
             if(iL) iL.innerText = `+${r}`; if(nD) nD.innerText = tN + " ج.م"; if(pED) pED.innerText = pE + " ج.م"; if(!lC) return;
             
             lC.innerHTML = flt.slice().reverse().map(e => {
+                let cashOut = 0;
+                if (e.type === 'withdrawal' || e.type === 'bonus' || e.type === 'expense') cashOut = e.totalExpenses || 0;
+                else if (e.type === 'entry') { if (e.gear) cashOut += e.gear.amount; if (e.flash) cashOut += (state.inventory.flashPrice || 50); }
+
                 let fH = '';
-                if (e.type === 'withdrawal') fH = `<div class="flex flex-col items-end"><span class="bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"><i data-lucide="wallet" class="w-3.5 h-3.5"></i> سحب: ${e.totalExpenses} ج.م</span></div>`;
-                else if (e.type === 'bonus') fH = `<div class="flex flex-col items-end"><span class="bg-purple-500/10 border border-purple-500/30 text-purple-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"><i data-lucide="gift" class="w-3.5 h-3.5"></i> مكافأة: ${e.totalExpenses} ج.م</span></div>`;
-                else if (e.type === 'expense') fH = `<div class="flex flex-col items-end"><span class="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> مصروف${e.hall ? ' ('+e.hall+')' : ''}: ${e.totalExpenses} ج.م</span></div>`;
-                else fH = `<div class="flex flex-col gap-1.5 items-end"><div class="flex gap-1.5">${e.income > 0 ? `<span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">إيراد: +${e.income}</span>` : ''}${e.totalExpenses > 0 ? `<span class="text-[10px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">منصرف: -${e.totalExpenses}</span>` : ''}</div><span class="text-xs text-white font-bold bg-white/10 px-3 py-1 rounded-lg border border-white/20 mt-0.5">صافي: ${e.income - e.totalExpenses} ج.م</span></div>`;
+                if (e.type === 'withdrawal') fH = `<div class="flex flex-col items-end"><span class="bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"><i data-lucide="wallet" class="w-3.5 h-3.5"></i> سحب: ${cashOut} ج.م</span></div>`;
+                else if (e.type === 'bonus') fH = `<div class="flex flex-col items-end"><span class="bg-purple-500/10 border border-purple-500/30 text-purple-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"><i data-lucide="gift" class="w-3.5 h-3.5"></i> مكافأة: ${cashOut} ج.م</span></div>`;
+                else if (e.type === 'expense') fH = `<div class="flex flex-col items-end"><span class="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> مصروف${e.hall ? ' ('+e.hall+')' : ''}: ${cashOut} ج.م</span></div>`;
+                else fH = `<div class="flex flex-col gap-1.5 items-end"><div class="flex gap-1.5">${e.income > 0 ? `<span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">إيراد: +${e.income}</span>` : ''}${cashOut > 0 ? `<span class="text-[10px] text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">منصرف نقدي: -${cashOut}</span>` : ''}</div><span class="text-xs text-white font-bold bg-white/10 px-3 py-1 rounded-lg border border-white/20 mt-0.5">الصافي: ${(e.income || 0) - cashOut} ج.م</span></div>`;
 
                 let cC = eC[e.id] || 1, tBT = e.type === 'bonus' ? 'مكافأة' : (e.type === 'withdrawal' ? 'سحب' : (e.type === 'expense' ? (e.hall ? 'مصروف قاعة' : 'مصروف عام') : `${cC} يوم عمل`));
                 let borderCls = e.type === 'withdrawal' ? 'border-red-500' : (e.type === 'bonus' ? 'border-purple-500' : (e.type === 'expense' ? 'border-orange-500' : 'border-emerald-500'));
@@ -1026,7 +1083,7 @@
                 let iconCol = e.type === 'withdrawal' ? 'text-red-400' : (e.type === 'bonus' ? 'text-purple-400' : (e.type === 'expense' ? 'text-orange-400' : 'text-emerald-400'));
                 let labelCls = e.type === 'bonus' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : (e.type === 'withdrawal' ? 'bg-red-500/20 text-red-300 border-red-500/30' : (e.type === 'expense' ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' : 'bg-blue-500/20 text-blue-300 border-blue-500/30'));
 
-                return `<div onclick="window.showEntryDetails(${e.id})" class="glass p-4 rounded-xl border-r-4 ${borderCls} cursor-pointer hover:bg-white/5 transition hover:-translate-y-1 duration-300 flex flex-col gap-3 shadow-lg"><div class="flex justify-between items-start"><div class="flex flex-col gap-1.5"><div class="flex items-center gap-2"><div class="${bgCls} p-1.5 rounded-full"><i data-lucide="${iconName}" class="w-4 h-4 ${iconCol}"></i></div><h4 class="font-bold text-sm text-white">${e.note}</h4><span class="${labelCls} border px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">${tBT}</span></div><div class="flex items-center gap-1 text-[10px] text-zinc-400 w-fit"><i data-lucide="calendar" class="w-3 h-3"></i><span>${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</span></div></div>${fH}</div><div class="flex justify-between items-center pt-2 border-t border-white/5"><div class="flex flex-wrap items-center gap-1.5">${e.photographers?.map(p=>`<span class="flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="${e.type === 'withdrawal' ? 'user' : 'camera'}" class="w-3 h-3 text-blue-400"></i> ${p.name} <span class="text-red-400 font-bold">${p.totalFee > 0 ? '-'+p.totalFee : p.totalFee}</span></span>`).join('')||''}${e.gear?`<span class="flex items-center gap-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="video" class="w-3 h-3 text-indigo-400"></i> ${e.gear.note} <span class="text-red-400 font-bold">-${e.gear.amount}</span></span>`:''}${e.flash?`<span class="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="usb" class="w-3 h-3 text-yellow-400"></i> فلاشة <span class="text-red-400 font-bold">-${state.inventory.flashPrice || 50}</span></span>`:''}${(!e.photographers?.length && !e.gear && !e.flash) ? '<span class="text-[9px] text-zinc-500">لا تكاليف مسجلة</span>' : ''}</div><button onclick="event.stopPropagation(); window.deleteEntry(${e.id})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 p-1.5 rounded-lg transition mr-2 flex-shrink-0"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`;
+                return `<div onclick="window.showEntryDetails(${e.id})" class="glass p-4 rounded-xl border-r-4 ${borderCls} cursor-pointer hover:bg-white/5 transition hover:-translate-y-1 duration-300 flex flex-col gap-3 shadow-lg"><div class="flex justify-between items-start"><div class="flex flex-col gap-1.5"><div class="flex items-center gap-2"><div class="${bgCls} p-1.5 rounded-full"><i data-lucide="${iconName}" class="w-4 h-4 ${iconCol}"></i></div><h4 class="font-bold text-sm text-white">${e.note}</h4><span class="${labelCls} border px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">${tBT}</span></div><div class="flex items-center gap-1 text-[10px] text-zinc-400 w-fit"><i data-lucide="calendar" class="w-3 h-3"></i><span>${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</span></div></div>${fH}</div><div class="flex justify-between items-center pt-2 border-t border-white/5"><div class="flex flex-wrap items-center gap-1.5">${e.photographers?.map(p=>`<span class="flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="${e.type === 'withdrawal' ? 'user' : 'camera'}" class="w-3 h-3 text-blue-400"></i> ${p.name} <span class="text-yellow-400 font-bold">${p.totalFee > 0 ? 'مستحق: '+p.totalFee : p.totalFee}</span></span>`).join('')||''}${e.gear?`<span class="flex items-center gap-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="video" class="w-3 h-3 text-indigo-400"></i> ${e.gear.note} <span class="text-red-400 font-bold">-${e.gear.amount}</span></span>`:''}${e.flash?`<span class="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="usb" class="w-3 h-3 text-yellow-400"></i> فلاشة <span class="text-red-400 font-bold">-${state.inventory.flashPrice || 50}</span></span>`:''}${(!e.photographers?.length && !e.gear && !e.flash) ? '<span class="text-[9px] text-zinc-500">لا يوجد</span>' : ''}</div><button onclick="event.stopPropagation(); window.deleteEntry(${e.id})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 p-1.5 rounded-lg transition mr-2 flex-shrink-0"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`;
             }).join(''); if(window.lucide) lucide.createIcons();
         };
 
@@ -1034,18 +1091,27 @@
             const hS = {}; let tI = 0, tE = 0;
             state.dailyEntries.forEach(e => {
                 if (e.type === 'bonus' || e.type === 'withdrawal') { tE += (e.totalExpenses || 0); return; }
+                
+                let hallName = e.hall || e.note || 'عام (بدون قاعة)';
+                if(!hS[hallName]) hS[hallName] = { jobs: 0, income: 0, expenses: 0 };
+
                 if (e.type === 'expense') {
                     tE += (e.totalExpenses || 0);
-                    if (e.hall) {
-                        if(!hS[e.hall]) hS[e.hall] = { jobs: 0, income: 0, expenses: 0 };
-                        hS[e.hall].expenses += (e.totalExpenses || 0);
-                    }
+                    hS[hallName].expenses += (e.totalExpenses || 0);
                     return;
                 }
-                const n = e.note || 'بدون بيان';
-                if(!hS[n]) hS[n] = { jobs: 0, income: 0, expenses: 0 };
-                hS[n].jobs++; hS[n].income += (e.income || 0); hS[n].expenses += (e.totalExpenses || 0);
-                tI += (e.income || 0); tE += (e.totalExpenses || 0);
+                
+                hS[hallName].jobs++; 
+                hS[hallName].income += (e.income || 0); 
+                tI += (e.income || 0); 
+                
+                // Add cash expenses only (not accrued photog fees)
+                let cashEx = 0;
+                if (e.gear) cashEx += e.gear.amount;
+                if (e.flash) cashEx += (state.inventory.flashPrice || 50);
+
+                hS[hallName].expenses += cashEx;
+                tE += cashEx;
             });
             state.bookings.forEach(bk => {
                 if(bk.status === 'completed') {
@@ -1053,10 +1119,7 @@
                     if(!hS[l]) hS[l] = { jobs: 0, income: 0, expenses: 0 };
                     hS[l].jobs++; hS[l].income += (bk.total || 0);
                     tI += (bk.total || 0);
-                    let exp = 0;
-                    if(bk.photographers) bk.photographers.forEach(p => exp += (p.fee || 0));
-                    hS[l].expenses += exp;
-                    tE += exp;
+                    // Do NOT add photographer fees here anymore to expenses.
                 }
             });
             const nL = el('reportNetProfit'), hR = el('reportHalls');
@@ -1081,21 +1144,34 @@
 
         window.showEntryDetails = function(id) {
             const e = state.dailyEntries.find(x => x.id === id); if(!e) return;
+
+            let cashOut = 0;
+            if (e.type === 'withdrawal' || e.type === 'bonus' || e.type === 'expense') cashOut = e.totalExpenses || 0;
+            else if (e.type === 'entry') { if (e.gear) cashOut += e.gear.amount; if (e.flash) cashOut += (state.inventory.flashPrice || 50); }
+
             let gH = e.gear ? `<div class="bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="bg-indigo-500/20 p-2 rounded-full"><i data-lucide="video" class="w-4 h-4 text-indigo-400"></i></div><div><p class="text-xs font-bold text-indigo-300">معدات</p><p class="text-[9px] text-indigo-400/70 mt-0.5">${e.gear.note}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${e.gear.amount} ج.م</span></div>` : '';
             let fH = e.flash ? `<div class="bg-yellow-500/10 border border-yellow-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="bg-yellow-500/20 p-2 rounded-full"><i data-lucide="usb" class="w-4 h-4 text-yellow-400"></i></div><div><p class="text-xs font-bold text-yellow-300">فلاشة عميل</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${e.flash} ج.م</span></div>` : '';
-            let pH = ''; if (e.type !== 'bonus' && e.type !== 'withdrawal' && e.type !== 'expense' && e.photographers && e.photographers.length > 0) { pH = e.photographers.map(p => `<div onclick="window.showPhotogDetails('${p.name}')" class="bg-blue-500/10 border border-blue-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2 cursor-pointer hover:bg-blue-500/20 transition group"><div class="flex items-center gap-3"><div class="bg-blue-500/20 p-2 rounded-full group-hover:scale-110 transition"><i data-lucide="camera" class="w-4 h-4 text-blue-400"></i></div><div><p class="text-xs font-bold text-blue-300">أجر مصور</p><p class="text-[11px] text-blue-100 font-bold mt-0.5">${p.name}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${p.totalFee} ج.م</span></div>`).join(''); }
-            let aH = ''; if (e.type !== 'withdrawal' && e.type !== 'bonus' && e.type !== 'expense') { const pE = state.dailyEntries.filter(x => x.note === e.note && x.type !== 'withdrawal' && x.type !== 'bonus' && x.type !== 'expense'); const tD = pE.length, tI = pE.reduce((s, x) => s + (x.income || 0), 0), tEx = pE.reduce((s, x) => s + (x.totalExpenses || 0), 0), nI = tI - tEx; aH = `<div class="mt-6 border-t border-white/10 pt-5"><h5 class="text-sm font-bold text-blue-400 flex items-center gap-2 mb-4"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> إحصائيات مجمعة للمكان (${e.note})</h5><div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">مرات التسجيل (الأيام)</p><p class="font-bold text-white text-sm">${tD} أيام</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">الصافي التاريخي</p><p class="font-bold text-emerald-400 text-sm">${nI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">إجمالي الدخل</p><p class="font-bold text-emerald-400 text-sm">${tI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">إجمالي المنصرف</p><p class="font-bold text-red-400 text-sm">${tEx} ج.م</p></div></div></div>`; }
+            let pH = ''; if (e.type !== 'bonus' && e.type !== 'withdrawal' && e.type !== 'expense' && e.photographers && e.photographers.length > 0) { pH = e.photographers.map(p => `<div onclick="window.showPhotogDetails('${p.name}')" class="bg-blue-500/10 border border-blue-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2 cursor-pointer hover:bg-blue-500/20 transition group"><div class="flex items-center gap-3"><div class="bg-blue-500/20 p-2 rounded-full group-hover:scale-110 transition"><i data-lucide="camera" class="w-4 h-4 text-blue-400"></i></div><div><p class="text-xs font-bold text-blue-300">أجر مصور</p><p class="text-[11px] text-blue-100 font-bold mt-0.5">${p.name}</p></div></div><span class="text-yellow-400 font-bold text-xs bg-yellow-500/10 px-2 py-1 rounded-lg">مستحق: ${p.totalFee} ج.م</span></div>`).join(''); }
+            
+            // ... omitting historical stats calculations for brevity as they remain mostly similar but adjusted to cashOut.
+            let aH = ''; if (e.type !== 'withdrawal' && e.type !== 'bonus' && e.type !== 'expense') { 
+                const pE = state.dailyEntries.filter(x => x.note === e.note && x.type !== 'withdrawal' && x.type !== 'bonus' && x.type !== 'expense'); 
+                const tD = pE.length, tI = pE.reduce((s, x) => s + (x.income || 0), 0);
+                const tEx = pE.reduce((s, x) => s + ((x.gear ? x.gear.amount : 0) + (x.flash ? (state.inventory.flashPrice || 50) : 0)), 0); 
+                const nI = tI - tEx; 
+                aH = `<div class="mt-6 border-t border-white/10 pt-5"><h5 class="text-sm font-bold text-blue-400 flex items-center gap-2 mb-4"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> إحصائيات مجمعة للمكان (${e.note})</h5><div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">مرات التسجيل (الأيام)</p><p class="font-bold text-white text-sm">${tD} أيام</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">الصافي التاريخي</p><p class="font-bold text-emerald-400 text-sm">${nI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">إجمالي الدخل</p><p class="font-bold text-emerald-400 text-sm">${tI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">المصروف الفعلي</p><p class="font-bold text-red-400 text-sm">${tEx} ج.م</p></div></div></div>`; 
+            }
             
             const lblType = e.type === 'bonus' ? 'سجل صرف مكافأة' : (e.type === 'withdrawal' ? 'سحب نقدي' : (e.type === 'expense' ? (e.hall ? 'مصروف قاعة' : 'مصروف عام') : 'بيان الدخل'));
             const lblAmt = (e.type === 'withdrawal' || e.type === 'expense') ? 'المبلغ المسحوب' : 'المبلغ الإجمالي';
             const borderClsDetail = e.type === 'withdrawal' ? 'border-red-500' : (e.type === 'bonus' ? 'border-purple-500' : (e.type === 'expense' ? 'border-orange-500' : 'border-emerald-500'));
             const textClsDetail = (e.type === 'withdrawal' || e.type === 'expense') ? 'text-red-400' : 'text-emerald-400';
             const signDetail = (e.type === 'withdrawal' || e.type === 'expense') ? '-' : '+';
-            const amountValDetail = (e.type === 'withdrawal' || e.type === 'expense') ? e.totalExpenses : e.income;
+            const amountValDetail = (e.type === 'withdrawal' || e.type === 'expense') ? cashOut : e.income;
             
-            const expenseBlock = e.type === 'expense' ? `<div class="bg-orange-500/10 border border-orange-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="bg-orange-500/20 p-2 rounded-full"><i data-lucide="shopping-cart" class="w-4 h-4 text-orange-400"></i></div><div><p class="text-xs font-bold text-orange-300">مشتريات/مصروفات: ${e.note}${e.hall ? ` (يخص: ${e.hall})` : ''}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${e.totalExpenses} ج.م</span></div>` : '';
+            const expenseBlock = e.type === 'expense' ? `<div class="bg-orange-500/10 border border-orange-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2"><div class="flex items-center gap-3"><div class="bg-orange-500/20 p-2 rounded-full"><i data-lucide="shopping-cart" class="w-4 h-4 text-orange-400"></i></div><div><p class="text-xs font-bold text-orange-300">مشتريات/مصروفات: ${e.note}${e.hall ? ` (يخص: ${e.hall})` : ''}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${cashOut} ج.م</span></div>` : '';
 
-            const h = `<div class="space-y-4 text-white"><div class="glass p-5 rounded-xl border-r-4 ${borderClsDetail}"><div class="flex justify-between items-center border-b border-white/5 pb-3 mb-4"><div><span class="text-zinc-400 text-xs block mb-1">${lblType}</span><span class="font-bold text-sm">${e.note}</span></div><div class="text-right"><span class="text-zinc-400 text-xs block mb-1">${lblAmt}</span><span class="font-bold ${textClsDetail} text-lg">${signDetail}${amountValDetail} ج.م</span></div></div><div class="mb-4"><p class="text-[11px] text-zinc-400 mb-3 font-bold flex items-center gap-1"><i data-lucide="receipt" class="w-3 h-3"></i> المصروفات والتكاليف:</p>${e.type === 'withdrawal' ? `<div onclick="window.showPhotogDetails('${e.photographers?.[0]?.name}')" class="bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2 cursor-pointer hover:bg-red-500/20 transition group"><div class="flex items-center gap-3"><div class="bg-red-500/20 p-2 rounded-full"><i data-lucide="wallet" class="w-4 h-4 text-red-400"></i></div><div><p class="text-xs font-bold text-red-300">سحب بواسطة: ${e.photographers?.[0]?.name}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${e.totalExpenses} ج.م</span></div>` : ''}${e.type === 'bonus' ? `<div onclick="window.showPhotogDetails('${e.photographers?.[0]?.name}')" class="bg-purple-500/10 border border-purple-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2 cursor-pointer hover:bg-purple-500/20 transition group"><div class="flex items-center gap-3"><div class="bg-purple-500/20 p-2 rounded-full"><i data-lucide="gift" class="w-4 h-4 text-purple-400"></i></div><div><p class="text-xs font-bold text-purple-300">مكافأة: ${e.photographers?.[0]?.name}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${e.totalExpenses} ج.م</span></div>` : ''}${expenseBlock}${pH}${gH}${fH}${(!gH && !fH && e.type !== 'bonus' && e.type !== 'withdrawal' && e.type !== 'expense' && (!e.photographers || e.photographers.length === 0)) ? '<p class="text-xs text-zinc-500 text-center py-2">لا مصروفات</p>' : ''}</div><div class="pt-4 border-t border-white/10 flex justify-between items-center font-bold"><span class="text-zinc-300">${e.type === 'withdrawal' || e.type === 'expense' ? 'خصم من الدرج' : 'الصافي للمعاملة'}</span><span class="text-xl text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10">${e.type === 'withdrawal' || e.type === 'expense' ? '-' + e.totalExpenses : (e.income - e.totalExpenses)} ج.م</span></div>${aH}</div></div>`;
+            const h = `<div class="space-y-4 text-white"><div class="glass p-5 rounded-xl border-r-4 ${borderClsDetail}"><div class="flex justify-between items-center border-b border-white/5 pb-3 mb-4"><div><span class="text-zinc-400 text-xs block mb-1">${lblType}</span><span class="font-bold text-sm">${e.note}</span></div><div class="text-right"><span class="text-zinc-400 text-xs block mb-1">${lblAmt}</span><span class="font-bold ${textClsDetail} text-lg">${signDetail}${amountValDetail} ج.م</span></div></div><div class="mb-4"><p class="text-[11px] text-zinc-400 mb-3 font-bold flex items-center gap-1"><i data-lucide="receipt" class="w-3 h-3"></i> التفاصيل والتكاليف:</p>${e.type === 'withdrawal' ? `<div onclick="window.showPhotogDetails('${e.photographers?.[0]?.name}')" class="bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2 cursor-pointer hover:bg-red-500/20 transition group"><div class="flex items-center gap-3"><div class="bg-red-500/20 p-2 rounded-full"><i data-lucide="wallet" class="w-4 h-4 text-red-400"></i></div><div><p class="text-xs font-bold text-red-300">سحب بواسطة: ${e.photographers?.[0]?.name}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${cashOut} ج.م</span></div>` : ''}${e.type === 'bonus' ? `<div onclick="window.showPhotogDetails('${e.photographers?.[0]?.name}')" class="bg-purple-500/10 border border-purple-500/20 p-2.5 rounded-lg flex justify-between items-center mb-2 cursor-pointer hover:bg-purple-500/20 transition group"><div class="flex items-center gap-3"><div class="bg-purple-500/20 p-2 rounded-full"><i data-lucide="gift" class="w-4 h-4 text-purple-400"></i></div><div><p class="text-xs font-bold text-purple-300">مكافأة: ${e.photographers?.[0]?.name}</p></div></div><span class="text-red-400 font-bold text-xs bg-red-500/10 px-2 py-1 rounded-lg">-${cashOut} ج.م</span></div>` : ''}${expenseBlock}${pH}${gH}${fH}${(!gH && !fH && e.type !== 'bonus' && e.type !== 'withdrawal' && e.type !== 'expense' && (!e.photographers || e.photographers.length === 0)) ? '<p class="text-xs text-zinc-500 text-center py-2">لا يوجد تفاصيل</p>' : ''}</div><div class="pt-4 border-t border-white/10 flex justify-between items-center font-bold"><span class="text-zinc-300">${e.type === 'withdrawal' || e.type === 'expense' ? 'خصم من الدرج' : 'الصافي للمعاملة (بالخزنة)'}</span><span class="text-xl text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10">${e.type === 'withdrawal' || e.type === 'expense' ? '-' + cashOut : (e.income - cashOut)} ج.م</span></div>${aH}</div></div>`;
             window.showStatsModal(`تفاصيل السجل`, h);
         };
 
@@ -1106,26 +1182,25 @@
                 state.bookings.forEach(b => b.status === 'completed' && i.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); 
                 state.dailyEntries.forEach(d => d.income > 0 && i.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date||d.id})); 
             } else if(t === 'expenses') { 
-                l = 'المصروفات'; 
-                state.bookings.forEach(b => b.status === 'completed' && b.photographers?.forEach(p => i.push({id:b.id, type:'booking', text:`أجر: ${p.name}`, val:p.fee, c:'text-red-400', s:'-', date:b.date}))); 
+                l = 'المصروفات النقدية (الخارج الفعلي)'; 
                 state.dailyEntries.forEach(d => {
-                    if(d.totalExpenses > 0) {
-                        let txt = `مصاريف: ${d.note}`;
-                        if(d.type === 'withdrawal') txt = `سحب: ${d.note}`;
-                        if(d.type === 'bonus') txt = `مكافأة: ${d.note}`;
-                        if(d.type === 'expense') txt = d.hall ? `مصروف (${d.hall}): ${d.note}` : `مصروف عام: ${d.note}`;
+                    if (d.type === 'withdrawal' || d.type === 'bonus' || d.type === 'expense') {
+                        let txt = d.type === 'withdrawal' ? `تصفية حساب: ${d.note}` : d.type === 'bonus' ? `مكافأة: ${d.note}` : (d.hall ? `مصروف (${d.hall}): ${d.note}` : `مصروف عام: ${d.note}`);
                         i.push({id:d.id, type:'entry', text:txt, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date||d.id});
+                    } else if (d.type === 'entry') {
+                        if (d.gear) i.push({id:d.id, type:'entry', text:`إيجار معدات (${d.note})`, val:d.gear.amount, c:'text-red-400', s:'-', date:d.date||d.id});
+                        if (d.flash) i.push({id:d.id, type:'entry', text:`سحب فلاشة (${d.note})`, val:state.inventory.flashPrice||50, c:'text-red-400', s:'-', date:d.date||d.id});
                     }
                 }); 
             } else { 
-                l = 'الأرباح'; 
+                l = 'الأرباح النقدية'; 
                 state.bookings.forEach(b => b.status === 'completed' && i.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); 
                 state.dailyEntries.forEach(d => { 
                     if(d.income>0) i.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:d.date}); 
-                    if(d.totalExpenses>0) {
-                        let txt = `مصاريف: ${d.note}`;
-                        if(d.type === 'expense') txt = d.hall ? `مصروف (${d.hall}): ${d.note}` : `مصروف عام: ${d.note}`;
-                        i.push({id:d.id, type:'entry', text:txt, val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date});
+                    if (d.type === 'expense') i.push({id:d.id, type:'entry', text:(d.hall ? `مصروف (${d.hall}): ${d.note}` : `مصروف عام: ${d.note}`), val:d.totalExpenses, c:'text-red-400', s:'-', date:d.date});
+                    if (d.type === 'entry') {
+                        if (d.gear) i.push({id:d.id, type:'entry', text:`إيجار معدات (${d.note})`, val:d.gear.amount, c:'text-red-400', s:'-', date:d.date||d.id});
+                        if (d.flash) i.push({id:d.id, type:'entry', text:`سحب فلاشة (${d.note})`, val:state.inventory.flashPrice||50, c:'text-red-400', s:'-', date:d.date||d.id});
                     }
                 }); 
             } 
@@ -1134,7 +1209,42 @@
             window.showStatsModal(l, h); 
         };
 
-        window.showHallDetails = function(n) { let i = [], s = { j: 0, i: 0, e: 0 }; if(n === 'حجوزات الاستوديو') { state.bookings.forEach(b => { if(b.status === 'completed') { s.j++; s.i += b.total; let ex = 0; if(b.photographers) b.photographers.forEach(p => ex += p.fee); s.e += ex; i.push({id:b.id, type:'booking', date:b.date, val:b.total, text:b.name}); } }); } else { state.dailyEntries.forEach(d => { if(d.note === n && d.type !== 'bonus' && d.type !== 'withdrawal' && d.type !== 'expense') { s.j++; s.i += d.income; s.e += d.totalExpenses; i.push({id:d.id, type:'entry', date:d.date||d.id, val:d.income, text:d.note}); } else if (d.type === 'expense' && d.hall === n) { s.e += d.totalExpenses; i.push({id:d.id, type:'entry', date:d.date||d.id, val:-d.totalExpenses, text:`مصروف: ${d.note}`}); } }); } i.sort((a,b) => new Date(b.date) - new Date(a.date)); let net = s.i - s.e; let h = `<div class="glass p-4 rounded-xl mb-6 border border-white/10 shadow-lg"><div class="grid grid-cols-3 gap-3 mb-4 text-center"><div class="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20"><p class="text-[9px] text-blue-300 mb-1">مرات التسجيل</p><p class="font-bold text-blue-400">${s.j}</p></div><div class="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20"><p class="text-[9px] text-emerald-300 mb-1">الإيرادات</p><p class="font-bold text-emerald-400">${s.i}</p></div><div class="bg-red-500/10 p-2 rounded-lg border border-red-500/20"><p class="text-[9px] text-red-300 mb-1">المصروفات</p><p class="font-bold text-red-400">${s.e}</p></div></div><div class="bg-white/5 p-3 rounded-lg border border-white/10 flex justify-between items-center"><span class="text-xs text-zinc-300">صافي الربح:</span><span class="text-lg font-bold ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span></div></div><h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>`; const hH = i.map(x => `<div onclick="window.closeStatsModal(); ${x.type==='booking' ? `window.showBookingDetails(${x.id})` : `window.showEntryDetails(${x.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="text-white text-[11px] font-bold">${x.text}</p><p class="text-[9px] text-zinc-500">${new Date(x.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold ${x.val >= 0 ? 'text-emerald-400' : 'text-red-400'}">${x.val > 0 ? '+' : ''}${x.val} ج.م</span></div>`).join('') || '<p class="text-zinc-500 text-center py-4">لا يوجد</p>'; window.showStatsModal(`قاعة: ${n}`, h + hH); };
+        window.showHallDetails = function(n) { 
+            let i = [], s = { j: 0, i: 0, e: 0 }; 
+            if(n === 'حجوزات الاستوديو') { 
+                state.bookings.forEach(b => { 
+                    if(b.status === 'completed') { 
+                        s.j++; s.i += b.total; 
+                        i.push({id:b.id, type:'booking', date:b.date, val:b.total, text:b.name}); 
+                    } 
+                }); 
+            } else { 
+                state.dailyEntries.forEach(d => { 
+                    let matchName = d.hall || d.note;
+                    if(matchName === n) { 
+                        if (d.type === 'expense') {
+                            s.e += d.totalExpenses;
+                            i.push({id:d.id, type:'entry', date:d.date||d.id, val:-d.totalExpenses, text:`مصروف: ${d.note}`});
+                        } else if (d.type === 'entry') {
+                            s.j++;
+                            s.i += (d.income || 0);
+                            let cashEx = 0;
+                            if (d.gear) cashEx += d.gear.amount;
+                            if (d.flash) cashEx += (state.inventory.flashPrice || 50);
+                            s.e += cashEx;
+
+                            if (d.income > 0) i.push({id:d.id, type:'entry', date:d.date||d.id, val:d.income, text:d.note});
+                            if (cashEx > 0) i.push({id:d.id, type:'entry', date:d.date||d.id, val:-cashEx, text:`مصروفات (معدات/فلاشة) لـ: ${d.note}`});
+                        }
+                    } 
+                }); 
+            } 
+            i.sort((a,b) => new Date(b.date) - new Date(a.date)); 
+            let net = s.i - s.e; 
+            let h = `<div class="glass p-4 rounded-xl mb-6 border border-white/10 shadow-lg"><div class="grid grid-cols-3 gap-3 mb-4 text-center"><div class="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20"><p class="text-[9px] text-blue-300 mb-1">مرات التسجيل</p><p class="font-bold text-blue-400">${s.j}</p></div><div class="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20"><p class="text-[9px] text-emerald-300 mb-1">الإيرادات</p><p class="font-bold text-emerald-400">${s.i}</p></div><div class="bg-red-500/10 p-2 rounded-lg border border-red-500/20"><p class="text-[9px] text-red-300 mb-1">المصروفات الفعلية</p><p class="font-bold text-red-400">${s.e}</p></div></div><div class="bg-white/5 p-3 rounded-lg border border-white/10 flex justify-between items-center"><span class="text-xs text-zinc-300">صافي الربح (بالخزنة):</span><span class="text-lg font-bold ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span></div></div><h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>`; 
+            const hH = i.map(x => `<div onclick="window.closeStatsModal(); ${x.type==='booking' ? `window.showBookingDetails(${x.id})` : `window.showEntryDetails(${x.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="text-white text-[11px] font-bold">${x.text}</p><p class="text-[9px] text-zinc-500">${new Date(x.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold ${x.val >= 0 ? 'text-emerald-400' : 'text-red-400'}">${x.val > 0 ? '+' : ''}${x.val} ج.م</span></div>`).join('') || '<p class="text-zinc-500 text-center py-4">لا يوجد</p>'; 
+            window.showStatsModal(`قاعة: ${n}`, h + hH); 
+        };
 
         window.showPhotogDetails = function(name) {
             let tE = 0, jC = 0, uC = 0, tB = 0, tW = 0, items = [];
