@@ -350,10 +350,11 @@
                     <div id="adminSwapsList" class="space-y-2"></div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-6">
-                    <div class="glass p-5 border-r-4 border-r-emerald-500 cursor-pointer" onclick="window.showDashboardDetails('revenue')"><p class="text-zinc-400 text-xs">إجمالي الإيرادات</p><h3 class="text-2xl sm:text-3xl font-bold mt-1 text-emerald-400" id="stat-revenue">0</h3></div>
-                    <div class="glass p-5 border-r-4 border-r-red-500 cursor-pointer" onclick="window.showDashboardDetails('expenses')"><p class="text-zinc-400 text-xs">إجمالي المصروفات</p><h3 class="text-2xl sm:text-3xl font-bold mt-1 text-red-400" id="stat-expenses">0</h3></div>
-                    <div class="glass p-5 border-r-4 border-r-blue-500 cursor-pointer" onclick="window.showDashboardDetails('profit')"><p class="text-zinc-400 text-xs">صافي الأرباح</p><h3 class="text-2xl sm:text-3xl font-bold mt-1 text-blue-400" id="stat-profit">0</h3></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-center mb-6">
+                    <div class="glass p-4 sm:p-5 border-r-4 border-r-emerald-500 cursor-pointer" onclick="window.showDashboardDetails('revenue')"><p class="text-zinc-400 text-[10px] sm:text-xs">إجمالي الإيرادات</p><h3 class="text-lg sm:text-2xl lg:text-3xl font-bold mt-1 text-emerald-400" id="stat-revenue">0</h3></div>
+                    <div class="glass p-4 sm:p-5 border-r-4 border-r-red-500 cursor-pointer" onclick="window.showDashboardDetails('expenses')"><p class="text-zinc-400 text-[10px] sm:text-xs">إجمالي المصروفات</p><h3 class="text-lg sm:text-2xl lg:text-3xl font-bold mt-1 text-red-400" id="stat-expenses">0</h3></div>
+                    <div class="glass p-4 sm:p-5 border-r-4 border-r-purple-500 cursor-pointer" onclick="window.showDashboardDetails('photogWages')"><p class="text-zinc-400 text-[10px] sm:text-xs">أجور المصورين</p><h3 class="text-lg sm:text-2xl lg:text-3xl font-bold mt-1 text-purple-400" id="stat-photog-wages">0</h3></div>
+                    <div class="glass p-4 sm:p-5 border-r-4 border-r-blue-500 cursor-pointer" onclick="window.showDashboardDetails('profit')"><p class="text-zinc-400 text-[10px] sm:text-xs">صافي الأرباح</p><h3 class="text-lg sm:text-2xl lg:text-3xl font-bold mt-1 text-blue-400" id="stat-profit">0</h3></div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-8">
@@ -961,11 +962,14 @@
         };
 
         window.updateDashboard = function() {
-            let r = 0, e = 0; 
+            let r = 0, e = 0, w = 0; 
             state.bookings.forEach(b => { if(b.status==='completed') r += b.total; else r += b.deposit; }); 
             state.dailyEntries.forEach(d => { 
                 r += (d.income || 0); 
-                if (d.type === 'withdrawal' || d.type === 'bonus' || d.type === 'expense') {
+                if (d.type === 'withdrawal' || d.type === 'bonus') {
+                    e += (d.totalExpenses || 0);
+                    w += (d.totalExpenses || 0);
+                } else if (d.type === 'expense') {
                     e += (d.totalExpenses || 0);
                 } else if (d.type === 'entry') {
                     // Do NOT deduct photographer fees from global expenses. They are accrued liabilities until withdrawn.
@@ -974,10 +978,11 @@
                 }
             }); 
             
-            const sR = el('stat-revenue'), sE = el('stat-expenses'), sP = el('stat-profit'); 
+            const sR = el('stat-revenue'), sE = el('stat-expenses'), sP = el('stat-profit'), sW = el('stat-photog-wages'); 
             if(sR) sR.innerText = r + " ج.م"; 
             if(sE) sE.innerText = e + " ج.م"; 
             if(sP) sP.innerText = (r - e) + " ج.م";
+            if(sW) sW.innerText = w + " ج.م";
 
             const log = el('recentBookings'); if(!log) return; let h = '';
             state.dailyEntries.slice(-5).reverse().forEach(a => { 
@@ -1046,7 +1051,7 @@
 
         window.updateEntryLog = function() {
             const fN = el('filterDailyNote').value.toLowerCase(), fP = el('filterDailyPhotog').value, flt = state.dailyEntries.filter(e => (!fN || e.note.toLowerCase().includes(fN)) && (!fP || e.photographers?.some(p=>p.name===fP)));
-            let r = 0, x = 0, tN = 0, pE = 0, sE = [...state.dailyEntries].sort((a,b) => new Date(a.date||a.id) - new Date(b.date||b.id) || a.id - b.id), cBN = {}, eC = {};
+            let r = 0, x = 0, tN = 0, sE = [...state.dailyEntries].sort((a,b) => new Date(a.date||a.id) - new Date(b.date||b.id) || a.id - b.id), cBN = {}, eC = {};
             sE.forEach(e => { if (e.type !== 'bonus' && e.type !== 'withdrawal' && e.type !== 'expense') { cBN[e.note] = (cBN[e.note] || 0) + 1; eC[e.id] = cBN[e.note]; } });
             flt.forEach(e => { 
                 r += (e.income || 0); 
@@ -1059,11 +1064,17 @@
                 }
                 x += cashOut; 
                 tN += ((e.income || 0) - cashOut); 
-                if (e.photographers) e.photographers.forEach(p => { if (p.totalFee > 0 && e.type === 'entry') pE += p.totalFee; }); 
             });
             
+            // حساب إجمالي مستحقات المصورين المعلقة بشكل دقيق ليتطابق مع التنبيه
+            let truePendingWages = 0;
+            state.photographers.forEach(photog => {
+                const fin = window.getPhotogFinances(photog.name);
+                if (fin.balance > 0) truePendingWages += fin.balance;
+            });
+
             const iL = el('dailyIncomeLabel'), nD = el('dailyTotalNetProfitDisplay'), pED = el('dailyPhotogTotalExpDisplay'), lC = el('dailyEntryLog');
-            if(iL) iL.innerText = `+${r}`; if(nD) nD.innerText = tN + " ج.م"; if(pED) pED.innerText = pE + " ج.م"; if(!lC) return;
+            if(iL) iL.innerText = `+${r}`; if(nD) nD.innerText = tN + " ج.م"; if(pED) pED.innerText = truePendingWages + " ج.م"; if(!lC) return;
             
             lC.innerHTML = flt.slice().reverse().map(e => {
                 let cashOut = 0;
@@ -1192,6 +1203,12 @@
                         if (d.flash) i.push({id:d.id, type:'entry', text:`سحب فلاشة (${d.note})`, val:state.inventory.flashPrice||50, c:'text-red-400', s:'-', date:d.date||d.id});
                     }
                 }); 
+            } else if(t === 'photogWages') {
+                l = 'أجور ومكافآت المصورين المُسددة';
+                state.dailyEntries.forEach(d => {
+                    if (d.type === 'withdrawal') i.push({id:d.id, type:'entry', text:`تصفية حساب: ${d.note}`, val:d.totalExpenses, c:'text-purple-400', s:'-', date:d.date||d.id});
+                    if (d.type === 'bonus') i.push({id:d.id, type:'entry', text:`مكافأة: ${d.note}`, val:d.totalExpenses, c:'text-purple-400', s:'-', date:d.date||d.id});
+                });
             } else { 
                 l = 'الأرباح النقدية'; 
                 state.bookings.forEach(b => b.status === 'completed' && i.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date})); 
