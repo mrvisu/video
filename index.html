@@ -421,7 +421,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div><input type="date" id="dailyEntryDate" class="w-full p-3 text-sm mb-1" onchange="window.updateRotationAlert('dailyEntryDate', 'dailyRotationAlert')"><div id="dailyRotationAlert"></div></div>
                             <div>
-                                <select id="dailyEntryHall" class="w-full p-3 text-sm bg-black/50 border border-white/10 rounded-xl focus:border-emerald-500 transition"></select>
+                                <select id="dailyEntryHall" class="w-full p-3 text-sm bg-black/50 border border-white/10 rounded-xl focus:border-emerald-50 transition"></select>
                                 <p class="text-[9px] text-zinc-500 mt-1">تخصيص المصروفات (إن وجدت) لقاعة محددة</p>
                             </div>
                         </div>
@@ -1468,13 +1468,11 @@
                 window.presenceListenerAdded = true;
             }
 
-            // --- اضافة اللوجيك الخاص بتعبئة بيانات المصور (الرصيد، الأعمال القادمة، وسجل التاريخ) ---
             let tE = 0, tW = 0, tB = 0, jC = 0;
             let historyHtml = '', upcomingHtml = '';
             let upcomingCount = 0;
             let items = [];
 
-            // تجميع بيانات الحجوزات
             state.bookings.forEach(b => {
                 if (b.photographers?.some(px => px.name === name)) {
                     const fee = b.photographers.find(px => px.name === name).fee;
@@ -1489,7 +1487,6 @@
                 }
             });
 
-            // تجميع بيانات السجلات اليومية (يوميات، سحوبات، مكافآت)
             state.dailyEntries.forEach(d => {
                 if (d.photographers?.some(px => px.name === name)) {
                     const feeObj = d.photographers.find(px => px.name === name);
@@ -1515,7 +1512,6 @@
                 }
             });
 
-            // ترتيب سجل التاريخ وعرضه
             items.sort((a, b) => new Date(b.date) - new Date(a.date));
             historyHtml = items.map(i => {
                 let ic = 'check-circle', cC = 'text-emerald-400', bC = 'bg-emerald-500/20', s = '+';
@@ -1525,7 +1521,6 @@
                 return `<div class="flex justify-between p-4 bg-black/30 rounded-xl border border-white/5 transition hover:bg-white/5"><div class="flex items-center gap-3"><div class="${bC} p-2 rounded-full"><i data-lucide="${ic}" class="w-4 h-4 ${cC}"></i></div><div><p class="text-white text-xs font-bold mb-0.5">${i.text}</p><p class="text-[10px] text-zinc-500"><i data-lucide="calendar" class="w-3 h-3 inline mr-0.5"></i> ${new Date(i.date).toLocaleDateString('ar-EG')}</p></div></div><span class="text-sm font-bold ${cC}">${s}${i.val} ج.م</span></div>`;
             }).join('') || '<div class="text-center p-6 bg-white/5 rounded-xl text-zinc-500 border border-white/10 text-sm">لا توجد أعمال منجزة حتى الآن</div>';
 
-            // تحديث الواجهة بالبيانات المحسوبة
             if(el('trackPhotogEarnings')) el('trackPhotogEarnings').innerText = (tE - tW) + " ج.م";
             if(el('trackPhotogTotalWithdrawals')) el('trackPhotogTotalWithdrawals').innerText = tW + " ج.م";
             if(el('trackPhotogTotalBonuses')) el('trackPhotogTotalBonuses').innerText = tB + " ج.م";
@@ -1546,7 +1541,6 @@
             const histList = el('trackPhotogHistory');
             if(histList) histList.innerHTML = historyHtml;
 
-            // تحديث قسم المكافآت إذا كان هناك مكافآت
             const bonusContainer = el('trackPhotogBonusesContainer');
             const bonusList = el('trackPhotogBonuses');
             if (bonusContainer && bonusList) {
@@ -1558,25 +1552,24 @@
                     bonusContainer.classList.add('hidden');
                 }
             }
-            // --- نهاية اللوجيك المُضاف ---
 
             const cW = el('photogCombinedRotationWidget'), ex = ["مصور اخر", "مصور آخر", "مصور جديد", "محمود كوكو"];
             if (ex.includes(name)) { if(cW) cW.classList.add('hidden'); } else {
-                const tD = new Date(), tS = tD.toISOString().split('T')[0], tR = window.getDailyRotation(tS), { busy: tB } = window.checkRotationAvailability(tS), tSw = window.getSwapDetails(tS);
+                const tD = new Date(), tS = tD.toISOString().split('T')[0], tR = window.getDailyRotation(tS), { busy: tB_avail } = window.checkRotationAvailability(tS), tSw = window.getSwapDetails(tS);
                 let cH = `<div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-blue-400 to-blue-600"></div><div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3"><div><h3 class="font-bold text-base text-blue-400 flex items-center gap-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i> نظام الساقية والأدوار</h3></div><span class="text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> ${tD.toLocaleDateString('ar-EG', { weekday: 'long', month: 'long', day: 'numeric' })}</span></div><div class="mb-5 bg-black/20 p-4 rounded-xl border border-white/5"><div class="flex justify-between items-center mb-3"><h4 class="text-xs font-bold text-zinc-300 flex items-center gap-1.5"><i data-lucide="sun" class="w-3.5 h-3.5 text-yellow-400"></i> فريق عمل اليوم:</h4><span class="text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-300 font-bold px-2 py-1 rounded">${tD.toLocaleDateString('ar-EG', { weekday: 'long', month: 'long', day: 'numeric' })}</span></div><div class="grid grid-cols-1 sm:grid-cols-4 gap-3">`;
                 tR.forEach(n => {
                     let si = tSw.find(s => s.coveringPhotog === n), sb = si ? `<span class="text-[8px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-md border border-purple-500/30 ml-1">بديل لـ ${si.originalPhotog}</span>` : '';
-                    if (tB.includes(n)) h += `<div onclick="window.showPhotogDetails('${n}')" class="cursor-pointer bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex justify-between items-center transition hover:bg-red-500/20 hover:scale-[1.02]"><span class="text-sm font-bold text-white flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4 text-red-400"></i> ${n} ${sb}</span><span class="text-[9px] bg-red-500/20 text-red-400 font-bold px-2 py-1 rounded flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> محجوز</span></div>`;
-                    else h += `<div onclick="window.showPhotogDetails('${n}')" class="cursor-pointer bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center transition hover:bg-emerald-500/20 hover:scale-[1.02]"><span class="text-sm font-bold text-white flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> ${n} ${sb}</span><span class="text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-1 rounded flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> متاح</span></div>`;
+                    if (tB_avail.includes(n)) cH += `<div onclick="window.showPhotogDetails('${n}')" class="cursor-pointer bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex justify-between items-center transition hover:bg-red-500/20 hover:scale-[1.02]"><span class="text-sm font-bold text-white flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4 text-red-400"></i> ${n} ${sb}</span><span class="text-[9px] bg-red-500/20 text-red-400 font-bold px-2 py-1 rounded flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> محجوز</span></div>`;
+                    else cH += `<div onclick="window.showPhotogDetails('${n}')" class="cursor-pointer bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center transition hover:bg-emerald-500/20 hover:scale-[1.02]"><span class="text-sm font-bold text-white flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> ${n} ${sb}</span><span class="text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-1 rounded flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> متاح</span></div>`;
                 });
-                h += `</div></div><div><h4 class="text-xs font-bold text-zinc-300 mb-3 flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-400"></i> الأيام الـ 7 القادمة:</h4><div class="flex overflow-x-auto gap-3 pb-2 no-scrollbar">`;
+                cH += `</div></div><div><h4 class="text-xs font-bold text-zinc-300 mb-3 flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-400"></i> الأيام الـ 7 القادمة:</h4><div class="flex overflow-x-auto gap-3 pb-2 no-scrollbar">`;
                 for(let i = 1; i <= 7; i++) {
                     let d = new Date(); d.setDate(d.getDate() + i); let dS = d.toISOString().split('T')[0], r = window.getDailyRotation(dS), sw = window.getSwapDetails(dS), dL = i === 1 ? "غداً" : d.toLocaleDateString('ar-EG', {weekday:'short'}), dtL = dS.split('-').reverse().slice(0,2).join('/');
                     let pL = r.map(n => { let isS = !!sw.find(s => s.coveringPhotog === n); return `<span class="text-[9px] ${isS ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-black/30 text-zinc-300 border-white/5'} border px-1.5 py-1 rounded-md truncate w-full text-center flex items-center justify-center gap-1"><i data-lucide="user" class="w-2.5 h-2.5"></i> ${n}</span>`; }).join('');
                     if(r.length === 0) pL = `<span class="text-[9px] text-zinc-500">لا يوجد</span>`;
-                    h += `<div class="min-w-[120px] bg-white/5 border border-white/10 p-3 rounded-xl flex flex-col items-center transition hover:bg-white/10 hover:shadow-lg"><span class="text-[10px] text-blue-300 mb-1 font-bold">${dL}</span><span class="font-bold text-xs text-white mb-2">${dtL}</span><div class="flex flex-col w-full gap-1.5">${pL}</div></div>`;
+                    cH += `<div class="min-w-[120px] bg-white/5 border border-white/10 p-3 rounded-xl flex flex-col items-center transition hover:bg-white/10 hover:shadow-lg"><span class="text-[10px] text-blue-300 mb-1 font-bold">${dL}</span><span class="font-bold text-xs text-white mb-2">${dtL}</span><div class="flex flex-col w-full gap-1.5">${pL}</div></div>`;
                 }
-                c.innerHTML = h + `</div></div>`; c.classList.remove('hidden');
+                cW.innerHTML = cH + `</div></div>`; cW.classList.remove('hidden');
             }
             if(window.lucide) lucide.createIcons();
         };
