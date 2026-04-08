@@ -524,6 +524,9 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         const firebaseConfig = { apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4", authDomain: "video-c59af.firebaseapp.com", databaseURL: "https://video-c59af-default-rtdb.firebaseio.com", projectId: "video-c59af", storageBucket: "video-c59af.firebasestorage.app", messagingSenderId: "418823882244", appId: "1:418823882244:web:a3b858a11bc191032a5751" };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        
+        let dbSaveTimeout = null;
+
         async function initAuth() {
             try { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { await signInAnonymously(auth); } } else { await signInAnonymously(auth); } } catch (e) { console.error("Auth Fail:", e); }
         }
@@ -541,7 +544,13 @@
                         if (!window.isAppBooted) window.bootApp(); else window.refreshAllViews();
                     } else { setDoc(stateRef, window.state).then(() => window.bootApp()); }
                 }, (err) => console.error("Snapshot error:", err));
-                window.saveStateToFirebase = () => { setDoc(stateRef, JSON.parse(JSON.stringify(window.state))).catch(e => console.error("Firestore Error:", e)); };
+                
+                window.saveStateToFirebase = () => { 
+                    if (dbSaveTimeout) clearTimeout(dbSaveTimeout);
+                    dbSaveTimeout = setTimeout(() => {
+                        setDoc(stateRef, JSON.parse(JSON.stringify(window.state))).catch(e => console.error("Firestore Error:", e)); 
+                    }, 1500);
+                };
             }
         });
     </script>
@@ -802,14 +811,25 @@
             const oP = adminOp || el('trackPhotogName').innerText;
             if(!cP) return window.showToast("يرجى اختيار الزميل البديل", "error");
             if(!state.shiftSwaps) state.shiftSwaps = []; state.shiftSwaps.push({ id: Date.now(), date: dS, originalPhotog: oP, coveringPhotog: cP, timestamp: new Date().toISOString() });
-            window.saveState(); el('swapShiftModal').classList.add('hidden'); window.showToast("تم تسجيل التبديل بنجاح");
-            el('swapDateInput').removeAttribute('data-original');
+            
+            let needsSave = true;
             if (el('photographerTrackingView') && !el('photographerTrackingView').classList.contains('hidden')) {
                 let c = state.photographers.find(x => x.name === oP); 
-                if (c) window.renderPhotogTracking(c.slug || c.name);
-            } else {
+                if (c) {
+                    window.saveState();
+                    window.renderPhotogTracking(c.slug || c.name);
+                    needsSave = false;
+                }
+            } 
+            
+            if(needsSave) {
+                window.saveState();
                 window.refreshAllViews();
             }
+            
+            el('swapShiftModal').classList.add('hidden'); 
+            window.showToast("تم تسجيل التبديل بنجاح");
+            el('swapDateInput').removeAttribute('data-original');
         };
 
         window.cancelSwap = function(id) { window.showConfirm("متأكد من إلغاء هذا التبديل؟", () => { if(state.shiftSwaps) { state.shiftSwaps = state.shiftSwaps.filter(s => s.id !== id); window.saveState(); window.showToast("تم إلغاء التبديل بنجاح"); const c = el('trackPhotogName').innerText; let p = state.photographers.find(x => x.name === c); if (p) window.renderPhotogTracking(p.slug || p.name); } }); };
@@ -1449,15 +1469,13 @@
             const cW = el('photogCombinedRotationWidget'), ex = ["مصور اخر", "مصور آخر", "مصور جديد", "محمود كوكو"];
             if (ex.includes(name)) { if(cW) cW.classList.add('hidden'); } else {
                 const tD = new Date(), tS = tD.toISOString().split('T')[0], tR = window.getDailyRotation(tS), { busy: tB } = window.checkRotationAvailability(tS), tSw = window.getSwapDetails(tS);
-                let cH = `<div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-blue-400 to-blue-600"></div><div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3"><div><h3 class="font-bold text-base text-blue-400 flex items-center gap-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i> نظام الساقية والأدوار</h3></div><span class="text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> ${tD.toLocaleDateString('ar-EG', { weekday: 'long', month: 'long', day: 'numeric' })}</span></div><div class="mb-5 bg-black/20 p-4 rounded-xl border border-white/5"><h4 class="text-xs font-bold text-zinc-300 mb-3 flex items-center gap-1.5"><i data-lucide="sun" class="w-3.5 h-3.5 text-yellow-400"></i> فريق عمل اليوم:</h4><div class="flex flex-wrap gap-2 mb-4">`;
-                tR.forEach(rn => { const im = rn === name; cH += `<span class="${im ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-white/5 text-zinc-300 border-white/10'} border px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">${im ? '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i>' : '<i data-lucide="user" class="w-3.5 h-3.5"></i>'} ${rn}</span>`; });
-                cH += `</div>`;
-                if (tR.includes(name)) { cH += `<div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-center gap-3 mt-2"><div class="bg-emerald-500/20 p-2 rounded-full"><i data-lucide="bell-ring" class="w-4 h-4 text-emerald-400 animate-pulse"></i></div><div><p class="text-xs font-bold text-emerald-400">دورك اليوم!</p><p class="text-[10px] text-emerald-200/70 mt-0.5">استعد للعمل.</p></div></div>`; } else {
-                    let nD = 1, nDt = new Date(tD), fT = false;
-                    for (let i=1; i<=30; i++) { nDt.setDate(nDt.getDate()+1); if (window.getDailyRotation(nDt.toISOString().split('T')[0]).includes(name)) { nD=i; fT=true; break; } }
-                    if (fT) cH += `<div class="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl flex items-center gap-3 mt-2"><div class="bg-yellow-500/20 p-2 rounded-full"><i data-lucide="calendar-clock" class="w-4 h-4 text-yellow-400"></i></div><div><p class="text-xs font-bold text-yellow-400">أنت في يوم راحة.</p><p class="text-[10px] text-yellow-200/80 mt-0.5">دورك القادم: <span class="font-bold text-yellow-300">${nD===1?'غداً':nD===2?'بعد غد':`بعد ${nD} أيام (${nDt.toLocaleDateString('ar-EG',{weekday:'long'})})`}</span></p></div></div>`;
-                }
-                cH += `</div><div><h4 class="text-xs font-bold text-zinc-300 mb-3 flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-400"></i> الـ 7 أيام القادمة:</h4><div class="flex overflow-x-auto gap-3 pb-2 no-scrollbar">`;
+                let cH = `<div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-blue-400 to-blue-600"></div><div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3"><div><h3 class="font-bold text-base text-blue-400 flex items-center gap-2"><i data-lucide="refresh-cw" class="w-5 h-5"></i> نظام الساقية والأدوار</h3></div><span class="text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-300 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> ${tD.toLocaleDateString('ar-EG', { weekday: 'long', month: 'long', day: 'numeric' })}</span></div><div class="mb-5 bg-black/20 p-4 rounded-xl border border-white/5"><div class="flex justify-between items-center mb-3"><h4 class="text-xs font-bold text-zinc-300 flex items-center gap-1.5"><i data-lucide="sun" class="w-3.5 h-3.5 text-yellow-400"></i> فريق عمل اليوم:</h4><span class="text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-300 font-bold px-2 py-1 rounded">${tD.toLocaleDateString('ar-EG', { weekday: 'long', month: 'long', day: 'numeric' })}</span></div><div class="grid grid-cols-1 sm:grid-cols-4 gap-3">`;
+                tR.forEach(n => {
+                    let si = tSw.find(s => s.coveringPhotog === n), sb = si ? `<span class="text-[8px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-md border border-purple-500/30 ml-1">بديل لـ ${si.originalPhotog}</span>` : '';
+                    if (tB.includes(n)) h += `<div onclick="window.showPhotogDetails('${n}')" class="cursor-pointer bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex justify-between items-center transition hover:bg-red-500/20 hover:scale-[1.02]"><span class="text-sm font-bold text-white flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4 text-red-400"></i> ${n} ${sb}</span><span class="text-[9px] bg-red-500/20 text-red-400 font-bold px-2 py-1 rounded flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> محجوز</span></div>`;
+                    else h += `<div onclick="window.showPhotogDetails('${n}')" class="cursor-pointer bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center transition hover:bg-emerald-500/20 hover:scale-[1.02]"><span class="text-sm font-bold text-white flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> ${n} ${sb}</span><span class="text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-1 rounded flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> متاح</span></div>`;
+                });
+                h += `</div></div><div><h4 class="text-xs font-bold text-zinc-300 mb-3 flex items-center gap-1.5"><i data-lucide="calendar-days" class="w-3.5 h-3.5 text-blue-400"></i> الأيام الـ 7 القادمة:</h4><div class="flex overflow-x-auto gap-3 pb-2 no-scrollbar">`;
                 for(let i = 1; i <= 7; i++) {
                     let d = new Date(); d.setDate(d.getDate() + i); let dS = d.toISOString().split('T')[0], r = window.getDailyRotation(dS), sw = window.getSwapDetails(dS), dL = i === 1 ? "غداً" : d.toLocaleDateString('ar-EG', {weekday:'short'}), dtL = dS.split('-').reverse().slice(0,2).join('/');
                     let pL = r.map(n => { let isS = !!sw.find(s => s.coveringPhotog === n); return `<span class="text-[9px] ${isS ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-black/30 text-zinc-300 border-white/5'} border px-1.5 py-1 rounded-md truncate w-full text-center flex items-center justify-center gap-1"><i data-lucide="user" class="w-2.5 h-2.5"></i> ${n}</span>`; }).join('');
