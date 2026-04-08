@@ -1457,14 +1457,108 @@
                 const nt = 'dev_' + Math.random().toString(36).substr(2, 9); localStorage.setItem(dk, nt); p.deviceLockToken = nt; window.saveState();
             }
 
-            el('photographerTrackingView').classList.remove('hidden'); el('trackPhotogName').innerText = p.name;
+            el('photographerTrackingView').classList.remove('hidden'); 
+            el('trackPhotogName').innerText = p.name;
             if (!p.isOnline) { p.isOnline = true; window.saveState(); }
             window.currentTrackingPhotog = name;
+            
             if (!window.presenceListenerAdded) {
                 document.addEventListener("visibilitychange", () => { if (window.currentTrackingPhotog) { let c = state.photographers.find(x => x.name === window.currentTrackingPhotog); if (c) { c.isOnline = document.visibilityState === "visible"; window.saveState(); } } });
                 window.addEventListener("beforeunload", () => { if (window.currentTrackingPhotog) { let c = state.photographers.find(x => x.name === window.currentTrackingPhotog); if (c) { c.isOnline = false; window.saveState(); } } });
                 window.presenceListenerAdded = true;
             }
+
+            // --- اضافة اللوجيك الخاص بتعبئة بيانات المصور (الرصيد، الأعمال القادمة، وسجل التاريخ) ---
+            let tE = 0, tW = 0, tB = 0, jC = 0;
+            let historyHtml = '', upcomingHtml = '';
+            let upcomingCount = 0;
+            let items = [];
+
+            // تجميع بيانات الحجوزات
+            state.bookings.forEach(b => {
+                if (b.photographers?.some(px => px.name === name)) {
+                    const fee = b.photographers.find(px => px.name === name).fee;
+                    if (b.status === 'completed') {
+                        tE += fee;
+                        jC++;
+                        items.push({ date: b.date, text: `حجز: ${b.name}`, val: fee, type: 'job', id: b.id });
+                    } else {
+                        upcomingCount++;
+                        upcomingHtml += `<div class="bg-black/30 p-4 rounded-xl border border-white/5 mb-2 transition hover:bg-white/5"><div class="flex justify-between items-start mb-2"><div><p class="font-bold text-sm text-white">${b.name}</p><p class="text-[10px] text-zinc-400 mt-1"><i data-lucide="calendar" class="w-3 h-3 inline"></i> ${new Date(b.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-1 rounded-lg font-bold">الأجر: ${fee} ج.م</span></div><div class="flex items-center gap-2 mt-2"><span class="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-1 rounded border border-zinc-700">العمل قيد الانتظار أو التنفيذ</span></div></div>`;
+                    }
+                }
+            });
+
+            // تجميع بيانات السجلات اليومية (يوميات، سحوبات، مكافآت)
+            state.dailyEntries.forEach(d => {
+                if (d.photographers?.some(px => px.name === name)) {
+                    const feeObj = d.photographers.find(px => px.name === name);
+                    const fee = feeObj.totalFee || 0;
+
+                    if (d.type === 'withdrawal') {
+                        tW += Math.abs(fee);
+                        items.push({ date: d.date || d.id, text: `سحب نقدي`, val: Math.abs(fee), type: 'withdrawal', id: d.id });
+                    } else if (d.type === 'bonus') {
+                        tE += fee;
+                        tB += fee;
+                        items.push({ date: d.date || d.id, text: `مكافأة: ${d.note}`, val: fee, type: 'bonus', id: d.id });
+                    } else if (d.type === 'entry') {
+                        tE += fee;
+                        jC++;
+                        if (d.isPaidNow) {
+                            tW += fee;
+                            items.push({ date: d.date || d.id, text: `عمل (سُدد فوراً): ${d.note}`, val: fee, type: 'job-paid', id: d.id });
+                        } else {
+                            items.push({ date: d.date || d.id, text: `عمل: ${d.note}`, val: fee, type: 'job', id: d.id });
+                        }
+                    }
+                }
+            });
+
+            // ترتيب سجل التاريخ وعرضه
+            items.sort((a, b) => new Date(b.date) - new Date(a.date));
+            historyHtml = items.map(i => {
+                let ic = 'check-circle', cC = 'text-emerald-400', bC = 'bg-emerald-500/20', s = '+';
+                if(i.type === 'withdrawal') { ic = 'wallet'; cC = 'text-red-400'; bC = 'bg-red-500/20'; s = '-'; }
+                else if(i.type === 'bonus') { ic = 'gift'; cC = 'text-purple-400'; bC = 'bg-purple-500/20'; s = '+'; }
+                else if(i.type === 'job' || i.type === 'job-paid') { ic = 'camera'; cC = 'text-blue-400'; bC = 'bg-blue-500/20'; s = '+'; }
+                return `<div class="flex justify-between p-4 bg-black/30 rounded-xl border border-white/5 transition hover:bg-white/5"><div class="flex items-center gap-3"><div class="${bC} p-2 rounded-full"><i data-lucide="${ic}" class="w-4 h-4 ${cC}"></i></div><div><p class="text-white text-xs font-bold mb-0.5">${i.text}</p><p class="text-[10px] text-zinc-500"><i data-lucide="calendar" class="w-3 h-3 inline mr-0.5"></i> ${new Date(i.date).toLocaleDateString('ar-EG')}</p></div></div><span class="text-sm font-bold ${cC}">${s}${i.val} ج.م</span></div>`;
+            }).join('') || '<div class="text-center p-6 bg-white/5 rounded-xl text-zinc-500 border border-white/10 text-sm">لا توجد أعمال منجزة حتى الآن</div>';
+
+            // تحديث الواجهة بالبيانات المحسوبة
+            if(el('trackPhotogEarnings')) el('trackPhotogEarnings').innerText = (tE - tW) + " ج.م";
+            if(el('trackPhotogTotalWithdrawals')) el('trackPhotogTotalWithdrawals').innerText = tW + " ج.م";
+            if(el('trackPhotogTotalBonuses')) el('trackPhotogTotalBonuses').innerText = tB + " ج.م";
+            if(el('trackPhotogJobs')) el('trackPhotogJobs').innerText = jC;
+
+            const upList = el('trackPhotogUpcoming');
+            if(upList) {
+                if(upcomingCount > 0) {
+                    upList.innerHTML = upcomingHtml;
+                    el('headerUpcomingBadge').classList.remove('hidden');
+                    el('headerUpcomingCount').innerText = upcomingCount;
+                } else {
+                    upList.innerHTML = '<div class="text-center p-6 bg-white/5 rounded-xl text-zinc-500 border border-white/10 text-sm">لا توجد أعمال قادمة حالياً</div>';
+                    el('headerUpcomingBadge').classList.add('hidden');
+                }
+            }
+
+            const histList = el('trackPhotogHistory');
+            if(histList) histList.innerHTML = historyHtml;
+
+            // تحديث قسم المكافآت إذا كان هناك مكافآت
+            const bonusContainer = el('trackPhotogBonusesContainer');
+            const bonusList = el('trackPhotogBonuses');
+            if (bonusContainer && bonusList) {
+                const bonusItems = items.filter(i => i.type === 'bonus');
+                if (bonusItems.length > 0) {
+                    bonusContainer.classList.remove('hidden');
+                    bonusList.innerHTML = bonusItems.map(i => `<div class="flex justify-between items-center text-xs border-b border-white/5 pb-1 mb-1 last:border-0 last:pb-0 last:mb-0"><span class="text-purple-300 truncate">${i.text.replace('مكافأة: ', '')}</span><span class="font-bold text-purple-400 whitespace-nowrap">+${i.val} ج.م</span></div>`).join('');
+                } else {
+                    bonusContainer.classList.add('hidden');
+                }
+            }
+            // --- نهاية اللوجيك المُضاف ---
 
             const cW = el('photogCombinedRotationWidget'), ex = ["مصور اخر", "مصور آخر", "مصور جديد", "محمود كوكو"];
             if (ex.includes(name)) { if(cW) cW.classList.add('hidden'); } else {
