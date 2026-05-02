@@ -225,11 +225,18 @@
                     <div class="glass p-6 border border-white/10 rounded-2xl relative overflow-hidden">
                         <div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500"></div>
                         <h3 class="text-lg font-bold mb-6 text-white flex items-center gap-2"><i data-lucide="wallet" class="text-emerald-400"></i> المحفظة <span class="text-[10px] text-zinc-400 font-normal">(للشهر المحدد)</span></h3>
+                        
+                        <!-- البطاقة الجديدة للرصيد المتاح بعد السحب -->
+                        <div class="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 text-center mb-3">
+                            <p class="text-[10px] text-emerald-200/70 mb-1 font-bold">الرصيد المتاح (بعد السحب)</p>
+                            <h3 class="text-2xl font-bold text-emerald-400" id="trackPhotogNetAvailable">0 ج.م</h3>
+                        </div>
+
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                            <div class="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-center"><p class="text-[9px] text-emerald-200/70 mb-1">متاح</p><h3 class="text-base font-bold text-emerald-400" id="trackPhotogEarnings">0 ج.م</h3></div>
-                            <div class="bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center"><p class="text-[9px] text-red-200/70 mb-1">مسحوبات/خصم</p><h3 class="text-base font-bold text-red-400" id="trackPhotogTotalWithdrawals">0 ج.م</h3></div>
-                            <div class="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20 text-center"><p class="text-[9px] text-purple-200/70 mb-1">مكافآت</p><h3 class="text-base font-bold text-purple-400" id="trackPhotogTotalBonuses">0 ج.م</h3></div>
-                            <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center" title="عدد الأيام غير المصفاة"><p class="text-[9px] text-blue-200/70 mb-1">أيام عمل (مستحقة)</p><h3 class="text-base font-bold text-blue-400" id="trackPhotogJobs">0</h3></div>
+                            <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center"><p class="text-[9px] text-blue-200/70 mb-1">إجمالي الأرباح</p><h3 class="text-sm font-bold text-blue-400" id="trackPhotogEarnings">0 ج.م</h3></div>
+                            <div class="bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center"><p class="text-[9px] text-red-200/70 mb-1">مسحوبات/خصم</p><h3 class="text-sm font-bold text-red-400" id="trackPhotogTotalWithdrawals">0 ج.م</h3></div>
+                            <div class="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20 text-center"><p class="text-[9px] text-purple-200/70 mb-1">مكافآت</p><h3 class="text-sm font-bold text-purple-400" id="trackPhotogTotalBonuses">0 ج.م</h3></div>
+                            <div class="bg-zinc-800/50 p-3 rounded-xl border border-white/10 text-center" title="عدد الأيام غير المصفاة"><p class="text-[9px] text-zinc-400 mb-1">أيام مستحقة</p><h3 class="text-sm font-bold text-white" id="trackPhotogJobs">0</h3></div>
                         </div>
                         <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center mb-6">
                             <div class="flex-grow w-full text-right"><p class="text-sm font-bold text-red-400 mb-0.5">سحب مستحقات</p></div>
@@ -1910,6 +1917,15 @@
             el('trackPhotogTotalWithdrawals').innerText = `${tW} ج.م`;
             el('trackPhotogTotalBonuses').innerText = `${tB} ج.م`;
             el('trackPhotogJobs').innerText = unsettledDaysSet.size;
+            
+            // تحديث بطاقة الرصيد المتاح (إجمالي الأرباح والمكافآت ناقص المسحوبات)
+            const netAvailable = tE - tW;
+            const netAvailableEl = el('trackPhotogNetAvailable');
+            if (netAvailableEl) {
+                netAvailableEl.innerText = `${netAvailable} ج.م`;
+                if (netAvailable < 0) netAvailableEl.classList.replace('text-emerald-400', 'text-red-400');
+                else netAvailableEl.classList.replace('text-red-400', 'text-emerald-400');
+            }
 
             const bL = items.filter(i => i.type === 'bonus');
             const bC = el('trackPhotogBonusesContainer'), bD = el('trackPhotogBonuses');
