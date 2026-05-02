@@ -926,9 +926,14 @@
         window.openWhatsAppModalClient = function() { window.open(`https://wa.me/201126810107?text=${encodeURIComponent('مرفق إيصال سداد باقي حساب حجز باسم: ' + el('trackClientName').innerText)}`, '_blank'); };
         
         window.requestWithdrawal = function() {
-            const a = parseFloat(el('withdrawAmount').value), n = el('trackPhotogName').innerText; if(!a || a <= 0) return window.showToast("مبلغ غير صحيح", "error");
-            let av = 0; state.bookings.forEach(b => { if(b.status === 'completed' && b.photographers?.some(px=>px.name===n)) av += b.photographers.find(x=>x.name===n).fee; }); state.dailyEntries.forEach(d => { const dP = d.photographers?.find(px=>px.name===n); if(dP) av += dP.totalFee; });
+            const a = parseFloat(el('withdrawAmount').value), n = el('trackPhotogName').innerText; 
+            if(!a || a <= 0) return window.showToast("مبلغ غير صحيح", "error");
+            
+            // جلب الرصيد الإجمالي المتاح للمصور من جميع الأيام والأشهر لضمان دقة عملية السحب 
+            let av = window.getPhotogFinances(n, true).balance; 
+            
             if(a > av) return window.showToast("الرصيد لا يكفي للسحب", "error");
+            
             window.showConfirm(`تأكيد سحب ${a} ج.م؟`, () => { 
                 state.dailyEntries.push({ id: Date.now(), note: `سحب نقدي: ${n}`, income: 0, date: new Date().toISOString().split('T')[0], photographers: [{name: n, totalFee: -a, isWithdrawal: true}], gear: null, flash: null, totalExpenses: a, time: new Date().toLocaleTimeString('ar-EG'), type: 'withdrawal' }); 
                 if(a === av) window.markAsSettled(n); // تصفير الأيام إذا سحب الرصيد بالكامل
