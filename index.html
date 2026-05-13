@@ -31,7 +31,7 @@
         input, select, textarea { background: rgba(255, 255, 255, 0.05) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; color: white !important; border-radius: 0.75rem !important; transition: all 0.3s ease-in-out !important; }
         input:focus, select:focus, textarea:focus { border-color: #e11d48 !important; outline: none; background: rgba(255, 255, 255, 0.08) !important; box-shadow: 0 0 15px rgba(225, 29, 72, 0.2) !important; }
         select option { background-color: #1a1a1a; color: white; }
-        input[type="month"]::-webkit-calendar-picker-indicator, input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
+        input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; }
         .btn-grad { background: linear-gradient(45deg, #e11d48, #9f1239); transition: 0.3s; }
         .btn-grad:hover { box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); }
         ::-webkit-scrollbar { width: 5px; }
@@ -322,7 +322,12 @@
                 <button onclick="window.showTab('inventory')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="badge-dollar-sign" class="w-4 h-4"></i> اليومية</button>
                 <button onclick="window.showTab('reports')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="pie-chart" class="w-4 h-4"></i> التقارير</button>
             </div>
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <div class="flex items-center gap-2 bg-white/5 px-2 py-1.5 rounded-lg border border-white/10">
+                    <i data-lucide="filter" class="w-4 h-4 text-emerald-400"></i>
+                    <input type="month" id="globalMonthFilter" onchange="window.setGlobalMonth(this.value)" class="bg-transparent border-none text-[11px] sm:text-xs text-white font-bold outline-none cursor-pointer w-[110px] p-0 m-0" title="اختر الشهر لفلترة النظام بالكامل">
+                    <button onclick="window.setGlobalMonth('all')" class="text-[9px] bg-white/10 hover:bg-white/20 text-zinc-300 px-2 py-1 rounded transition whitespace-nowrap">كل الشهور</button>
+                </div>
                 <button onclick="window.adminLogout()" class="text-zinc-500 hover:text-red-500 transition flex items-center gap-2 text-xs sm:text-sm font-bold bg-white/5 px-3 py-2 rounded-lg" title="تسجيل الخروج"><span class="hidden sm:block">خروج</span> <i data-lucide="log-out" class="w-4 h-4 sm:w-5 sm:h-5"></i></button>
             </div>
         </nav>
@@ -331,15 +336,6 @@
             <div class="glass p-3 mb-4 text-center text-emerald-400 font-bold text-sm flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-4 h-4"></i> <span class="dhikr-text transition-opacity duration-500">ألا بذكر الله تطمئن القلوب</span> <i data-lucide="sparkles" class="w-4 h-4"></i></div>
 
             <div id="tab-dashboard" class="space-y-6 animate-in fade-in duration-500">
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-2 gap-3">
-                    <h3 class="font-bold text-lg text-white">إحصائيات عامة والتقويم</h3>
-                    <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
-                        <i data-lucide="filter" class="w-4 h-4 text-emerald-400"></i>
-                        <span class="text-xs text-zinc-400">شهر الإحصائيات:</span>
-                        <select id="filterDashboardMonth" onchange="window.refreshAllViews()" class="bg-transparent border-none text-[12px] text-white font-bold outline-none cursor-pointer p-0 m-0 w-28"></select>
-                    </div>
-                </div>
-
                 <!-- تذكير الرواتب الذكي -->
                 <div id="payrollReminderWidget" class="hidden flex-col sm:flex-row justify-between items-center gap-4 bg-indigo-500/10 border border-indigo-500/30 p-4 sm:p-5 rounded-2xl mb-2 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition-all">
                     <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -397,7 +393,7 @@
                             <label class="block text-sm text-zinc-400">اسم العميل</label><input type="text" id="clientName" class="w-full p-3">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div><label class="block text-sm text-zinc-400">الهاتف (يستخدم في رابط التتبع)</label><input type="tel" id="clientPhone" class="w-full p-3 text-left font-bold" dir="ltr" placeholder="01xxxxxxxxx"></div>
-                                <div><label class="block text-sm text-zinc-400">التاريخ</label><input type="date" id="bookingDate" class="w-full p-3 text-sm" onchange="window.checkBookingDateConflict()"><div id="bookingRotationAlert"></div></div>
+                                <div><label class="block text-sm text-zinc-400">التاريخ</label><input type="date" id="bookingDate" class="w-full p-3 text-sm" onchange="window.updateRotationAlert('bookingDate', 'bookingRotationAlert')"><div id="bookingRotationAlert"></div></div>
                             </div>
                             <label class="block text-sm text-zinc-400">تفاصيل أخرى</label><textarea id="bookingDetails" class="w-full p-3 min-h-[80px]"></textarea>
                         </div>
@@ -419,12 +415,7 @@
                 <div class="glass p-4 sm:p-6 w-full overflow-hidden">
                     <div class="flex flex-col sm:flex-row justify-between mb-6 flex-wrap gap-4">
                         <div class="flex items-center gap-4"><h3 onclick="window.toggleBookingForm()" class="text-xl font-bold cursor-pointer hover:text-red-400 transition flex items-center gap-2" title="إضافة حجز جديد">الحجوزات النشطة <i data-lucide="plus-circle" class="w-5 h-5 text-cinema-red"></i></h3></div>
-                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                            <select id="filterBookingsMonth" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"></select>
-                            <input type="date" id="filterBookingDate" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto">
-                            <input type="text" id="filterBookingName" placeholder="بحث باسم العميل..." oninput="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto">
-                            <select id="filterBookingPhotog" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><option value="">كل المصورين</option></select>
-                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto"><input type="date" id="filterBookingDate" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><input type="text" id="filterBookingName" placeholder="بحث..." oninput="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><select id="filterBookingPhotog" onchange="window.renderBookings()" class="p-2 text-xs glass w-full sm:w-auto"><option value="">كل المصورين</option></select></div>
                     </div>
                     <div class="w-full"><div id="bookingsTable" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-3"></div></div>
                 </div>
@@ -450,7 +441,7 @@
                         <div id="photogManager" class="hidden p-4 bg-zinc-900/50 rounded-xl border border-dashed border-white/20"><div id="photogEditList" class="space-y-2"></div><button onclick="window.addNewPhotographer()" class="mt-2 w-full p-1 text-[9px] border border-white/10 hover:bg-white/5">+ مصور</button></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><input type="text" id="incomeNote" placeholder="بيان الدخل" class="p-3 text-sm"><input type="number" id="incomeAmount" placeholder="المبلغ" class="p-3 text-sm"></div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div><input type="date" id="dailyEntryDate" class="w-full p-3 text-sm mb-1"></div>
+                            <div><input type="date" id="dailyEntryDate" class="w-full p-3 text-sm mb-1" onchange="window.updateRotationAlert('dailyEntryDate', 'dailyRotationAlert')"><div id="dailyRotationAlert"></div></div>
                             <div>
                                 <select id="dailyEntryHall" class="w-full p-3 text-sm bg-black/50 border border-white/10 rounded-xl focus:border-emerald-50 transition"></select>
                                 <p class="text-[9px] text-zinc-500 mt-1">تخصيص المصروفات (إن وجدت) لقاعة محددة</p>
@@ -461,12 +452,12 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="dailyPhotographerList"></div>
                             
                             <div class="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">
-                                <h6 class="text-[11px] font-bold text-emerald-400">إيجار معدات للاستوديو (تخصم من الإيراد وتضاف للمورد)</h6>
+                                <h6 class="text-[11px] font-bold text-emerald-400">إيجار معدات للاستوديو (تخصم من الإيراد وتضاف للمستأجر منه)</h6>
                                 <div class="flex flex-col sm:flex-row gap-2 items-center">
                                     <i data-lucide="video" class="w-4 h-4 text-blue-400 hidden sm:block"></i>
                                     <input type="text" id="gearRentalNote" placeholder="وصف معدات الإيجار (مثال: كاميرا سوني)" class="flex-grow w-full sm:w-auto text-xs bg-black/50 border border-white/10 rounded-lg p-2 transition focus:border-indigo-500">
                                     <select id="gearRentalType" class="w-full sm:w-auto text-xs bg-black/50 border border-white/10 rounded-lg p-2 text-zinc-300 transition focus:border-indigo-500">
-                                        <!-- سيتم إضافة الموردين هنا من الكود -->
+                                        <option value="external">من خارجي (مكتب/شخص)</option>
                                     </select>
                                     <input type="number" id="gearRentalAmount" placeholder="التكلفة" class="w-full sm:w-20 text-xs bg-black/50 border border-white/10 rounded-lg sm:text-center p-2 transition focus:border-indigo-500">
                                 </div>
@@ -488,10 +479,9 @@
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-4 border-b border-white/10 gap-3">
                             <div class="flex items-center gap-3 w-full sm:w-auto flex-grow">
                                 <h4 onclick="window.toggleDailyEntryForm()" class="cursor-pointer hover:text-emerald-400 transition flex items-center gap-1.5 font-bold whitespace-nowrap text-sm sm:text-base" title="تسجيل يومية جديدة">سجل اليومية <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i></h4>
-                                <div class="flex flex-wrap gap-2 flex-grow items-center">
-                                    <select id="filterInventoryMonth" onchange="window.updateEntryLog(); window.updateGlobalFinancialCards(); window.renderPayroll();" class="p-1.5 px-3 text-xs glass w-auto"></select>
-                                    <input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-1.5 px-3 text-xs glass flex-grow w-full">
-                                    <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-1.5 px-1 text-xs glass w-auto min-w-[75px]"><option value="">المصور</option></select>
+                                <div class="flex gap-2 flex-grow">
+                                    <input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-1.5 px-3 text-[10px] sm:text-xs glass flex-grow w-full">
+                                    <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-1.5 px-1 text-[10px] sm:text-xs glass w-auto min-w-[75px]"><option value="">المصور</option></select>
                                 </div>
                             </div>
                             <div class="w-full sm:w-auto mt-2 sm:mt-0">
@@ -504,14 +494,6 @@
             </div>
             
             <div id="tab-reports" class="hidden flex flex-col gap-6 sm:gap-8 animate-in fade-in duration-300">
-                <div class="flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                    <h3 class="text-lg font-bold text-white">التقارير المالية والتحليلات</h3>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-zinc-400">شهر التقرير:</span>
-                        <select id="filterReportsMonth" onchange="window.renderReports()" class="p-2 text-xs glass w-auto"></select>
-                    </div>
-                </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="glass p-4 sm:p-5 border border-yellow-500/20 rounded-2xl flex flex-wrap justify-between items-center transition-all hover:border-yellow-500/40 gap-4">
                         <div class="flex items-center gap-3">
@@ -564,65 +546,37 @@
         </div>
     </div>
 
-    <!-- Firebase Integration Module & State Recovery -->
+    <!-- Firebase Integration Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
         const firebaseConfig = { apiKey: "AIzaSyDn_hoiOb2FN8-tAXOaeEeerVYaJVPcAq4", authDomain: "video-c59af.firebaseapp.com", databaseURL: "https://video-c59af-default-rtdb.firebaseio.com", projectId: "video-c59af", storageBucket: "video-c59af.firebasestorage.app", messagingSenderId: "418823882244", appId: "1:418823882244:web:a3b858a11bc191032a5751" };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        
         let dbSaveTimeout = null;
-
-        // النظام الذكي والآمن لاستعادة البيانات ومنع التصفير!
-        let localBackup = localStorage.getItem('studio_pro_backup_v2');
-        if (localBackup) {
-            try { 
-                window.state = { ...window.defaultState, ...JSON.parse(localBackup) };
-            } catch(e){ console.error(e); }
-        }
 
         async function initAuth() {
             try { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { await signInAnonymously(auth); } } else { await signInAnonymously(auth); } } catch (e) { console.error("Auth Fail:", e); }
         }
         initAuth();
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 const stateRef = doc(db, 'artifacts', 'video-c59af-studio-main', 'public', 'data', 'studio_state', 'main_database');
-                
                 onSnapshot(stateRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data();
-                        
-                        // تحديث حالة اتصال المصورين إن وجدت
                         if (window.state && window.state.photographers && cloudData.photographers) {
                             cloudData.photographers.forEach(newP => { const oldP = window.state.photographers.find(op => op.name === newP.name); if (newP.isOnline && (!oldP || !oldP.isOnline)) { const mC = document.getElementById('mainContent'); if (mC && !mC.classList.contains('hidden')) { setTimeout(() => { window.showToast(`المصور ${newP.name} متصل الآن 🟢`, "success"); }, 500); } } });
                         }
-
                         window.state = { ...window.defaultState, ...cloudData };
-                        localStorage.setItem('studio_pro_backup_v2', JSON.stringify(window.state)); // حفظ نسخة محلية فورية للوقاية
-                        
                         if (!window.isAppBooted) window.bootApp(); else window.refreshAllViews();
-                    } else {
-                        // أمان مشدد: لو فشل جلب البيانات لا تقم بالكتابة فوقها إذا كان لدينا نسخة محلية للتو
-                        let existingLocal = localStorage.getItem('studio_pro_backup_v2');
-                        if (existingLocal) {
-                            try { window.state = { ...window.defaultState, ...JSON.parse(existingLocal) }; } catch(e){}
-                            setDoc(stateRef, window.state).then(() => { if(!window.isAppBooted) window.bootApp(); });
-                        } else {
-                            setDoc(stateRef, window.state).then(() => { if(!window.isAppBooted) window.bootApp(); });
-                        }
-                    }
-                }, (err) => {
-                    console.error("Snapshot error:", err);
-                    if (!window.isAppBooted) window.bootApp();
-                });
+                    } else { setDoc(stateRef, window.state).then(() => window.bootApp()); }
+                }, (err) => console.error("Snapshot error:", err));
                 
                 window.saveStateToFirebase = () => { 
                     if (dbSaveTimeout) clearTimeout(dbSaveTimeout);
                     dbSaveTimeout = setTimeout(() => {
-                        localStorage.setItem('studio_pro_backup_v2', JSON.stringify(window.state)); // حفظ محلي قبل السحابة
                         setDoc(stateRef, JSON.parse(JSON.stringify(window.state))).catch(e => console.error("Firestore Error:", e)); 
                     }, 1500);
                 };
@@ -630,9 +584,10 @@
         });
     </script>
 
+    <!-- Global Application Scripts -->
     <script>
         const el = id => document.getElementById(id);
-        var defaultState = { isLoggedIn: false, activeMonth: 'all', bookings: [], dailyEntries: [], finances: { revenue: 0, expenses: 0 }, inventory: { flashesCount: 0, flashesTotalValue: 0, flashPrice: 50 }, selectedServices: [], services: [{ id: 1, name: 'جلسة تصوير', price: 1000 }, { id: 2, name: 'مونتاج فيديو', price: 2500 }, { id: 3, name: 'مكياج', price: 800 }, { id: 4, name: 'طباعة', price: 400 }], templates: [{ id: 1, name: 'قاعة 1', price: 150 }, { id: 2, name: 'شغل الشارع', price: 300 }], photographers: [ { id: 1, name: 'أحمد', fee: 300, token: null, isOnline: false, photoUrl: '' }, { id: 2, name: 'سارة', fee: 400, token: null, isOnline: false, photoUrl: '' }, { id: 3, name: 'محمد', fee: 350, token: null, isOnline: false, photoUrl: '' }, { id: 4, name: 'محمود المراكبى', fee: 400, token: null, isOnline: false, photoUrl: '' } ] };
+        var defaultState = { isLoggedIn: false, activeMonth: new Date().toISOString().slice(0, 7), bookings: [], dailyEntries: [], finances: { revenue: 0, expenses: 0 }, inventory: { flashesCount: 0, flashesTotalValue: 0, flashPrice: 50 }, selectedServices: [], services: [{ id: 1, name: 'جلسة تصوير', price: 1000 }, { id: 2, name: 'مونتاج فيديو', price: 2500 }, { id: 3, name: 'مكياج', price: 800 }, { id: 4, name: 'طباعة', price: 400 }], templates: [{ id: 1, name: 'قاعة 1', price: 150 }, { id: 2, name: 'شغل الشارع', price: 300 }], photographers: [ { id: 1, name: 'أحمد', fee: 300, token: null, isOnline: false, photoUrl: '' }, { id: 2, name: 'سارة', fee: 400, token: null, isOnline: false, photoUrl: '' }, { id: 3, name: 'محمد', fee: 350, token: null, isOnline: false, photoUrl: '' }, { id: 4, name: 'محمود المراكبى', fee: 400, token: null, isOnline: false, photoUrl: '' } ] };
         var state = JSON.parse(JSON.stringify(defaultState));
         var currentWhatsAppBookingId = null, currentEditBookingId = null, currentEditEntryId = null, currentCalMonth = new Date().getMonth(), currentCalYear = new Date().getFullYear(), isAppBooted = false, selectedCalendarDate = '';
         
@@ -641,74 +596,20 @@
         setInterval(window.updateDhikr, 15000); setTimeout(window.updateDhikr, 1000);
 
         window.defaultState = defaultState; window.state = state;
-        window.saveState = function() { if (window.saveStateToFirebase) window.saveStateToFirebase(); else localStorage.setItem('studio_pro_backup_v2', JSON.stringify(state)); };
+        window.saveState = function() { if (window.saveStateToFirebase) window.saveStateToFirebase(); else localStorage.setItem('studio_pro_local', JSON.stringify(state)); };
 
-        // --- نظام الفلاتر المستقل لكل قسم ---
-        window.isMonthMatch = function(dateVal, filterId) {
-            let activeMonth = 'all';
-            if (filterId && document.getElementById(filterId)) {
-                activeMonth = document.getElementById(filterId).value;
-            }
-            if (!activeMonth || activeMonth === 'all') return true;
+        window.setGlobalMonth = function(val) {
+            state.activeMonth = val;
+            window.saveState();
+            window.refreshAllViews();
+        };
+
+        window.isCurrentMonth = function(dateVal) {
+            if (!state.activeMonth || state.activeMonth === 'all') return true;
             if (!dateVal) return false;
             let dStr = typeof dateVal === 'number' ? new Date(dateVal).toISOString() : String(dateVal);
-            return dStr.startsWith(activeMonth);
+            return dStr.startsWith(state.activeMonth);
         };
-
-        window.getAvailableMonths = function() {
-            let months = new Set();
-            (state.bookings || []).forEach(b => { if(b.date) months.add(b.date.substring(0, 7)); });
-            (state.dailyEntries || []).forEach(d => {
-                let dDate = d.date || (d.id ? new Date(d.id).toISOString().split('T')[0] : null);
-                if(dDate) months.add(dDate.substring(0, 7));
-            });
-            return Array.from(months).sort().reverse();
-        };
-
-        window.renderMonthFilters = function() {
-            const available = window.getAvailableMonths();
-            const optionsHtml = '<option value="all">كل الشهور (الكل)</option>' + available.map(m => `<option value="${m}">${m}</option>`).join('');
-
-            const filters = [
-                { id: 'filterDashboardMonth', defaultAll: false },
-                { id: 'filterBookingsMonth', defaultAll: true }, // عرض كل الحجوزات افتراضياً بناء على طلبك
-                { id: 'filterInventoryMonth', defaultAll: false },
-                { id: 'filterReportsMonth', defaultAll: false },
-                { id: 'photogMonthFilter', defaultAll: false }
-            ];
-
-            filters.forEach(f => {
-                const el = document.getElementById(f.id);
-                if(el) {
-                    const currentVal = el.value;
-                    el.innerHTML = optionsHtml;
-                    if(currentVal && (available.includes(currentVal) || currentVal === 'all')) {
-                        el.value = currentVal;
-                    } else if (f.defaultAll) {
-                        el.value = 'all';
-                    } else {
-                        el.value = available.length > 0 ? available[0] : 'all';
-                    }
-                }
-            });
-        };
-        // ------------------------------------
-
-        // --- نظام التنبيه للمواعيد المحجوزة مسبقاً ---
-        window.checkBookingDateConflict = function() {
-            const d = el('bookingDate').value;
-            const alertDiv = el('bookingRotationAlert');
-            if(!d || !alertDiv) return;
-
-            const existingBookings = (state.bookings || []).filter(b => b.date === d && b.id !== window.currentEditBookingId);
-            if (existingBookings.length > 0) {
-                alertDiv.innerHTML = `<div class="bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 p-2 rounded-lg text-xs mt-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i> تنبيه: يوجد (${existingBookings.length}) حجز مسبق في نفس هذا اليوم!</div>`;
-            } else {
-                alertDiv.innerHTML = `<div class="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 p-2 rounded-lg text-xs mt-2 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> اليوم متاح بالكامل.</div>`;
-            }
-            if(window.lucide) lucide.createIcons();
-        };
-        // ------------------------------------
 
         window.markAsSettled = function(name) {
             (state.bookings || []).forEach(b => {
@@ -735,6 +636,14 @@
             });
         };
 
+        window.notifyPhotog = function(msg) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification('Cinema Studio Pro', { body: msg, icon: 'https://cdn-icons-png.flaticon.com/512/3178/3178158.png' });
+            } else {
+                window.showToast(msg);
+            }
+        };
+
         window.showToast = function(m, t="success") { const ts = el('toast'), tm = el('toastMessage'), ti = el('toastIcon'); if (!ts || !tm || !ti) return; tm.innerText = m; ti.className = t === "success" ? "bg-emerald-500 p-2 rounded-lg flex items-center justify-center" : "bg-red-500 p-2 rounded-lg flex items-center justify-center"; ts.classList.remove('translate-y-24', 'opacity-0'); setTimeout(() => ts.classList.add('translate-y-24', 'opacity-0'), 4000); };
         window.showConfirm = function(msg, cb) { el('confirmModalMessage').innerText = msg; el('confirmModal').classList.remove('hidden'); el('btnConfirmYes').onclick = function() { el('confirmModal').classList.add('hidden'); cb(); }; };
         window.showStatsModal = function(t, h) { const mT = el('statsModalTitleText'), mC = el('statsModalContent'); if(mT) mT.innerText = t; if(mC) mC.innerHTML = h; el('statsModal').classList.remove('hidden'); if(window.lucide) lucide.createIcons(); };
@@ -749,7 +658,7 @@
                 
                 const gearSel = el('gearRentalType');
                 if (gearSel && !window.currentEditEntryId) {
-                    gearSel.innerHTML = '<option value="external">مورد خارجي (عام)</option><option value="مورد شاشات">مورد شاشات</option><option value="مورد درون">مورد درون</option><option value="مورد كاميرات">مورد كاميرات</option>' + (state.photographers||[]).map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+                    gearSel.innerHTML = '<option value="external">من خارجي (مكتب/شخص)</option>' + (state.photographers||[]).map(p => `<option value="${p.name}">${p.name}</option>`).join('');
                 }
 
                 e.classList.remove('hidden'); 
@@ -760,17 +669,17 @@
             }
         };
 
-        window.getPhotogFinances = function(name, ignoreMonth = false, sectionId = 'filterInventoryMonth') {
+        window.getPhotogFinances = function(name, ignoreMonth = false) {
             let tE = 0, tW = 0;
             (state.bookings || []).forEach(b => { 
-                if (!ignoreMonth && !window.isMonthMatch(b.date, sectionId)) return;
+                if (!ignoreMonth && !window.isCurrentMonth(b.date)) return;
                 if (b.status === 'completed' && b.photographers?.some(px=>px.name===name)) {
                     let p = b.photographers.find(x=>x.name===name);
                     if(!p.isSettled) tE += (p.fee || 0); 
                 }
             });
             (state.dailyEntries || []).forEach(d => {
-                if (!ignoreMonth && !window.isMonthMatch(d.date || d.id, sectionId)) return;
+                if (!ignoreMonth && !window.isCurrentMonth(d.date || d.id)) return;
                 if (d.photographers?.some(px=>px.name===name)) {
                     const dP = d.photographers.find(x=>x.name===name);
                     if (d.type === 'withdrawal') {
@@ -786,6 +695,7 @@
             return { balance: tE - tW };
         };
 
+        // --- الدالة الجديدة الخاصة بفتح سجلات المصور المنفرد ---
         window.showPhotogStatLog = function(type) {
             const pName = window.currentTrackingPhotog;
             if (!pName) return window.showToast("خطأ في تحديد المصور", "error");
@@ -799,7 +709,7 @@
             const addGear = (date, note, val, id) => items.push({ date, note, val, type: 'gear', id });
 
             (state.bookings || []).forEach(b => {
-                if (!window.isMonthMatch(b.date, 'photogMonthFilter')) return;
+                if (!window.isCurrentMonth(b.date)) return;
                 if (b.status === 'completed' && b.photographers?.some(px => px.name === pName)) {
                     let pObj = b.photographers.find(px => px.name === pName);
                     if (type === 'earnings' || type === 'jobs' || type === 'net') addJob(b.date, `حجز: ${b.name}`, pObj.fee, pObj.isSettled, b.id);
@@ -809,7 +719,7 @@
 
             (state.dailyEntries || []).forEach(d => {
                 let dDate = d.date || new Date(d.id).toISOString().split('T')[0];
-                if (!window.isMonthMatch(dDate, 'photogMonthFilter')) return;
+                if (!window.isCurrentMonth(dDate)) return;
 
                 if (d.photographers?.some(px => px.name === pName)) {
                     let pObj = d.photographers.find(px => px.name === pName);
@@ -874,6 +784,7 @@
 
             window.showStatsModal(title, html);
         };
+        // -----------------------------------------------------------
 
         window.renderPayroll = function() {
             const pL = el('payrollList'); if(!pL) return;
@@ -1033,18 +944,18 @@
         window.updateGlobalFinancialCards = function() {
             let totalPending = 0;
             (state.photographers || []).forEach(p => {
-                const fin = window.getPhotogFinances(p.name, false, 'filterDashboardMonth'); 
+                const fin = window.getPhotogFinances(p.name, false); 
                 if (fin.balance > 0) totalPending += fin.balance;
             });
             document.querySelectorAll('.pending-wages-display').forEach(e => e.innerText = totalPending + " ج.م");
 
             let r = 0, e = 0, pw = 0;
             (state.bookings || []).forEach(b => { 
-                if(!window.isMonthMatch(b.date, 'filterDashboardMonth')) return;
+                if(!window.isCurrentMonth(b.date)) return;
                 if(b.status==='completed') r += (b.total || 0); else r += (b.deposit || 0); 
             });
             (state.dailyEntries || []).forEach(d => {
-                if(!window.isMonthMatch(d.date || d.id, 'filterDashboardMonth')) return;
+                if(!window.isCurrentMonth(d.date || d.id)) return;
                 r += (d.income || 0);
                 if (d.type === 'withdrawal' || d.type === 'bonus') pw += (d.totalExpenses || 0);
                 else if (d.type === 'expense') e += (d.totalExpenses || 0);
@@ -1129,7 +1040,7 @@
             let gear = null; 
             if(gN && gA > 0) { 
                 gear = { note: gN, amount: gA, assignedTo: gT }; 
-                tEx += gA;
+                tEx += gA; // تأجير المعدة يعتبر مصروف على الاستوديو في جميع الحالات
             }
             
             let flash = null; if(el('useFlashCheckbox').checked) { const fp = state.inventory.flashPrice || 50; flash = fp; tEx += fp; }
@@ -1217,14 +1128,14 @@
         };
 
         window.openBookingForDate = function(d) { selectedCalendarDate = d; el('calendarActionDateText').innerText = new Date(d).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); el('calendarActionModal').classList.remove('hidden'); lucide.createIcons(); };
-        window.handleCalendarAction = function(t) { el('calendarActionModal').classList.add('hidden'); if(t === 'booking') { window.showTab('bookings'); window.toggleBookingForm(true); const b = el('bookingDate'); if(b) { b.value = selectedCalendarDate; window.checkBookingDateConflict(); } } else if (t === 'entry') { window.showTab('inventory'); window.toggleDailyEntryForm(true); const d = el('dailyEntryDate'); if(d) d.value = selectedCalendarDate; } };
+        window.handleCalendarAction = function(t) { el('calendarActionModal').classList.add('hidden'); if(t === 'booking') { window.showTab('bookings'); window.toggleBookingForm(true); const b = el('bookingDate'); if(b) b.value = selectedCalendarDate; } else if (t === 'entry') { window.showTab('inventory'); window.toggleDailyEntryForm(true); const d = el('dailyEntryDate'); if(d) d.value = selectedCalendarDate; } };
         
         window.renderCalendar = function() {
             const cal = el('dashboardCalendar'); if(!cal) return;
             const mN = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"], myL = el('currentMonthYear'); if (myL) myL.innerText = `${mN[currentCalMonth]} ${currentCalYear}`;
             cal.innerHTML = ''; const f = new Date(currentCalYear, currentCalMonth, 1).getDay(), ds = new Date(currentCalYear, currentCalMonth + 1, 0).getDate(); let h = '';
             for(let i=0; i<f; i++) h += '<div></div>';
-            const c = {}; (state.bookings || []).forEach(b => { if(!window.isMonthMatch(b.date, 'filterDashboardMonth')) return; if(b.date) c[b.date] = (c[b.date]||0)+1; });
+            const c = {}; (state.bookings || []).forEach(b => { if(!window.isCurrentMonth(b.date)) return; if(b.date) c[b.date] = (c[b.date]||0)+1; });
             for(let i=1; i<=ds; i++) { const d = `${currentCalYear}-${String(currentCalMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`, cn = c[d] || 0; let cls = cn > 0 ? "bg-yellow-500/20 border border-yellow-500/50 text-yellow-500 font-bold" : "text-zinc-400"; if(new Date().toISOString().split('T')[0] === d) cls += " ring-1 ring-white/50"; h += `<button onclick="window.openBookingForDate('${d}')" class="calendar-day glass transition rounded relative ${cls}">${i}${cn>1 ? `<span class="absolute -top-1 -right-1 bg-red-600 text-[8px] w-3 h-3 flex items-center justify-center rounded-full text-white shadow-lg animate-pulse">${cn}</span>`:''}</button>`; } cal.innerHTML = h;
         };
 
@@ -1233,7 +1144,7 @@
             let totalPending = 0;
 
             (state.bookings || []).forEach(b => { 
-                if(!window.isMonthMatch(b.date, 'filterDashboardMonth')) return;
+                if(!window.isCurrentMonth(b.date)) return;
                 if(b.status==='completed') {
                     r += (b.total || 0); 
                 } else {
@@ -1241,7 +1152,7 @@
                 }
             }); 
             (state.dailyEntries || []).forEach(d => { 
-                if(!window.isMonthMatch(d.date || d.id, 'filterDashboardMonth')) return;
+                if(!window.isCurrentMonth(d.date || d.id)) return;
                 r += (d.income || 0); 
                 if (d.type === 'withdrawal' || d.type === 'bonus') {
                     pw += (d.totalExpenses || 0);
@@ -1254,7 +1165,7 @@
             }); 
             
             (state.photographers || []).forEach(p => {
-                const fin = window.getPhotogFinances(p.name, false, 'filterDashboardMonth'); 
+                const fin = window.getPhotogFinances(p.name, false); 
                 if (fin.balance > 0) totalPending += fin.balance;
             });
 
@@ -1265,7 +1176,7 @@
             if(sP) sP.innerText = (r - e - pw - totalPending) + " ج.م";
 
             const log = el('recentBookings'); if(!log) return; let h = '';
-            const recentFiltered = (state.dailyEntries || []).filter(a => window.isMonthMatch(a.date || a.id, 'filterDashboardMonth')).slice(-5).reverse();
+            const recentFiltered = (state.dailyEntries || []).filter(a => window.isCurrentMonth(a.date || a.id)).slice(-5).reverse();
             recentFiltered.forEach(a => { 
                 let cashOut = 0;
                 if (a.type === 'withdrawal' || a.type === 'bonus' || a.type === 'expense') cashOut = a.totalExpenses || 0;
@@ -1283,7 +1194,7 @@
 
         window.renderBookings = function() {
             const fD = el('filterBookingDate').value, fN = el('filterBookingName').value.toLowerCase(), fP = el('filterBookingPhotog').value;
-            const flt = (state.bookings || []).filter(b => window.isMonthMatch(b.date, 'filterBookingsMonth') && (!fD || b.date === fD) && (!fN || b.name.toLowerCase().includes(fN)) && (!fP || b.photographers?.some(p=>p.name===fP)));
+            const flt = (state.bookings || []).filter(b => window.isCurrentMonth(b.date) && (!fD || b.date === fD) && (!fN || b.name.toLowerCase().includes(fN)) && (!fP || b.photographers?.some(p=>p.name===fP)));
             const bT = el('bookingsTable'); if(!bT) return;
             bT.innerHTML = flt.map(b => {
                 let sH = `<span class="px-2 py-1 rounded-full text-[10px] ${b.status==='completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20':'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}">${b.status==='completed'?'تم':'معلق'}</span>`;
@@ -1328,7 +1239,7 @@
                     let pObj = b.photographers?.find(px=>px.name===p.name);
                     if(pObj) { 
                         if (b.status === 'completed') { 
-                            if (window.isMonthMatch(b.date, 'filterReportsMonth')) {
+                            if (window.isCurrentMonth(b.date)) {
                                 cC++; 
                                 uniqueDaysSet.add(b.date);
                                 if (!pObj.isSettled) {
@@ -1336,14 +1247,14 @@
                                     currentMonthPendingFee += pObj.fee;
                                 }
                             }
-                        } else if (window.isMonthMatch(b.date, 'filterReportsMonth') || new Date(b.date) >= new Date()) { 
+                        } else if (window.isCurrentMonth(b.date) || new Date(b.date) >= new Date()) { 
                             uC++; 
                         } 
                     } 
                 });
                 (state.dailyEntries || []).forEach(d => { 
                     let dDate = d.date || new Date(d.id).toISOString().split('T')[0];
-                    let isMonth = window.isMonthMatch(dDate, 'filterReportsMonth');
+                    let isMonth = window.isCurrentMonth(dDate);
 
                     if (d.type !== 'withdrawal' && d.type !== 'bonus' && d.type !== 'expense') {
                         let dP = d.photographers?.find(px=>px.name===p.name);
@@ -1387,19 +1298,23 @@
 
         window.unlockPhotogDevice = function(idx) { window.showConfirm("متأكد من فك ارتباط جهاز المصور؟", () => { state.photographers[idx].deviceLockToken = null; window.saveState(); window.showToast("تم إعادة الفتح بنجاح"); window.renderPhotographers(); }); };
 
+        // --- التعديل لحل المشكلة ---
         window.copyPhotogLink = function(name) {
             const photog = (state.photographers || []).find(p => p.name === name);
             if(photog) {
+                // توليد Token جديد إذا لم يكن المصور يمتلك واحداً لضمان حماية الرابط
                 if (!photog.token) {
                     photog.token = Math.random().toString(36).substring(2, 12) + Date.now().toString(36);
                     window.saveState();
-                    window.renderPhotographers();
+                    window.renderPhotographers(); // تحديث الواجهة لإظهار زر الإبطال
                 }
+                // إضافة الـ Token للرابط المنسوخ
                 const link = `${window.location.origin}${window.location.pathname}?photographer=${photog.slug}&token=${photog.token}`;
                 window.copyToClipboard(link, "تم نسخ رابط لوحة المصور");
             }
         };
 
+        // دالة إبطال الرابط (تُصفر الـ token وقفل الجهاز)
         window.resetPhotogDevice = function(idx) {
             window.showConfirm("متأكد من إبطال الرابط الحالي؟ سيحتاج المصور لرابط جديد وسيفقد وصوله الحالي.", () => {
                 state.photographers[idx].token = null;
@@ -1409,21 +1324,23 @@
                 window.renderPhotographers();
             });
         };
+        // -----------------------------
 
         window.updateEntryLog = function() {
             const fN = el('filterDailyNote').value.toLowerCase();
             const fP = el('filterDailyPhotog').value;
+            const fM = el('globalMonthFilter') ? el('globalMonthFilter').value : ''; 
 
             const flt = (state.dailyEntries || []).filter(e => {
                 const entryDate = e.date || new Date(e.id).toISOString().split('T')[0];
                 const matchesNote = (!fN || e.note.toLowerCase().includes(fN));
                 const matchesPhotog = (!fP || e.photographers?.some(p=>p.name===fP));
-                const matchesMonth = window.isMonthMatch(entryDate, 'filterInventoryMonth');
+                const matchesMonth = window.isCurrentMonth(entryDate);
                 return matchesNote && matchesPhotog && matchesMonth;
             });
             
             let r = 0, cBN = {}, eC = {};
-            const sE = [...(state.dailyEntries || [])].filter(x => window.isMonthMatch(x.date || x.id, 'filterInventoryMonth')).sort((a,b) => new Date(a.date||a.id) - new Date(b.date||b.id) || a.id - b.id);
+            const sE = [...(state.dailyEntries || [])].filter(x => window.isCurrentMonth(x.date || x.id)).sort((a,b) => new Date(a.date||a.id) - new Date(b.date||b.id) || a.id - b.id);
             sE.forEach(e => { if (e.type !== 'bonus' && e.type !== 'withdrawal' && e.type !== 'expense') { cBN[e.note] = (cBN[e.note] || 0) + 1; eC[e.id] = cBN[e.note]; } });
             flt.forEach(e => { r += (e.income || 0); });
             
@@ -1454,7 +1371,7 @@
 
                 let editBtn = e.type === 'entry' ? `<button onclick="event.stopPropagation(); window.editEntry(${e.id})" class="text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500 p-1.5 rounded-lg transition mr-2 flex-shrink-0"><i data-lucide="edit-2" class="w-3 h-3"></i></button>` : '';
 
-                return `<div onclick="window.showEntryDetails(${e.id})" class="glass p-4 rounded-xl border-r-4 ${borderCls} cursor-pointer hover:bg-white/5 transition hover:-translate-y-1 duration-300 flex flex-col gap-3 shadow-lg"><div class="flex justify-between items-start"><div class="flex flex-col gap-1.5"><div class="flex items-center gap-2"><div class="${bgCls} p-1.5 rounded-full"><i data-lucide="${iconName}" class="w-4 h-4 ${iconCol}"></i></div><h4 class="font-bold text-sm text-white">${e.note}</h4><span class="${labelCls} border px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">${tBT}</span></div><div class="flex items-center gap-1 text-[10px] text-zinc-400 w-fit"><i data-lucide="calendar" class="w-3 h-3"></i><span>${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</span></div></div>${fH}</div><div class="flex justify-between items-center pt-2 border-t border-white/5"><div class="flex flex-wrap items-center gap-1.5">${e.photographers?.map(p=>`<span class="flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="${e.type === 'withdrawal' ? 'user' : 'camera'}" class="w-3 h-3 text-blue-400"></i> ${p.name} <span class="text-yellow-400 font-bold">${p.isSettled ? '(مصفى) ' : 'مستحق: '+p.totalFee}</span></span>`).join('')||''}${e.gear?`<span class="flex items-center gap-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="video" class="w-3 h-3 text-indigo-400"></i> ${e.gear.note} <span class="text-red-400 font-bold">${e.gear.assignedTo !== 'external' ? '(يخص '+e.gear.assignedTo+')' : ''} -${e.gear.amount}</span></span>`:''}${e.flash?`<span class="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="usb" class="w-3 h-3 text-yellow-400"></i> فلاشة <span class="text-red-400 font-bold">-${state.inventory.flashPrice || 50}</span></span>`:''}${(!e.photographers?.length && !e.gear && !e.flash) ? '<span class="text-[9px] text-zinc-500">لا يوجد</span>' : ''}</div><div class="flex items-center">${editBtn}<button onclick="event.stopPropagation(); window.deleteEntry(${e.id})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 p-1.5 rounded-lg transition flex-shrink-0"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div></div>`;
+                return `<div onclick="window.showEntryDetails(${e.id})" class="glass p-4 rounded-xl border-r-4 ${borderCls} cursor-pointer hover:bg-white/5 transition hover:-translate-y-1 duration-300 flex flex-col gap-3 shadow-lg"><div class="flex justify-between items-start"><div class="flex flex-col gap-1.5"><div class="flex items-center gap-2"><div class="${bgCls} p-1.5 rounded-full"><i data-lucide="${iconName}" class="w-4 h-4 ${iconCol}"></i></div><h4 class="font-bold text-sm text-white">${e.note}</h4><span class="${labelCls} border px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">${tBT}</span></div><div class="flex items-center gap-1 text-[10px] text-zinc-400 w-fit"><i data-lucide="calendar" class="w-3 h-3"></i><span>${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</span></div></div>${fH}</div><div class="flex justify-between items-center pt-2 border-t border-white/5"><div class="flex flex-wrap items-center gap-1.5">${e.photographers?.map(p=>`<span class="flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="${e.type === 'withdrawal' ? 'user' : 'camera'}" class="w-3 h-3 text-blue-400"></i> ${p.name} <span class="text-yellow-400 font-bold">${p.isSettled ? '(مصفى) ' : 'مستحق: '+p.totalFee}</span></span>`).join('')||''}${e.gear?`<span class="flex items-center gap-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="video" class="w-3 h-3 text-indigo-400"></i> ${e.gear.note} <span class="text-red-400 font-bold">${e.gear.assignedTo !== 'external' ? '(من '+e.gear.assignedTo+')' : ''} -${e.gear.amount}</span></span>`:''}${e.flash?`<span class="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="usb" class="w-3 h-3 text-yellow-400"></i> فلاشة <span class="text-red-400 font-bold">-${state.inventory.flashPrice || 50}</span></span>`:''}${(!e.photographers?.length && !e.gear && !e.flash) ? '<span class="text-[9px] text-zinc-500">لا يوجد</span>' : ''}</div><div class="flex items-center">${editBtn}<button onclick="event.stopPropagation(); window.deleteEntry(${e.id})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 p-1.5 rounded-lg transition flex-shrink-0"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div></div>`;
             }).join('') || '<p class="text-zinc-500 col-span-full text-center py-4 text-sm">لا توجد سجلات في هذا الشهر</p>'; if(window.lucide) lucide.createIcons();
         };
 
@@ -1465,7 +1382,7 @@
             let totalWages = 0;
             
             (state.dailyEntries || []).forEach(e => {
-                if(!window.isMonthMatch(e.date || e.id, 'filterReportsMonth')) return;
+                if(!window.isCurrentMonth(e.date || e.id)) return;
 
                 if (e.type === 'bonus') { 
                     totalExpenses += (e.totalExpenses || 0); 
@@ -1501,7 +1418,7 @@
             });
 
             (state.bookings || []).forEach(bk => {
-                if(!window.isMonthMatch(bk.date, 'filterReportsMonth')) return;
+                if(!window.isCurrentMonth(bk.date)) return;
                 if(bk.status === 'completed') {
                     const l = 'حجوزات الاستوديو';
                     if(!hS[l]) hS[l] = { jobs: 0, income: 0, expenses: 0 };
@@ -1600,14 +1517,14 @@
             if(t === 'revenue') { 
                 l = 'الإيرادات'; 
                 (state.bookings || []).forEach(b => {
-                    if (b.status === 'completed' && window.isMonthMatch(b.date, 'filterDashboardMonth')) {
+                    if (b.status === 'completed' && window.isCurrentMonth(b.date)) {
                         i.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date});
                         addH('حجوزات الاستوديو', b.date, b.total);
                         b.photographers?.forEach(p => addP(p.name, b.date, 0));
                     }
                 }); 
                 (state.dailyEntries || []).forEach(d => {
-                    if (d.income > 0 && window.isMonthMatch(d.date||d.id, 'filterDashboardMonth')) {
+                    if (d.income > 0 && window.isCurrentMonth(d.date||d.id)) {
                         let dDate = d.date || new Date(d.id).toISOString().split('T')[0];
                         i.push({id:d.id, type:'entry', text:d.note, val:d.income, c:'text-emerald-400', s:'+', date:dDate});
                         addH(d.hall || d.note, dDate, d.income);
@@ -1617,7 +1534,7 @@
             } else if(t === 'expenses') { 
                 l = 'المصروفات العامة والمعدات والأجور المنصرفة'; 
                 (state.dailyEntries || []).forEach(d => {
-                    if (!window.isMonthMatch(d.date || d.id, 'filterDashboardMonth')) return;
+                    if (!window.isCurrentMonth(d.date || d.id)) return;
                     let dDate = d.date || new Date(d.id).toISOString().split('T')[0];
                     if (d.type === 'expense') {
                         let txt = d.hall ? `مصروف (${d.hall}): ${d.note}` : `مصروف عام: ${d.note}`;
@@ -1648,7 +1565,7 @@
                     let pendingFee = 0;
                     
                     (state.bookings || []).forEach(b => { 
-                        if (!window.isMonthMatch(b.date, 'filterDashboardMonth')) return;
+                        if (!window.isCurrentMonth(b.date)) return;
                         if(b.photographers?.some(px=>px.name===p.name)) { 
                             let pObj = b.photographers.find(px=>px.name===p.name);
                             if (b.status === 'completed' && !pObj.isSettled) { 
@@ -1658,7 +1575,7 @@
                         } 
                     });
                     (state.dailyEntries || []).forEach(d => { 
-                        if (!window.isMonthMatch(d.date || d.id, 'filterDashboardMonth')) return;
+                        if (!window.isCurrentMonth(d.date || d.id)) return;
                         
                         if(d.type !== 'withdrawal' && d.type !== 'bonus' && d.type !== 'expense' && d.photographers?.some(px=>px.name===p.name)) {
                             const dP = d.photographers.find(px=>px.name===p.name); 
@@ -1684,14 +1601,14 @@
             } else { 
                 l = 'الأرباح النقدية بالخزنة'; 
                 (state.bookings || []).forEach(b => {
-                    if (b.status === 'completed' && window.isMonthMatch(b.date, 'filterDashboardMonth')) {
+                    if (b.status === 'completed' && window.isCurrentMonth(b.date)) {
                         i.push({id:b.id, type:'booking', text:b.name, val:b.total, c:'text-emerald-400', s:'+', date:b.date});
                         addH('حجوزات الاستوديو', b.date, b.total);
                         b.photographers?.forEach(p => addP(p.name, b.date, 0));
                     }
                 }); 
                 (state.dailyEntries || []).forEach(d => { 
-                    if (!window.isMonthMatch(d.date || d.id, 'filterDashboardMonth')) return;
+                    if (!window.isCurrentMonth(d.date || d.id)) return;
                     let dDate = d.date || new Date(d.id).toISOString().split('T')[0];
                     let hn = d.hall || d.note || 'عام (بدون قاعة)';
 
@@ -1758,14 +1675,14 @@
             let i = [], s = { j: 0, i: 0, e: 0 }; 
             if(n === 'حجوزات الاستوديو') { 
                 (state.bookings || []).forEach(b => { 
-                    if(b.status === 'completed' && window.isMonthMatch(b.date, 'filterReportsMonth')) { 
+                    if(b.status === 'completed' && window.isCurrentMonth(b.date)) { 
                         s.j++; s.i += (b.total || 0); 
                         i.push({id:b.id, type:'booking', date:b.date, val:(b.total||0), text:b.name}); 
                     } 
                 }); 
             } else { 
                 (state.dailyEntries || []).forEach(d => { 
-                    if(!window.isMonthMatch(d.date || d.id, 'filterReportsMonth')) return;
+                    if(!window.isCurrentMonth(d.date || d.id)) return;
                     let matchName = d.hall || d.note;
                     if(matchName === n) { 
                         if (d.type === 'expense') {
@@ -1801,7 +1718,7 @@
             let hallsStats = {};
             
             (state.bookings || []).forEach(b => { 
-                if(!window.isMonthMatch(b.date, 'filterReportsMonth')) return;
+                if(!window.isCurrentMonth(b.date)) return;
                 if(b.photographers?.some(p => p.name === name)) { 
                     let pObj = b.photographers.find(p=>p.name===name);
                     if (b.status === 'completed') { 
@@ -1828,7 +1745,7 @@
                 } 
             });
             (state.dailyEntries || []).forEach(d => {
-                if(!window.isMonthMatch(d.date || d.id, 'filterReportsMonth')) return;
+                if(!window.isCurrentMonth(d.date || d.id)) return;
                 if (d.photographers?.some(px => px.name === name)) {
                     const feeObj = d.photographers.find(px => px.name === name);
                     const fee = feeObj.totalFee || 0;
@@ -1884,10 +1801,13 @@
                 else if(i.type === 'job' || i.type === 'job-paid') { ic = 'camera'; cC = 'text-blue-400'; bC = 'bg-blue-500/20'; s = '+'; } 
                 return `<div class="flex justify-between p-3.5 bg-white/5 rounded-xl border border-white/10 mb-2 transition hover:bg-white/10"><div class="flex items-center gap-3"><div class="${bC} p-2 rounded-full"><i data-lucide="${ic}" class="w-4 h-4 ${cC}"></i></div><div><p class="text-white text-xs font-bold mb-0.5">${i.text}</p><p class="text-[10px] text-zinc-500"><i data-lucide="calendar" class="w-3 h-3 inline mr-0.5"></i> ${new Date(i.date).toLocaleDateString('ar-EG')}</p></div></div><span class="text-sm font-bold ${cC}">${s}${i.val} ج.م</span></div>`; 
             }).join('') || '<p class="text-zinc-500 text-center py-6 glass rounded-xl border border-white/5">لا توجد حركات مسجلة</p>';
-            window.showStatsModal(`كشف حساب: ${name}`, sH + hH);
+            window.showStatsModal(`كشف حساب: ${name} ${state.activeMonth !== 'all' ? '(للشهر المحدد)' : ''}`, sH + hH);
         };
 
         window.handlePhotogMonthFilter = function() {
+            const m = el('photogMonthFilter').value;
+            state.activeMonth = m || 'all'; 
+            window.saveState();
             window.renderPhotogTracking(window.currentTrackingPhotog);
         };
 
