@@ -257,8 +257,13 @@
                             <h3 class="text-2xl font-bold text-emerald-400" id="trackPhotogNetAvailable">0 ج.م</h3>
                         </div>
 
+                        <div onclick="window.showPhotogStatLog('equipment')" class="cursor-pointer hover:bg-indigo-500/20 transition hover:-translate-y-1 bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20 text-center mb-3 shadow-lg">
+                            <p class="text-[10px] text-indigo-200/70 mb-1 font-bold">إجمالي إيجار المعدات (منفصل)</p>
+                            <h3 class="text-2xl font-bold text-indigo-400" id="trackPhotogEquipmentRental">0 ج.م</h3>
+                        </div>
+
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                            <div onclick="window.showPhotogStatLog('earnings')" class="cursor-pointer hover:bg-blue-500/20 transition hover:-translate-y-1 hover:shadow-lg bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center"><p class="text-[9px] text-blue-200/70 mb-1">أرباح (الشهر)</p><h3 class="text-sm font-bold text-blue-400" id="trackPhotogEarnings">0 ج.م</h3></div>
+                            <div onclick="window.showPhotogStatLog('earnings')" class="cursor-pointer hover:bg-blue-500/20 transition hover:-translate-y-1 hover:shadow-lg bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-center"><p class="text-[9px] text-blue-200/70 mb-1">أجور اليومية (الشهر)</p><h3 class="text-sm font-bold text-blue-400" id="trackPhotogEarnings">0 ج.م</h3></div>
                             <div onclick="window.showPhotogStatLog('withdrawals')" class="cursor-pointer hover:bg-red-500/20 transition hover:-translate-y-1 hover:shadow-lg bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center"><p class="text-[9px] text-red-200/70 mb-1">مسحوبات (الشهر)</p><h3 class="text-sm font-bold text-red-400" id="trackPhotogTotalWithdrawals">0 ج.م</h3></div>
                             <div onclick="window.showPhotogStatLog('bonuses')" class="cursor-pointer hover:bg-purple-500/20 transition hover:-translate-y-1 hover:shadow-lg bg-purple-500/10 p-3 rounded-xl border border-purple-500/20 text-center"><p class="text-[9px] text-purple-200/70 mb-1">مكافآت (الشهر)</p><h3 class="text-sm font-bold text-purple-400" id="trackPhotogTotalBonuses">0 ج.م</h3></div>
                             <div onclick="window.showPhotogStatLog('jobs')" class="cursor-pointer hover:bg-zinc-800/80 transition hover:-translate-y-1 hover:shadow-lg bg-zinc-800/50 p-3 rounded-xl border border-white/10 text-center" title="أيام عمل تمت إضافتها في الشهر المحدد"><p class="text-[9px] text-zinc-400 mb-1">أماكن/أيام (الشهر)</p><h3 class="text-sm font-bold text-white" id="trackPhotogJobs">0</h3></div>
@@ -758,7 +763,19 @@
                     balance += (d.gear.amount || 0);
                 }
             });
-            return { balance: balance };
+            let equipmentRental = 0, equipmentPending = 0;
+            (state.dailyEntries || []).forEach(d => {
+                if (!ignoreMonth && !window.isCurrentMonth(d.date || d.id)) return;
+                if (d.type === 'entry' && d.gear && d.gear.assignedTo === name) {
+                    equipmentRental += (d.gear.amount || 0);
+                    if (!d.gear.isSettled) equipmentPending += (d.gear.amount || 0);
+                }
+            });
+            return { balance: balance, equipmentRental: equipmentRental, equipmentPending: equipmentPending, photographerBalance: balance - equipmentPending };
+        };
+
+        window.getPhotogEquipmentTotal = function(name, ignoreMonth = false) {
+            return window.getPhotogFinances(name, ignoreMonth).equipmentRental || 0;
         };
 
         // --- الدالة الجديدة الخاصة بفتح سجلات المصور المنفرد ---
@@ -804,7 +821,7 @@
                     }
                 }
                 if (d.type === 'entry' && d.gear && d.gear.assignedTo === pName) {
-                    if (type === 'earnings' || type === 'net') addGear(dDate, `تأجير معدات منك: ${d.gear.note}`, d.gear.amount, d.id);
+                    if (type === 'net' || type === 'equipment') addGear(dDate, `إيجار معدات: ${d.gear.note}`, d.gear.amount, d.id);
                 }
             });
 
@@ -851,6 +868,7 @@
             if (type === 'bonuses') title = 'سجل المكافآت';
             if (type === 'jobs') title = 'سجل أماكن وأيام العمل';
             if (type === 'unsettled') title = 'سجل الأعمال المستحقة الدفع';
+            if (type === 'equipment') title = 'سجل إيجار المعدات';
 
             window.showStatsModal(title, html);
         };
@@ -1291,7 +1309,7 @@
 
             (state.photographers || []).forEach((p, i) => {
                 if(!p.slug) p.slug = window.getPhotogSlug(p.name, p.id);
-                let cC = 0, uC = 0;
+                let cC = 0, uC = 0, currentMonthEquipmentRental = 0;
                 let uniqueDaysSet = new Set();
                 let unsettledDaysSet = new Set();
                 let currentMonthPendingFee = 0;
@@ -1316,6 +1334,10 @@
                 (state.dailyEntries || []).forEach(d => { 
                     let dDate = d.date || new Date(d.id).toISOString().split('T')[0];
                     let isMonth = window.isCurrentMonth(dDate);
+
+                    if (isMonth && d.type === 'entry' && d.gear && d.gear.assignedTo === p.name) {
+                        currentMonthEquipmentRental += (d.gear.amount || 0);
+                    }
 
                     if (d.type !== 'withdrawal' && d.type !== 'bonus' && d.type !== 'expense') {
                         let dP = d.photographers?.find(px=>px.name===p.name);
@@ -1350,7 +1372,7 @@
                 
                 if(mL) mL.innerHTML += `<div class="flex flex-col gap-2 bg-black/30 p-3 rounded-lg border border-white/5 mb-2"><div class="flex gap-2 items-center"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="flex-grow p-2 text-xs font-bold bg-white/5 border border-white/10 focus:border-blue-500 rounded-lg outline-none transition"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-20 p-2 text-xs text-center font-bold bg-white/5 border border-white/10 focus:border-blue-500 rounded-lg outline-none transition" placeholder="الأجر"><button onclick="window.deletePhotographer(${i})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 transition p-2 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div><div class="flex gap-2 items-center"><input type="tel" value="${p.phone || ''}" dir="ltr" placeholder="رقم واتساب المصور" onchange="state.photographers[${i}].phone=this.value.trim();window.saveState();window.renderPhotographers();" class="flex-grow p-2 text-xs bg-white/5 border border-white/10 focus:border-green-500 rounded-lg outline-none transition"><button onclick="event.stopPropagation();window.sendPhotogWhatsApp('${p.name.replace(/'/g, "\\'")}')" class="bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white border border-green-500/30 p-2 rounded-lg transition" title="إرسال تفاصيل للمصور عبر واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button></div></div>`;
                 
-                rH += `<div onclick="window.showPhotogDetails('${p.name}')" class="cursor-pointer glass p-4 rounded-xl border-r-4 border-blue-500 hover:bg-white/5 transition flex items-center justify-between"><div><div class="flex items-center gap-2 mb-1"><h5 class="font-bold text-white text-sm">${p.name}</h5><div class="flex items-center mr-2">${oB}</div><button onclick="event.stopPropagation(); window.copyPhotogLink('${p.name}')" class="text-zinc-500 hover:text-blue-400 transition mr-2" title="نسخ رابط لوحة المصور"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="event.stopPropagation(); window.sendPhotogWhatsApp('${p.name.replace(/'/g, "\\'")}')" class="text-green-400 hover:text-white transition mr-1" title="إرسال تفاصيل عبر واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button></div><div class="flex gap-2 mt-2 mb-1.5"><span class="text-[10px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg font-bold" title="أيام مستحقة غير مصفاة">أيام مستحقة: ${unsettledDaysSet.size}</span><span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold">مهام (الشهر): ${cC}</span><span class="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-lg font-bold">قادم: ${uC}</span></div></div><div class="flex flex-col items-end gap-2"><span class="font-bold text-sm text-red-400">${currentMonthPendingFee} ج.م</span><div class="flex flex-wrap gap-2 mt-2 justify-end">${p.deviceLockToken ? `<button onclick="event.stopPropagation(); window.unlockPhotogDevice(${i})" class="text-[9px] bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded transition border border-yellow-500/30"><i data-lucide="unlock" class="w-3 h-3 inline"></i> إعادة فتح</button>` : `<span class="text-[9px] text-zinc-500 bg-black/30 px-2 py-1 rounded border border-white/5"><i data-lucide="unlock" class="w-3 h-3 inline"></i> متاح للربط</span>`}${p.token ? `<button onclick="event.stopPropagation(); window.resetPhotogDevice(${i})" class="text-[9px] bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition border border-red-500/30"><i data-lucide="refresh-cw" class="w-3 h-3 inline"></i> إبطال الرابط</button>` : ''}</div></div></div>`;
+                rH += `<div onclick="window.showPhotogDetails('${p.name}')" class="cursor-pointer glass p-4 rounded-xl border-r-4 border-blue-500 hover:bg-white/5 transition flex items-center justify-between"><div><div class="flex items-center gap-2 mb-1"><h5 class="font-bold text-white text-sm">${p.name}</h5><div class="flex items-center mr-2">${oB}</div><button onclick="event.stopPropagation(); window.copyPhotogLink('${p.name}')" class="text-zinc-500 hover:text-blue-400 transition mr-2" title="نسخ رابط لوحة المصور"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="event.stopPropagation(); window.sendPhotogWhatsApp('${p.name.replace(/'/g, "\\'")}')" class="text-green-400 hover:text-white transition mr-1" title="إرسال تفاصيل عبر واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button></div><div class="flex gap-2 mt-2 mb-1.5"><span class="text-[10px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg font-bold" title="أيام مستحقة غير مصفاة">أيام مستحقة: ${unsettledDaysSet.size}</span><span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold">مهام (الشهر): ${cC}</span><span class="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-lg font-bold">قادم: ${uC}</span></div></div><div class="flex flex-col items-end gap-2"><span class="font-bold text-sm text-red-400">${currentMonthPendingFee} ج.م</span><span class="text-[10px] text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-lg font-bold">إيجار معدات: ${currentMonthEquipmentRental} ج.م</span><div class="flex flex-wrap gap-2 mt-2 justify-end">${p.deviceLockToken ? `<button onclick="event.stopPropagation(); window.unlockPhotogDevice(${i})" class="text-[9px] bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded transition border border-yellow-500/30"><i data-lucide="unlock" class="w-3 h-3 inline"></i> إعادة فتح</button>` : `<span class="text-[9px] text-zinc-500 bg-black/30 px-2 py-1 rounded border border-white/5"><i data-lucide="unlock" class="w-3 h-3 inline"></i> متاح للربط</span>`}${p.token ? `<button onclick="event.stopPropagation(); window.resetPhotogDevice(${i})" class="text-[9px] bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition border border-red-500/30"><i data-lucide="refresh-cw" class="w-3 h-3 inline"></i> إبطال الرابط</button>` : ''}</div></div></div>`;
             });
             
             if(rL) { rL.innerHTML = rH; const rW = el('reportTotalWages'); if(rW) rW.innerText = tW + " ج.م"; }
@@ -1374,6 +1396,7 @@
 
         window.getPhotogWhatsAppMessage = function(p) {
             const fin = window.getPhotogFinances(p.name, true);
+            const equipmentRental = fin.equipmentRental || 0;
             const withdrawals = (state.dailyEntries || [])
                 .filter(d => d.type === 'withdrawal' && d.photographers?.some(x => x.name === p.name))
                 .map(d => ({ date: d.date || new Date(d.id).toISOString().split('T')[0], amount: Math.abs(d.photographers.find(x => x.name === p.name)?.totalFee || 0) }))
@@ -1382,7 +1405,7 @@
             const withdrawalLines = withdrawals.length
                 ? withdrawals.slice(0, 10).map(item => `- ${item.date}: ${item.amount} ج.م`).join('\n')
                 : '- لا توجد سحوبات مسجلة';
-            return `أهلاً ${p.name} 🎬\n\nتفاصيل حسابك الحالي:\n💰 الرصيد المتاح/المستحق: ${fin.balance} ج.م\n💸 إجمالي السحوبات: ${totalWithdrawals} ج.م\n\nتفاصيل آخر السحوبات:\n${withdrawalLines}\n\nيمكنك متابعة حسابك ومواعيدك وسحوباتك من خلال لوحة المصور الخاصة بك:\n${window.getPhotogLink(p)}\n\nيرجى الاحتفاظ بهذا الرابط وعدم مشاركته مع الآخرين.`;
+            return `أهلاً ${p.name} 🎬\n\nتفاصيل حسابك الحالي:\n💰 الرصيد المتاح/المستحق من التصوير: ${fin.photographerBalance} ج.م\n🎥 إجمالي إيجار المعدات: ${equipmentRental} ج.م\n💸 إجمالي السحوبات: ${totalWithdrawals} ج.م\n\nتفاصيل آخر السحوبات:\n${withdrawalLines}\n\nيمكنك متابعة حسابك ومواعيدك وسحوباتك من خلال لوحة المصور الخاصة بك:\n${window.getPhotogLink(p)}\n\nيرجى الاحتفاظ بهذا الرابط وعدم مشاركته مع الآخرين.`;
         };
 
         window.sendPhotogWhatsApp = function(name) {
@@ -1414,8 +1437,8 @@
             const p = (state.photographers || []).find(x => x.name === name);
             const phone = p ? window.normalizePhotogPhone(p.phone) : '';
             if (!p || !phone) return;
-            const balance = window.getPhotogFinances(name, true).balance;
-            const message = `أهلاً ${name} 🎬\n\nتم تسجيل سحب جديد في حسابك:\n💸 مبلغ السحب: ${amount} ج.م\n💰 الرصيد المتاح/المستحق بعد السحب: ${balance} ج.م\n\n${window.getPhotogWhatsAppMessage(p)}\n\nهذه رسالة إشعار تلقائية من Cinema Studio Pro.`;
+            const fin = window.getPhotogFinances(name, true);
+            const message = `أهلاً ${name} 🎬\n\nتم تسجيل سحب جديد في حسابك:\n💸 مبلغ السحب: ${amount} ج.م\n💰 رصيد التصوير بعد السحب: ${fin.photographerBalance} ج.م\n🎥 إجمالي إيجار المعدات: ${fin.equipmentRental} ج.م\n\n${window.getPhotogWhatsAppMessage(p)}\n\nهذه رسالة إشعار تلقائية من Cinema Studio Pro.`;
             window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
         };
 
@@ -1863,7 +1886,7 @@
 
         window.showPhotogDetails = function(name) {
             if (!el('photographerTrackingView').classList.contains('hidden') && window.currentTrackingPhotog !== name) return window.showToast("لا يمكن عرض تفاصيل مصور آخر لضمان الخصوصية", "error");
-            let tE = 0, jC = 0, uC = 0, tB = 0, tW = 0, items = [];
+            let tE = 0, tGear = 0, jC = 0, uC = 0, tB = 0, tW = 0, items = [];
             let uniqueDaysSet = new Set();
             let unsettledDaysSet = new Set();
             let hallsStats = {};
@@ -1935,8 +1958,8 @@
                 }
                 
                 if (d.type === 'entry' && d.gear && d.gear.assignedTo === name) {
-                    tE += (d.gear.amount || 0);
-                    items.push({ date: d.date || d.id, text: `تأجير معدات منك للاستوديو: ${d.gear.note}`, val: (d.gear.amount||0), type: 'job-paid', id: d.id });
+                    tGear += (d.gear.amount || 0);
+                    items.push({ date: d.date || d.id, text: `إيجار معدات: ${d.gear.note}`, val: (d.gear.amount||0), type: 'gear-rental', id: d.id });
                 }
             });
             jC = uniqueDaysSet.size;
@@ -1949,11 +1972,12 @@
             if(Object.keys(hallsStats).length === 0) hallsHtml = '';
 
             items.sort((a,b) => new Date(b.date) - new Date(a.date)); let nB = tE - tW, tD = jC + uC;
-            let sH = `<div class="glass p-5 rounded-xl mb-6 border border-blue-500/20 shadow-lg"><div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 text-center"><div class="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20"><p class="text-[10px] text-blue-300 mb-1" title="أيام عمل فريدة">أيام العمل</p><p class="font-bold text-blue-400 text-lg">${jC}</p><p class="text-[8px] text-blue-300/70 mt-1 font-bold">${jC} فعلي | ${uC} قادم</p></div><div class="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20"><p class="text-[10px] text-emerald-300 mb-1">المستحقات</p><p class="font-bold text-emerald-400 text-lg">${tE}</p></div><div class="bg-purple-500/10 p-3 rounded-lg border border-purple-500/20"><p class="text-[10px] text-purple-300 mb-1">المكافآت</p><p class="font-bold text-purple-400 text-lg">${tB}</p></div><div class="bg-red-500/10 p-3 rounded-lg border border-red-500/20"><p class="text-[10px] text-red-300 mb-1">المسحوبات</p><p class="font-bold text-red-400 text-lg">${tW}</p></div></div><div class="bg-black/30 p-3.5 rounded-lg border border-white/10 flex justify-between items-center"><span class="text-sm font-bold text-zinc-300">الرصيد المتاح (بعد السحب):</span><span class="text-xl font-bold ${nB>=0?'text-emerald-400':'text-red-400'}">${nB} ج.م</span></div>${hallsHtml}</div><h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>`;
+            let sH = `<div class="glass p-5 rounded-xl mb-6 border border-blue-500/20 shadow-lg"><div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5 text-center"><div class="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20"><p class="text-[10px] text-blue-300 mb-1" title="أيام عمل فريدة">أيام العمل</p><p class="font-bold text-blue-400 text-lg">${jC}</p><p class="text-[8px] text-blue-300/70 mt-1 font-bold">${jC} فعلي | ${uC} قادم</p></div><div class="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20"><p class="text-[10px] text-emerald-300 mb-1">أجور اليومية</p><p class="font-bold text-emerald-400 text-lg">${tE}</p></div><div class="bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20"><p class="text-[10px] text-indigo-300 mb-1">إيجار المعدات</p><p class="font-bold text-indigo-400 text-lg">${tGear}</p></div><div class="bg-purple-500/10 p-3 rounded-lg border border-purple-500/20"><p class="text-[10px] text-purple-300 mb-1">المكافآت</p><p class="font-bold text-purple-400 text-lg">${tB}</p></div><div class="bg-red-500/10 p-3 rounded-lg border border-red-500/20"><p class="text-[10px] text-red-300 mb-1">المسحوبات</p><p class="font-bold text-red-400 text-lg">${tW}</p></div></div><div class="bg-black/30 p-3.5 rounded-lg border border-white/10 flex justify-between items-center"><span class="text-sm font-bold text-zinc-300">الرصيد المتاح (بعد السحب):</span><span class="text-xl font-bold ${nB>=0?'text-emerald-400':'text-red-400'}">${nB} ج.م</span></div>${hallsHtml}</div><h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>`;
             const hH = items.map(i => { 
                 let ic = 'check-circle', cC = 'text-emerald-400', bC = 'bg-emerald-500/20', s = '+'; 
                 if(i.type === 'withdrawal') { ic = 'wallet'; cC = 'text-red-400'; bC = 'bg-red-500/20'; s = '-'; } 
                 else if(i.type === 'bonus') { ic = 'gift'; cC = 'text-purple-400'; bC = 'bg-purple-500/20'; s = '+'; } 
+                else if(i.type === 'gear-rental') { ic = 'video'; cC = 'text-indigo-400'; bC = 'bg-indigo-500/20'; s = '+'; }
                 else if(i.type === 'job' || i.type === 'job-paid') { ic = 'camera'; cC = 'text-blue-400'; bC = 'bg-blue-500/20'; s = '+'; } 
                 return `<div class="flex justify-between p-3.5 bg-white/5 rounded-xl border border-white/10 mb-2 transition hover:bg-white/10"><div class="flex items-center gap-3"><div class="${bC} p-2 rounded-full"><i data-lucide="${ic}" class="w-4 h-4 ${cC}"></i></div><div><p class="text-white text-xs font-bold mb-0.5">${i.text}</p><p class="text-[10px] text-zinc-500"><i data-lucide="calendar" class="w-3 h-3 inline mr-0.5"></i> ${new Date(i.date).toLocaleDateString('ar-EG')}</p></div></div><span class="text-sm font-bold ${cC}">${s}${i.val} ج.م</span></div>`; 
             }).join('') || '<p class="text-zinc-500 text-center py-6 glass rounded-xl border border-white/5">لا توجد حركات مسجلة</p>';
@@ -2022,7 +2046,7 @@
             // const mf = el('photogMonthFilter');
             // if(mf) mf.value = state.activeMonth !== 'all' ? state.activeMonth : '';
 
-            let uB = [], tE = 0, tW = 0, jC = 0, tB = 0;
+            let uB = [], tE = 0, tGear = 0, tW = 0, jC = 0, tB = 0;
             let uniqueDaysSet = new Set();
             let unsettledDaysSet = new Set();
             let items = [];
@@ -2085,9 +2109,9 @@
                     }
                 }
                 
-                if (d.type === 'entry' && d.gear && d.gear.assignedTo === p.name && !d.gear.isSettled) {
-                    tE += (d.gear.amount || 0);
-                    items.push({ date: d.date || d.id, text: `تأجير معدات منك للاستوديو: ${d.gear.note}`, val: (d.gear.amount || 0), type: 'job-paid', id: d.id });
+                if (d.type === 'entry' && d.gear && d.gear.assignedTo === p.name) {
+                    tGear += (d.gear.amount || 0);
+                    if (!d.gear.isSettled) items.push({ date: d.date || d.id, text: `إيجار معدات: ${d.gear.note}`, val: (d.gear.amount || 0), type: 'gear-rental', id: d.id });
                 }
             });
 
@@ -2111,6 +2135,8 @@
             }
 
             el('trackPhotogEarnings').innerText = `${tE} ج.م`;
+            const equipmentEl = el('trackPhotogEquipmentRental');
+            if (equipmentEl) equipmentEl.innerText = `${tGear} ج.م`;
             el('trackPhotogTotalWithdrawals').innerText = `${tW} ج.م`;
             el('trackPhotogTotalBonuses').innerText = `${tB} ج.م`;
             el('trackPhotogJobs').innerText = unsettledDaysSet.size;
