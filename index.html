@@ -571,7 +571,7 @@
         }
 
         async function initAuth() {
-            try { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { await signInAnonymously(auth); } } else { await signInAnonymously(auth); } } catch (e) { console.error("Auth Fail:", e); }
+            try { if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { await signInAnonymously(auth); } } else { await signInAnonymously(auth); } } catch (e) { console.error("Auth Fail:", e); if (window.startLocalFallback) window.startLocalFallback(); }
         }
         initAuth();
 
@@ -595,7 +595,7 @@
                         
                         if (!window.isAppBooted) window.bootApp(); else window.refreshAllViews();
                     } else { setDoc(stateRef, window.state).then(() => window.bootApp()); }
-                }, (err) => console.error("Snapshot error:", err));
+                }, (err) => { console.error("Snapshot error:", err); if (window.startLocalFallback) window.startLocalFallback(); });
                 
                 window.saveStateToFirebase = () => { 
                     if (dbSaveTimeout) clearTimeout(dbSaveTimeout);
@@ -609,7 +609,7 @@
 
     <script>
         const el = id => document.getElementById(id);
-        var defaultState = { isLoggedIn: false, activeMonth: new Date().toISOString().slice(0, 7), bookings: [], dailyEntries: [], finances: { revenue: 0, expenses: 0 }, selectedServices: [], services: [{ id: 1, name: 'جلسة تصوير', price: 1000 }, { id: 2, name: 'مونتاج فيديو', price: 2500 }, { id: 3, name: 'مكياج', price: 800 }, { id: 4, name: 'طباعة', price: 400 }], templates: [{ id: 1, name: 'قاعة 1', price: 150 }, { id: 2, name: 'شغل الشارع', price: 300 }], photographers: [ { id: 1, name: 'أحمد', fee: 300, token: null, isOnline: false, photoUrl: '' }, { id: 2, name: 'سارة', fee: 400, token: null, isOnline: false, photoUrl: '' }, { id: 3, name: 'محمد', fee: 350, token: null, isOnline: false, photoUrl: '' }, { id: 4, name: 'محمود المراكبى', fee: 400, token: null, isOnline: false, photoUrl: '' } ] };
+        var defaultState = { isLoggedIn: false, activeMonth: new Date().toISOString().slice(0, 7), bookings: [], dailyEntries: [], finances: { revenue: 0, expenses: 0 }, selectedServices: [], services: [{ id: 1, name: 'جلسة تصوير', price: 1000 }, { id: 2, name: 'مونتاج فيديو', price: 2500 }, { id: 3, name: 'مكياج', price: 800 }, { id: 4, name: 'طباعة', price: 400 }], templates: [{ id: 1, name: 'قاعة 1', price: 150 }, { id: 2, name: 'شغل الشارع', price: 300 }], photographers: [ { id: 1, name: 'أحمد', fee: 300, phone: '', token: null, isOnline: false, photoUrl: '' }, { id: 2, name: 'سارة', fee: 400, phone: '', token: null, isOnline: false, photoUrl: '' }, { id: 3, name: 'محمد', fee: 350, phone: '', token: null, isOnline: false, photoUrl: '' }, { id: 4, name: 'محمود المراكبى', fee: 400, phone: '', token: null, isOnline: false, photoUrl: '' } ] };
         var state = JSON.parse(JSON.stringify(defaultState));
         var currentWhatsAppBookingId = null, currentEditBookingId = null, currentEditEntryId = null, currentCalMonth = new Date().getMonth(), currentCalYear = new Date().getFullYear(), isAppBooted = false, selectedCalendarDate = '';
         
@@ -667,6 +667,9 @@
                 if (d.photographers) {
                     let p = d.photographers.find(x => x.name === name);
                     if (p) p.isSettled = true;
+                }
+                if (d.type === 'entry' && d.gear && d.gear.assignedTo === name) {
+                    d.gear.isSettled = true;
                 }
             });
         };
@@ -733,7 +736,7 @@
                         }
                     }
                 }
-                if (d.type === 'entry' && d.gear && d.gear.assignedTo === name) {
+                if (d.type === 'entry' && d.gear && d.gear.assignedTo === name && !d.gear.isSettled) {
                     balance += (d.gear.amount || 0);
                 }
             });
@@ -1325,9 +1328,9 @@
                 
                 if(eL) eL.innerHTML += `<div class="flex gap-2 items-center mb-1"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="flex-grow p-1 text-xs"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-16 p-1 text-xs text-center"><button onclick="window.deletePhotographer(${i})" class="text-red-500 transition hover:bg-white/5 p-1 rounded"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
                 
-                if(mL) mL.innerHTML += `<div class="flex flex-col gap-2 bg-black/30 p-3 rounded-lg border border-white/5 mb-2"><div class="flex gap-2 items-center"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="flex-grow p-2 text-xs font-bold bg-white/5 border border-white/10 focus:border-blue-500 rounded-lg outline-none transition"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-20 p-2 text-xs text-center font-bold bg-white/5 border border-white/10 focus:border-blue-500 rounded-lg outline-none transition" placeholder="الأجر"><button onclick="window.deletePhotographer(${i})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 transition p-2 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`;
+                if(mL) mL.innerHTML += `<div class="flex flex-col gap-2 bg-black/30 p-3 rounded-lg border border-white/5 mb-2"><div class="flex gap-2 items-center"><input type="text" value="${p.name}" onchange="state.photographers[${i}].name=this.value;window.saveState();window.renderPhotographers();" class="flex-grow p-2 text-xs font-bold bg-white/5 border border-white/10 focus:border-blue-500 rounded-lg outline-none transition"><input type="number" value="${p.fee}" onchange="state.photographers[${i}].fee=parseFloat(this.value);window.saveState();window.renderPhotographers();" class="w-20 p-2 text-xs text-center font-bold bg-white/5 border border-white/10 focus:border-blue-500 rounded-lg outline-none transition" placeholder="الأجر"><button onclick="window.deletePhotographer(${i})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 transition p-2 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div><div class="flex gap-2 items-center"><input type="tel" value="${p.phone || ''}" dir="ltr" placeholder="رقم واتساب المصور" onchange="state.photographers[${i}].phone=this.value.trim();window.saveState();window.renderPhotographers();" class="flex-grow p-2 text-xs bg-white/5 border border-white/10 focus:border-green-500 rounded-lg outline-none transition"><button onclick="event.stopPropagation();window.sendPhotogWhatsApp('${p.name.replace(/'/g, "\\'")}')" class="bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white border border-green-500/30 p-2 rounded-lg transition" title="إرسال تفاصيل للمصور عبر واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button></div></div>`;
                 
-                rH += `<div onclick="window.showPhotogDetails('${p.name}')" class="cursor-pointer glass p-4 rounded-xl border-r-4 border-blue-500 hover:bg-white/5 transition flex items-center justify-between"><div><div class="flex items-center gap-2 mb-1"><h5 class="font-bold text-white text-sm">${p.name}</h5><div class="flex items-center mr-2">${oB}</div><button onclick="event.stopPropagation(); window.copyPhotogLink('${p.name}')" class="text-zinc-500 hover:text-blue-400 transition mr-2" title="نسخ رابط لوحة المصور"><i data-lucide="link" class="w-3 h-3"></i></button></div><div class="flex gap-2 mt-2 mb-1.5"><span class="text-[10px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg font-bold" title="أيام مستحقة غير مصفاة">أيام مستحقة: ${unsettledDaysSet.size}</span><span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold">مهام (الشهر): ${cC}</span><span class="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-lg font-bold">قادم: ${uC}</span></div></div><div class="flex flex-col items-end gap-2"><span class="font-bold text-sm text-red-400">${currentMonthPendingFee} ج.م</span><div class="flex flex-wrap gap-2 mt-2 justify-end">${p.deviceLockToken ? `<button onclick="event.stopPropagation(); window.unlockPhotogDevice(${i})" class="text-[9px] bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded transition border border-yellow-500/30"><i data-lucide="unlock" class="w-3 h-3 inline"></i> إعادة فتح</button>` : `<span class="text-[9px] text-zinc-500 bg-black/30 px-2 py-1 rounded border border-white/5"><i data-lucide="unlock" class="w-3 h-3 inline"></i> متاح للربط</span>`}${p.token ? `<button onclick="event.stopPropagation(); window.resetPhotogDevice(${i})" class="text-[9px] bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition border border-red-500/30"><i data-lucide="refresh-cw" class="w-3 h-3 inline"></i> إبطال الرابط</button>` : ''}</div></div></div>`;
+                rH += `<div onclick="window.showPhotogDetails('${p.name}')" class="cursor-pointer glass p-4 rounded-xl border-r-4 border-blue-500 hover:bg-white/5 transition flex items-center justify-between"><div><div class="flex items-center gap-2 mb-1"><h5 class="font-bold text-white text-sm">${p.name}</h5><div class="flex items-center mr-2">${oB}</div><button onclick="event.stopPropagation(); window.copyPhotogLink('${p.name}')" class="text-zinc-500 hover:text-blue-400 transition mr-2" title="نسخ رابط لوحة المصور"><i data-lucide="link" class="w-3 h-3"></i></button><button onclick="event.stopPropagation(); window.sendPhotogWhatsApp('${p.name.replace(/'/g, "\\'")}')" class="text-green-400 hover:text-white transition mr-1" title="إرسال تفاصيل عبر واتساب"><i data-lucide="message-circle" class="w-4 h-4"></i></button></div><div class="flex gap-2 mt-2 mb-1.5"><span class="text-[10px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg font-bold" title="أيام مستحقة غير مصفاة">أيام مستحقة: ${unsettledDaysSet.size}</span><span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg font-bold">مهام (الشهر): ${cC}</span><span class="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-lg font-bold">قادم: ${uC}</span></div></div><div class="flex flex-col items-end gap-2"><span class="font-bold text-sm text-red-400">${currentMonthPendingFee} ج.م</span><div class="flex flex-wrap gap-2 mt-2 justify-end">${p.deviceLockToken ? `<button onclick="event.stopPropagation(); window.unlockPhotogDevice(${i})" class="text-[9px] bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500 hover:text-white px-2 py-1 rounded transition border border-yellow-500/30"><i data-lucide="unlock" class="w-3 h-3 inline"></i> إعادة فتح</button>` : `<span class="text-[9px] text-zinc-500 bg-black/30 px-2 py-1 rounded border border-white/5"><i data-lucide="unlock" class="w-3 h-3 inline"></i> متاح للربط</span>`}${p.token ? `<button onclick="event.stopPropagation(); window.resetPhotogDevice(${i})" class="text-[9px] bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded transition border border-red-500/30"><i data-lucide="refresh-cw" class="w-3 h-3 inline"></i> إبطال الرابط</button>` : ''}</div></div></div>`;
             });
             
             if(rL) { rL.innerHTML = rH; const rW = el('reportTotalWages'); if(rW) rW.innerText = tW + " ج.م"; }
@@ -1347,6 +1350,20 @@
                 const link = `${window.location.origin}${window.location.pathname}?photographer=${photog.slug}&token=${photog.token}`;
                 window.copyToClipboard(link, "تم نسخ رابط لوحة المصور");
             }
+        };
+
+        window.sendPhotogWhatsApp = function(name) {
+            const p = (state.photographers || []).find(x => x.name === name);
+            if (!p) return window.showToast("لم يتم العثور على المصور", "error");
+            const raw = String(p.phone || '').replace(/\D/g, '');
+            if (!raw) return window.showToast("أضف رقم واتساب للمصور أولاً من إدارة المصورين", "error");
+            let phone = raw.replace(/^00/, '');
+            if (phone.startsWith('0')) phone = '20' + phone.substring(1);
+            const fin = window.getPhotogFinances(name, true);
+            const slug = p.slug || window.getPhotogSlug(p.name, p.id);
+            const link = `${window.location.origin}${window.location.pathname}?photographer=${slug}${p.token ? `&token=${p.token}` : ''}`;
+            const message = `أهلاً ${p.name} 🎬\n\nتفاصيل حسابك الحالي:\n💰 الرصيد المستحق: ${fin.balance} ج.م\n📅 يمكنك متابعة مواعيدك وأعمالك وسحوباتك من خلال لوحة المصور الخاصة بك:\n${link}\n\nيرجى الاحتفاظ بهذا الرابط وعدم مشاركته مع الآخرين.`;
+            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
         };
 
         window.resetPhotogDevice = function(idx) {
@@ -1382,7 +1399,7 @@
                     else if (d.type === 'bonus') tE += (dP.totalFee || 0);
                     else if (d.type === 'entry' && !dP.isSettled && !dP.isPaidImmediately) tE += (dP.totalFee || 0);
                 }
-                if (d.type === 'entry' && d.gear && d.gear.assignedTo === pName) {
+                if (d.type === 'entry' && d.gear && d.gear.assignedTo === pName && !d.gear.isSettled) {
                     tE += (d.gear.amount || 0);
                 }
             });
@@ -1671,7 +1688,7 @@
                             }
                         }
                         
-                        if (d.type === 'entry' && d.gear && d.gear.assignedTo === p.name) {
+                        if (d.type === 'entry' && d.gear && d.gear.assignedTo === p.name && !d.gear.isSettled) {
                             pendingFee += d.gear.amount;
                         }
                     });
@@ -2008,7 +2025,7 @@
                     }
                 }
                 
-                if (d.type === 'entry' && d.gear && d.gear.assignedTo === p.name) {
+                if (d.type === 'entry' && d.gear && d.gear.assignedTo === p.name && !d.gear.isSettled) {
                     tE += (d.gear.amount || 0);
                     items.push({ date: d.date || d.id, text: `تأجير معدات منك للاستوديو: ${d.gear.note}`, val: (d.gear.amount || 0), type: 'job-paid', id: d.id });
                 }
@@ -2067,7 +2084,7 @@
                             monthUnsettledAmount += (pObj.totalFee || 0);
                         }
                     }
-                    if (window.isCurrentMonth(d.date || d.id) && d.type === 'entry' && d.gear && d.gear.assignedTo === p.name) {
+                    if (window.isCurrentMonth(d.date || d.id) && d.type === 'entry' && d.gear && d.gear.assignedTo === p.name && !d.gear.isSettled) {
                         monthUnsettledAmount += (d.gear.amount || 0);
                     }
                 });
@@ -2255,6 +2272,17 @@
                 if(window.lucide) lucide.createIcons();
             } catch(e) { console.error(e); } 
         };
+
+        // تشغيل احتياطي: لا نترك المستخدم عالقاً إذا تأخر Firebase أو تعذر تحميله.
+        window.startLocalFallback = function() {
+            if (window.isAppBooted) return;
+            try {
+                const saved = localStorage.getItem('studio_pro_local');
+                if (saved) window.state = { ...window.defaultState, ...JSON.parse(saved) };
+            } catch(e) { console.error('Local data load failed:', e); }
+            if (window.bootApp) window.bootApp();
+        };
+        setTimeout(() => { if (!window.isAppBooted) window.startLocalFallback(); }, 4000);
 
         window.checkLogin = function() { if (el('loginPass').value === "271192@") { el('loginOverlay').classList.add('hidden'); el('mainContent').classList.remove('hidden'); window.refreshAllViews(); } else { const e = el('loginError'); if(e) { e.classList.remove('hidden'); setTimeout(() => e.classList.add('hidden'), 3000); } } };
         window.adminLogout = function() { location.href = window.location.origin + window.location.pathname; };
