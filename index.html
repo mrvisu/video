@@ -289,7 +289,7 @@
                 <div>
                     <div class="glass p-6 border border-white/10 rounded-2xl relative overflow-hidden">
                         <div class="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-emerald-500 via-blue-500 to-purple-500"></div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 mb-6"><h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="wallet" class="text-emerald-400"></i> المحفظة <span class="text-[10px] text-zinc-400 font-normal">(أرقام الشهر المحدد)</span></h3><button onclick="window.showPhotogStatLog('all')" class="bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 text-blue-300 px-3 py-2 rounded-lg text-[11px] font-bold flex items-center gap-1.5"><i data-lucide="scroll-text" class="w-4 h-4"></i> سجل كل العمليات</button></div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-6"><h3 class="text-lg font-bold text-white flex items-center gap-2"><i data-lucide="wallet" class="text-emerald-400"></i> المحفظة <span class="text-[10px] text-zinc-400 font-normal">(أرقام الشهر المحدد)</span></h3><button onclick="window.showPhotogStatLog('all')" class="bg-blue-500/15 hover:bg-blue-500/30 border border-blue-500/30 text-blue-300 px-3 py-2 rounded-lg text-[11px] font-bold flex items-center gap-1.5"><i data-lucide="scroll-text" class="w-4 h-4"></i> سجل عمليات الشهر</button></div>
                         
                         <!-- البطاقة للرصيد المتاح الفعلي الكلي بعد السحب -->
                         <div onclick="window.showPhotogStatLog('net')" class="cursor-pointer hover:bg-emerald-500/20 transition hover:-translate-y-1 hover:shadow-lg bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 text-center mb-3 shadow-lg">
@@ -379,7 +379,7 @@
     <!-- الإدارة الرئيسية -->
     <div id="mainContent" class="hidden">
         <nav class="sticky top-0 z-50 glass m-4 mb-8 flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-4 gap-4">
-            <div class="flex items-center gap-3"><i data-lucide="clapperboard" class="cinema-red w-6 h-6 sm:w-8 sm:h-8"></i><h2 class="text-lg sm:text-xl font-bold hidden md:block">MRAKBY.Visuals</h2></div>
+            <div class="flex items-center gap-3"><i data-lucide="clapperboard" class="cinema-red w-6 h-6 sm:w-8 sm:h-8"></i><h2 class="text-lg sm:text-xl font-bold hidden md:block">لوحة التحكم السينمائية</h2></div>
             <div class="flex gap-2 sm:gap-4 overflow-x-auto no-scrollbar mx-auto w-full sm:w-auto justify-center">
                 <button onclick="window.showTab('dashboard')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> الإحصائيات</button>
                 <button onclick="window.showTab('bookings')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="calendar-plus" class="w-4 h-4"></i> الحجوزات</button>
@@ -839,6 +839,7 @@
 
             let items = [];
             let title = '';
+            const logMonthKey = state.activeMonth && state.activeMonth !== 'all' ? state.activeMonth : new Date().toISOString().slice(0, 7);
 
             const addJob = (date, note, val, isSettled, id) => items.push({ date, note, val, isSettled, type: 'job', id });
             const addWithdrawal = (date, note, val, id) => items.push({ date, note, val, type: 'withdrawal', id });
@@ -846,7 +847,7 @@
             const addGear = (date, note, val, id) => items.push({ date, note, val, type: 'gear', id });
 
             (state.bookings || []).forEach(b => {
-                if (type !== 'all' && !window.isCurrentMonth(b.date)) return;
+                if (type === 'all' ? !String(b.date || '').startsWith(logMonthKey) : !window.isCurrentMonth(b.date)) return;
                 if (b.status === 'completed' && b.photographers?.some(px => px.name === pName)) {
                     let pObj = b.photographers.find(px => px.name === pName);
                     if (type === 'all' || type === 'earnings' || type === 'jobs' || type === 'net') addJob(b.date, `حجز: ${b.name}`, pObj.fee, pObj.isSettled, b.id);
@@ -856,7 +857,7 @@
 
             (state.dailyEntries || []).forEach(d => {
                 let dDate = d.date || new Date(d.id).toISOString().split('T')[0];
-                if (type !== 'all' && !window.isCurrentMonth(dDate)) return;
+                if (type === 'all' ? !String(dDate || '').startsWith(logMonthKey) : !window.isCurrentMonth(dDate)) return;
 
                 if (d.photographers?.some(px => px.name === pName)) {
                     let pObj = d.photographers.find(px => px.name === pName);
@@ -916,7 +917,7 @@
                 html += '</div>';
             }
 
-            if (type === 'all') title = 'كشف حساب المصور — كل العمليات';
+            if (type === 'all') title = 'كشف حساب المصور — عمليات الشهر المحدد';
             if (type === 'net') title = 'السجل المالي الشامل';
             if (type === 'earnings') title = 'سجل الأرباح (الدخل)';
             if (type === 'withdrawals') title = 'سجل المسحوبات النقدية';
@@ -1503,7 +1504,7 @@
    ${jobs.join('\n   ')}` : ''}`;
             });
             const formattedDate = new Date(`${date}T12:00:00`).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            return `🎬 جدول عمل المصورين\n━━━━━━━━━━━━━━\n📅 التاريخ: ${formattedDate}\n\n${lines.join('\n\n')}\n\nيرجى تأكيد الحضور والالتزام بموعد العمل.\nمع تمنياتنا بيوم عمل موفق — MR.Visuals`;
+            return `🎬 جدول عمل المصورين\n━━━━━━━━━━━━━━\n📅 التاريخ: ${formattedDate}\n\n${lines.join('\n\n')}\n\nيرجى تأكيد الحضور والالتزام بموعد العمل.\nمع تمنياتنا بيوم عمل موفق — Cinema Studio Pro`;
         };
 
         window.refreshWorkGroupMessagePreview = function() {
@@ -1526,6 +1527,16 @@
         window.toggleAllWorkGroupPhotogs = function() {
             const boxes = Array.from(document.querySelectorAll('.work-group-photog'));
             const shouldCheck = boxes.some(x => !x.checked); boxes.forEach(x => x.checked = shouldCheck); window.refreshWorkGroupMessagePreview();
+        };
+
+        window.sendWorkGroupWhatsApp = function() {
+            const message = window.buildWorkGroupMessage();
+            if (!message) return window.showToast('اختر تاريخ العمل ومصوراً واحداً على الأقل', 'error');
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            // Keep navigation directly within the user click to avoid popup blockers on mobile browsers.
+            const waWindow = window.open(whatsappUrl, '_blank');
+            if (!waWindow) window.location.href = whatsappUrl;
+            el('workGroupWhatsAppModal').classList.add('hidden');
         };
 
         window.notifyPhotogWithdrawal = function(name, amount) {
