@@ -540,6 +540,7 @@
                         <div class="flex items-center justify-between w-full xl:w-auto bg-black/30 p-3 rounded-xl xl:bg-transparent xl:p-0 border border-white/5 xl:border-none gap-4">
                             <div class="text-center border-l border-white/10 pl-4 flex-1 xl:flex-auto"><p class="text-[9px] text-zinc-400 mb-1">صافي الدرج</p><span class="net-profit-display text-sm text-blue-400 font-bold whitespace-nowrap">0 ج.م</span></div>
                             <div class="text-center border-l border-white/10 pl-4 flex-1 xl:flex-auto"><p class="text-[9px] text-zinc-400 mb-1">أجور معلقة (خصم)</p><span class="pending-wages-display text-sm text-yellow-400 font-bold whitespace-nowrap">0 ج.م</span></div>
+                            <div class="text-center border-l border-white/10 pl-4 flex-1 xl:flex-auto"><p class="text-[9px] text-indigo-300 mb-1">الرصيد المتاح للمصورين</p><span id="reportAvailablePhotogs" class="text-sm text-indigo-400 font-bold whitespace-nowrap">0 ج.م</span></div>
                             <div class="text-center flex-1 xl:flex-auto"><p class="text-[9px] text-emerald-300 mb-1">الصافي الفعلي</p><span class="actual-net-profit-display text-lg sm:text-xl text-emerald-400 font-bold whitespace-nowrap">0 ج.م</span></div>
                         </div>
                     </div>
@@ -756,11 +757,12 @@
         };
 
         window.getPhotogFinances = function(name, ignoreMonth = false) {
-            let balance = 0;
+            let balance = 0, availableBalance = 0;
             (state.bookings || []).forEach(b => { 
                 if (!ignoreMonth && !window.isCurrentMonth(b.date)) return;
                 if (b.status === 'completed' && b.photographers?.some(px=>px.name===name)) {
                     let p = b.photographers.find(x=>x.name===name);
+                    availableBalance += (p.fee || 0);
                     if(!p.isSettled) balance += (p.fee || 0); 
                 }
             });
@@ -769,11 +771,18 @@
                 if (d.photographers?.some(px=>px.name===name)) {
                     const dP = d.photographers.find(px=>px.name===name);
                     if (d.type === 'withdrawal' && String(d.note || '').includes('بواسطة المصور')) {
-                        balance -= Math.abs(dP.totalFee || 0);
+                        const withdrawalAmount = Math.abs(dP.totalFee || 0);
+                        balance -= withdrawalAmount;
+                        availableBalance -= withdrawalAmount;
                     } else if (d.type !== 'withdrawal' && d.type !== 'expense' && d.type !== 'bonus') {
+                        availableBalance += (dP.totalFee || 0);
                         if (!dP.isSettled && !dP.isPaidImmediately) {
                             balance += (dP.totalFee || 0);
                         }
+                        if (dP.isPaidImmediately) availableBalance -= (dP.totalFee || 0);
+                    } else if (d.type === 'bonus') {
+                        availableBalance += (dP.totalFee || 0);
+                        if (!dP.isSettled) balance += (dP.totalFee || 0);
                     }
                 }
             });
@@ -782,10 +791,11 @@
                 if (!ignoreMonth && !window.isCurrentMonth(d.date || d.id)) return;
                 if (d.type === 'entry' && d.gear && d.gear.assignedTo === name) {
                     equipmentRental += (d.gear.amount || 0);
+                    availableBalance += (d.gear.amount || 0);
                     if (!d.gear.isSettled) equipmentPending += (d.gear.amount || 0);
                 }
             });
-            return { balance: balance, equipmentRental: equipmentRental, equipmentPending: equipmentPending, photographerBalance: balance, totalBalance: balance + equipmentPending };
+            return { balance: balance, equipmentRental: equipmentRental, equipmentPending: equipmentPending, photographerBalance: balance, totalBalance: balance + equipmentPending, availableBalance: availableBalance };
         };
 
         window.getPhotogEquipmentTotal = function(name, ignoreMonth = false) {
@@ -1622,6 +1632,10 @@
             let totalIncome = 0;
             let totalExpenses = 0;
             let totalWages = 0;
+            let totalPhotogAvailable = 0;
+            (state.photographers || []).forEach(p => {
+                totalPhotogAvailable += (window.getPhotogFinances(p.name, false).availableBalance || 0);
+            });
             
             (state.dailyEntries || []).forEach(e => {
                 if(!window.isCurrentMonth(e.date || e.id)) return;
@@ -1679,6 +1693,8 @@
             });
 
             const nL = el('reportNetProfit'), hR = el('reportHalls');
+            const availableEl = el('reportAvailablePhotogs');
+            if (availableEl) availableEl.innerText = totalPhotogAvailable + ' ج.م';
             let actualNetProfit = totalIncome - totalExpenses - totalWages;
             if(nL) nL.innerText = actualNetProfit + " ج.م";
             
@@ -2040,7 +2056,7 @@
             hallsHtml += '</div>';
             if(Object.keys(hallsStats).length === 0) hallsHtml = '';
 
-            items.sort((a,b) => new Date(b.date) - new Date(a.date)); let nB = tE - tW, tD = jC + uC;
+            items.sort((a,b) => new Date(b.date) - new Date(a.date)); let nB = tE + tGear - tW, tD = jC + uC;
             let sH = `<div class="glass p-5 rounded-xl mb-6 border border-blue-500/20 shadow-lg"><div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5 text-center"><div class="bg-blue-500/10 p-3 rounded-lg border border-blue-500/20"><p class="text-[10px] text-blue-300 mb-1" title="أيام عمل فريدة">أيام العمل</p><p class="font-bold text-blue-400 text-lg">${jC}</p><p class="text-[8px] text-blue-300/70 mt-1 font-bold">${jC} فعلي | ${uC} قادم</p></div><div class="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20"><p class="text-[10px] text-emerald-300 mb-1">أجور اليومية</p><p class="font-bold text-emerald-400 text-lg">${tE}</p></div><div class="bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20"><p class="text-[10px] text-indigo-300 mb-1">إيجار المعدات</p><p class="font-bold text-indigo-400 text-lg">${tGear}</p></div><div class="bg-purple-500/10 p-3 rounded-lg border border-purple-500/20"><p class="text-[10px] text-purple-300 mb-1">المكافآت</p><p class="font-bold text-purple-400 text-lg">${tB}</p></div><div class="bg-red-500/10 p-3 rounded-lg border border-red-500/20"><p class="text-[10px] text-red-300 mb-1">المسحوبات</p><p class="font-bold text-red-400 text-lg">${tW}</p></div></div><div class="bg-black/30 p-3.5 rounded-lg border border-white/10 flex justify-between items-center"><span class="text-sm font-bold text-zinc-300">الرصيد المتاح (بعد السحب):</span><span class="text-xl font-bold ${nB>=0?'text-emerald-400':'text-red-400'}">${nB} ج.م</span></div>${hallsHtml}</div><h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>`;
             const hH = items.map(i => { 
                 let ic = 'check-circle', cC = 'text-emerald-400', bC = 'bg-emerald-500/20', s = '+'; 
@@ -2210,7 +2226,7 @@
             el('trackPhotogTotalBonuses').innerText = `${tB} ج.م`;
             el('trackPhotogJobs').innerText = unsettledDaysSet.size;
             
-            const netAvailable = tE - tW;
+            const netAvailable = tE + tGear - tW;
             const netAvailableEl = el('trackPhotogNetAvailable');
             if (netAvailableEl) {
                 netAvailableEl.innerText = `${netAvailable} ج.م`;
