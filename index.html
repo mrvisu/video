@@ -180,7 +180,8 @@
             </div>
             <div class="space-y-4">
                 <div><label class="text-xs text-zinc-400 mb-1 block">تاريخ العمل</label><input type="date" id="workGroupDate" onchange="window.refreshWorkGroupMessagePreview()" class="w-full p-3"></div>
-                <div><div class="flex justify-between items-center mb-2"><label class="text-xs text-zinc-400">اختيار المصورين</label><button onclick="window.toggleAllWorkGroupPhotogs()" class="text-[10px] text-green-400 hover:text-white">تحديد/إلغاء الكل</button></div><div id="workGroupPhotographers" class="grid grid-cols-2 gap-2"></div></div>
+                <div><label class="text-xs text-zinc-400 mb-1 block">قالب/مكان العمل</label><select id="workGroupHall" onchange="window.refreshWorkGroupMessagePreview()" class="w-full p-3"><option value="">اختيار القاعة من قائمة القاعات</option></select><p class="text-[10px] text-zinc-500 mt-1">يمكن تعديل القاعة لكل مصور من القائمة التالية.</p></div>
+                <div><div class="flex justify-between items-center mb-2"><label class="text-xs text-zinc-400">اختيار المصورين وتحديد قاعة كل مصور</label><button onclick="window.toggleAllWorkGroupPhotogs()" class="text-[10px] text-green-400 hover:text-white">تحديد/إلغاء الكل</button></div><div id="workGroupPhotographers" class="grid grid-cols-1 gap-2"></div></div>
                 <div><label class="text-xs text-zinc-400 mb-1 block">معاينة الرسالة</label><textarea id="workGroupMessagePreview" readonly rows="10" class="w-full p-3 text-xs leading-relaxed"></textarea></div>
                 <button onclick="window.sendWorkGroupWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-bold transition flex items-center justify-center gap-2"><i data-lucide="send" class="w-5 h-5"></i> فتح الرسالة في واتساب</button>
             </div>
@@ -521,13 +522,18 @@
                                 <h4 onclick="window.toggleDailyEntryForm()" class="cursor-pointer hover:text-emerald-400 transition flex items-center gap-1.5 font-bold whitespace-nowrap text-sm sm:text-base" title="تسجيل يومية جديدة">سجل اليومية <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-500"></i></h4>
                                 <div class="flex gap-2 flex-grow">
                                     <input type="text" id="filterDailyNote" placeholder="البحث..." oninput="window.updateEntryLog()" class="p-1.5 px-3 text-[10px] sm:text-xs glass flex-grow w-full">
-                                    <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-1.5 px-1 text-[10px] sm:text-xs glass w-auto min-w-[75px]"><option value="">المصور</option></select>
+                                    <select id="filterDailyPhotog" onchange="window.updateEntryLog()" class="p-1.5 px-1 text-[10px] sm:text-xs glass w-auto min-w-[75px]"><option value="">كل المصورين</option></select>
+                                    <select id="filterDailyPeriod" onchange="window.updateEntryLog()" class="p-1.5 text-[10px] sm:text-xs glass"><option value="month">الشهر</option><option value="today">اليوم</option><option value="week">الأسبوع</option><option value="all">كل الفترات</option><option value="custom">فترة مخصصة</option></select>
+                                    <input type="date" id="filterDailyFrom" onchange="window.updateEntryLog()" class="hidden p-1.5 text-[10px] sm:text-xs glass">
+                                    <input type="date" id="filterDailyTo" onchange="window.updateEntryLog()" class="hidden p-1.5 text-[10px] sm:text-xs glass">
+                                    <select id="filterDailyHall" onchange="window.updateEntryLog()" class="p-1.5 text-[10px] sm:text-xs glass"><option value="">كل الأماكن</option></select>
                                 </div>
                             </div>
                             <div class="w-full sm:w-auto mt-2 sm:mt-0">
                                 <div class="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg flex justify-between sm:flex-col items-center sm:justify-center"><span class="block text-[10px] text-emerald-300 sm:mb-0.5">إجمالي الدخل</span><span id="dailyIncomeLabel" class="text-sm font-bold text-emerald-400">+0</span></div>
                             </div>
                         </div>
+                        <div id="dailyPeriodStats" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"></div>
                         <div id="dailyEntryLog" class="space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-1"></div>
                     </div>
                 </div>
@@ -1465,14 +1471,17 @@
 
         window.buildWorkGroupMessage = function() {
             const date = el('workGroupDate')?.value;
-            const selected = Array.from(document.querySelectorAll('.work-group-photog:checked')).map(x => x.dataset.name);
+            const selected = Array.from(document.querySelectorAll('.work-group-photog:checked'));
             if (!date || !selected.length) return '';
-            const lines = [];
-            selected.forEach((name, index) => {
-                const jobs = [];
+            const lines = selected.map((box, index) => {
+                const name = box.dataset.name, hallSelect = document.querySelector(`[data-work-hall="${box.dataset.id}"]`);
+                const hall = hallSelect?.value || el('workGroupHall')?.value || 'لم تحدد القاعة';
+                let jobs = [];
                 (state.bookings || []).forEach(b => { if (b.date === date && b.photographers?.some(x => x.name === name)) jobs.push(`حجز: ${b.name}${b.details ? ` - ${b.details}` : ''}`); });
                 (state.dailyEntries || []).forEach(d => { if ((d.date || new Date(d.id).toISOString().split('T')[0]) === date && d.type === 'entry' && d.photographers?.some(x => x.name === name)) jobs.push(`يومية: ${d.note}${d.hall ? ` - ${d.hall}` : ''}`); });
-                lines.push(`${index + 1}. المصور: ${name}\n   ${jobs.length ? jobs.join('\n   ') : 'العمل المحدد في هذا اليوم'}`);
+                return `${index + 1}. المصور: ${name}
+   📍 مكان العمل: ${hall}${jobs.length ? `
+   ${jobs.join('\n   ')}` : ''}`;
             });
             const formattedDate = new Date(`${date}T12:00:00`).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             return `🎬 جدول عمل المصورين\n━━━━━━━━━━━━━━\n📅 التاريخ: ${formattedDate}\n\n${lines.join('\n\n')}\n\nيرجى تأكيد الحضور والالتزام بموعد العمل.\nمع تمنياتنا بيوم عمل موفق — Cinema Studio Pro`;
@@ -1486,25 +1495,18 @@
         window.openWorkGroupWhatsApp = function() {
             const dateEl = el('workGroupDate');
             if (dateEl && !dateEl.value) dateEl.value = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            const halls = [...new Set([...(state.templates || []).map(x => x.name), ...(state.dailyEntries || []).map(x => x.hall).filter(Boolean)])];
+            const hallEl = el('workGroupHall');
+            if (hallEl) hallEl.innerHTML = '<option value="">اختيار القاعة من قائمة القاعات</option>' + halls.map(h => `<option value="${h}">${h}</option>`).join('');
             const list = el('workGroupPhotographers');
-            if (list) list.innerHTML = (state.photographers || []).map((p, i) => `<label class="flex items-center gap-2 p-2.5 bg-white/5 border border-white/10 rounded-lg cursor-pointer hover:bg-green-500/10"><input type="checkbox" class="work-group-photog accent-green-500" data-name="${p.name.replace(/"/g, '&quot;')}" onchange="window.refreshWorkGroupMessagePreview()"><span class="text-xs font-bold text-white">${p.name}</span></label>`).join('');
-            el('workGroupWhatsAppModal').classList.remove('hidden');
-            window.refreshWorkGroupMessagePreview();
+            if (list) list.innerHTML = (state.photographers || []).map(p => `<div class="grid grid-cols-[auto_1fr_1fr] items-center gap-2 p-2.5 bg-white/5 border border-white/10 rounded-lg"><input type="checkbox" class="work-group-photog accent-green-500" data-name="${p.name.replace(/"/g, '&quot;')}" data-id="${p.id}" onchange="window.refreshWorkGroupMessagePreview()"><span class="text-xs font-bold text-white">${p.name}</span><select data-work-hall="${p.id}" onchange="window.refreshWorkGroupMessagePreview()" class="text-[10px] p-2"><option value="">افتراضي</option>${halls.map(h=>`<option value="${h}">${h}</option>`).join('')}</select></div>`).join('');
+            el('workGroupWhatsAppModal').classList.remove('hidden'); window.refreshWorkGroupMessagePreview();
             if (window.lucide) lucide.createIcons();
         };
 
         window.toggleAllWorkGroupPhotogs = function() {
             const boxes = Array.from(document.querySelectorAll('.work-group-photog'));
-            const shouldCheck = boxes.some(x => !x.checked);
-            boxes.forEach(x => x.checked = shouldCheck);
-            window.refreshWorkGroupMessagePreview();
-        };
-
-        window.sendWorkGroupWhatsApp = function() {
-            const message = window.buildWorkGroupMessage();
-            if (!message) return window.showToast('اختر التاريخ ومصوراً واحداً على الأقل', 'error');
-            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-            el('workGroupWhatsAppModal').classList.add('hidden');
+            const shouldCheck = boxes.some(x => !x.checked); boxes.forEach(x => x.checked = shouldCheck); window.refreshWorkGroupMessagePreview();
         };
 
         window.notifyPhotogWithdrawal = function(name, amount) {
@@ -1583,13 +1585,24 @@
         window.updateEntryLog = function() {
             const fN = el('filterDailyNote').value.toLowerCase();
             const fP = el('filterDailyPhotog').value;
+            const period = el('filterDailyPeriod')?.value || 'month';
+            const from = el('filterDailyFrom'), to = el('filterDailyTo');
+            [from,to].forEach(x => x && x.classList.toggle('hidden', period !== 'custom'));
+            const today = new Date().toISOString().slice(0,10);
+            const startWeek = new Date(); startWeek.setDate(startWeek.getDate() - ((startWeek.getDay()+6)%7));
+            const weekStart = startWeek.toISOString().slice(0,10);
+            const matchesPeriod = d => period === 'all' || (period === 'month' ? window.isCurrentMonth(d) : period === 'today' ? d === today : period === 'week' ? d >= weekStart && d <= today : period === 'custom' ? (!from?.value || d >= from.value) && (!to?.value || d <= to.value) : true);
+            const hallSel = el('filterDailyHall');
+            if (hallSel && hallSel.options.length <= 1) { const halls=[...new Set([...(state.templates||[]).map(x=>x.name), ...(state.dailyEntries||[]).map(x=>x.hall).filter(Boolean)])]; hallSel.innerHTML='<option value="">كل الأماكن</option>'+halls.map(h=>`<option value="${h}">${h}</option>`).join(''); }
+            const hallFilter = hallSel?.value || '';
 
             const flt = (state.dailyEntries || []).filter(e => {
                 const entryDate = e.date || new Date(e.id).toISOString().split('T')[0];
-                const matchesNote = (!fN || e.note.toLowerCase().includes(fN));
+                const matchesNote = (!fN || String(e.note || '').toLowerCase().includes(fN));
                 const matchesPhotog = (!fP || e.photographers?.some(p=>p.name===fP));
-                const matchesMonth = window.isCurrentMonth(entryDate);
-                return matchesNote && matchesPhotog && matchesMonth;
+                const matchesDate = matchesPeriod(entryDate);
+                const matchesHall = !hallFilter || (e.hall || e.note || 'عام (بدون قاعة)') === hallFilter;
+                return matchesNote && matchesPhotog && matchesDate && matchesHall;
             });
             
             let r = 0, cBN = {}, eC = {};
@@ -1598,7 +1611,10 @@
             flt.forEach(e => { r += (e.income || 0); });
             
             const iL = el('dailyIncomeLabel'), lC = el('dailyEntryLog');
-            if(iL) iL.innerText = `+${r}`; if(!lC) return;
+            if(iL) iL.innerText = `+${r}`;
+            const stats = el('dailyPeriodStats');
+            if (stats) { let income=0, costs=0, jobs=0; flt.forEach(x=>{ income += x.income||0; if(x.type==='entry'){ jobs++; costs += (x.gear?.amount||0) + (x.photographers||[]).reduce((a,p)=>a+(p.totalFee||0),0); } else costs += x.totalExpenses||0; }); stats.innerHTML = [['السجلات',flt.length,'text-white'],['أيام العمل',jobs,'text-blue-300'],['إجمالي الدخل',income+' ج.م','text-emerald-400'],['إجمالي المصروفات',costs+' ج.م','text-red-400'],['الصافي', (income-costs)+' ج.م',income>=costs?'text-emerald-400':'text-red-400']].map(x=>`<div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center"><div class="text-[10px] text-zinc-400">${x[0]}</div><b class="text-sm ${x[2]}">${x[1]}</b></div>`).join(''); }
+            if(!lC) return;
             
             lC.innerHTML = flt.slice().reverse().map(e => {
                 let cashOut = 0;
@@ -1624,7 +1640,7 @@
                 let editBtn = e.type === 'entry' ? `<button onclick="event.stopPropagation(); window.editEntry(${e.id})" class="text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500 p-1.5 rounded-lg transition mr-2 flex-shrink-0"><i data-lucide="edit-2" class="w-3 h-3"></i></button>` : '';
 
                 return `<div onclick="window.showEntryDetails(${e.id})" class="glass p-4 rounded-xl border-r-4 ${borderCls} cursor-pointer hover:bg-white/5 transition hover:-translate-y-1 duration-300 flex flex-col gap-3 shadow-lg"><div class="flex justify-between items-start"><div class="flex flex-col gap-1.5"><div class="flex items-center gap-2"><div class="${bgCls} p-1.5 rounded-full"><i data-lucide="${iconName}" class="w-4 h-4 ${iconCol}"></i></div><h4 class="font-bold text-sm text-white">${e.note}</h4><span class="${labelCls} border px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">${tBT}</span></div><div class="flex items-center gap-1 text-[10px] text-zinc-400 w-fit"><i data-lucide="calendar" class="w-3 h-3"></i><span>${new Date(e.date||e.id).toLocaleDateString('ar-EG')}</span></div></div>${fH}</div><div class="flex justify-between items-center pt-2 border-t border-white/5"><div class="flex flex-wrap items-center gap-1.5">${e.photographers?.map(p=>`<span class="flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="${e.type === 'withdrawal' ? 'user' : 'camera'}" class="w-3 h-3 text-blue-400"></i> ${p.name} <span class="text-yellow-400 font-bold">${p.isPaidImmediately ? '(دفع فوري)' : (p.isSettled ? '(مصفى)' : 'مستحق: '+p.totalFee)}</span></span>`).join('')||''}${e.gear?`<span class="flex items-center gap-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-200 px-1.5 py-0.5 rounded text-[9px]"><i data-lucide="video" class="w-3 h-3 text-indigo-400"></i> ${e.gear.note} <span class="text-red-400 font-bold">${e.gear.assignedTo !== 'external' ? '(من '+e.gear.assignedTo+')' : ''} -${e.gear.amount}</span></span>`:''}${(!e.photographers?.length && !e.gear) ? '<span class="text-[9px] text-zinc-500">لا يوجد</span>' : ''}</div><div class="flex items-center">${editBtn}<button onclick="event.stopPropagation(); window.deleteEntry(${e.id})" class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-500 p-1.5 rounded-lg transition flex-shrink-0"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div></div>`;
-            }).join('') || '<p class="text-zinc-500 col-span-full text-center py-4 text-sm">لا توجد سجلات في هذا الشهر</p>'; if(window.lucide) lucide.createIcons();
+            }).join('') || '<p class="text-zinc-500 col-span-full text-center py-4 text-sm">لا توجد سجلات في الفترة المحددة</p>'; if(window.lucide) lucide.createIcons();
         };
 
         window.renderReports = function() {
@@ -1739,7 +1755,7 @@
                     return s + cOut;
                 }, 0); 
                 const nI = tI - tEx; 
-                aH = `<div class="mt-6 border-t border-white/10 pt-5"><h5 class="text-sm font-bold text-blue-400 flex items-center gap-2 mb-4"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> إحصائيات مجمعة للمكان (${e.note})</h5><div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">مرات التسجيل (الأيام)</p><p class="font-bold text-white text-sm">${tD} أيام</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">الصافي التاريخي</p><p class="font-bold text-emerald-400 text-sm">${nI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">إجمالي الدخل</p><p class="font-bold text-emerald-400 text-sm">${tI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">المصروف الفعلي</p><p class="font-bold text-red-400 text-sm">${tEx} ج.م</p></div></div></div>`; 
+                aH = `<div class="mt-6 border-t border-white/10 pt-5"><h5 class="text-sm font-bold text-blue-400 flex items-center gap-2 mb-4"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> إحصائيات مجمعة للمكان (${placeName})</h5><div class="grid grid-cols-2 gap-3 mb-3"><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">مرات التسجيل (الأيام)</p><p class="font-bold text-white text-sm">${tD} أيام</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">الصافي التاريخي</p><p class="font-bold text-emerald-400 text-sm">${nI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">إجمالي الدخل</p><p class="font-bold text-emerald-400 text-sm">${tI} ج.م</p></div><div class="bg-black/30 p-3 rounded-lg border border-white/5 text-center"><p class="text-[10px] text-zinc-400 mb-1">المصروف الفعلي</p><p class="font-bold text-red-400 text-sm">${tEx} ج.م</p></div></div></div>`; 
             }
             
             const lblType = e.type === 'bonus' ? 'سجل صرف مكافأة' : (e.type === 'withdrawal' ? 'سحب نقدي' : (e.type === 'expense' ? (e.hall ? 'مصروف قاعة' : 'مصروف عام') : 'بيان الدخل'));
