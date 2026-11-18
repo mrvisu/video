@@ -172,6 +172,21 @@
         </div>
     </div>
 
+    <div id="workGroupWhatsAppModal" class="fixed inset-0 z-[350] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="glass p-6 w-full max-w-lg card-shadow border border-green-500/30 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-5 border-b border-white/10 pb-4">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="users-round" class="text-green-400"></i> رسالة جروب العمل</h3>
+                <button onclick="document.getElementById('workGroupWhatsAppModal').classList.add('hidden')" class="text-zinc-400 hover:text-white transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div><label class="text-xs text-zinc-400 mb-1 block">تاريخ العمل</label><input type="date" id="workGroupDate" onchange="window.refreshWorkGroupMessagePreview()" class="w-full p-3"></div>
+                <div><div class="flex justify-between items-center mb-2"><label class="text-xs text-zinc-400">اختيار المصورين</label><button onclick="window.toggleAllWorkGroupPhotogs()" class="text-[10px] text-green-400 hover:text-white">تحديد/إلغاء الكل</button></div><div id="workGroupPhotographers" class="grid grid-cols-2 gap-2"></div></div>
+                <div><label class="text-xs text-zinc-400 mb-1 block">معاينة الرسالة</label><textarea id="workGroupMessagePreview" readonly rows="10" class="w-full p-3 text-xs leading-relaxed"></textarea></div>
+                <button onclick="window.sendWorkGroupWhatsApp()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-bold transition flex items-center justify-center gap-2"><i data-lucide="send" class="w-5 h-5"></i> فتح الرسالة في واتساب</button>
+            </div>
+        </div>
+    </div>
+
     <div id="statsModal" class="fixed inset-0 z-[250] bg-black/80 flex items-center justify-center p-4 hidden backdrop-blur-sm">
         <div class="glass p-6 w-full max-w-2xl max-h-[85vh] flex flex-col border border-white/10 card-shadow">
             <div class="flex justify-between items-center mb-6 pb-4 border-b border-white/10">
@@ -345,6 +360,7 @@
                 <button onclick="window.showTab('bookings')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="calendar-plus" class="w-4 h-4"></i> الحجوزات</button>
                 <button onclick="window.showTab('inventory')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="badge-dollar-sign" class="w-4 h-4"></i> اليومية</button>
                 <button onclick="window.showTab('reports')" class="hover:text-red-500 transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="pie-chart" class="w-4 h-4"></i> التقارير</button>
+                <button onclick="window.openWorkGroupWhatsApp()" class="text-green-400 hover:text-white transition-all flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap"><i data-lucide="users-round" class="w-4 h-4"></i> جروب العمل</button>
             </div>
             <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                 <div class="flex items-center gap-2 bg-white/5 px-2 py-1.5 rounded-lg border border-white/10">
@@ -536,6 +552,7 @@
                                 <h4 class="text-base sm:text-lg font-bold flex items-center gap-2"><i data-lucide="users" class="text-blue-400 w-4 h-4 sm:w-5 sm:h-5"></i> إحصائيات المصورين</h4>
                                 <button onclick="document.getElementById('managePhotogsModal').classList.remove('hidden')" class="text-[10px] bg-blue-500/20 text-blue-300 hover:bg-blue-500 hover:text-white transition px-2.5 py-1 rounded-lg border border-blue-500/30 flex items-center gap-1.5"><i data-lucide="settings" class="w-3 h-3"></i> إدارة</button>
                                 <button onclick="window.sendAllPhotogsWhatsApp()" class="text-[10px] bg-green-500/20 text-green-300 hover:bg-green-500 hover:text-white transition px-2.5 py-1 rounded-lg border border-green-500/30 flex items-center gap-1.5"><i data-lucide="send" class="w-3 h-3"></i> إرسال للجميع</button>
+                                <button onclick="window.openWorkGroupWhatsApp()" class="text-[10px] bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500 hover:text-white transition px-2.5 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1.5"><i data-lucide="users-round" class="w-3 h-3"></i> جروب العمل</button>
                             </div>
                             <div class="text-right sm:text-left w-full sm:w-auto">
                                 <span class="block text-[9px] sm:text-[10px] text-zinc-400 mb-0.5">إجمالي الأجور والمستحقات (للشهر)</span>
@@ -759,9 +776,6 @@
                         }
                     }
                 }
-                if (d.type === 'entry' && d.gear && d.gear.assignedTo === name && !d.gear.isSettled) {
-                    balance += (d.gear.amount || 0);
-                }
             });
             let equipmentRental = 0, equipmentPending = 0;
             (state.dailyEntries || []).forEach(d => {
@@ -771,7 +785,7 @@
                     if (!d.gear.isSettled) equipmentPending += (d.gear.amount || 0);
                 }
             });
-            return { balance: balance, equipmentRental: equipmentRental, equipmentPending: equipmentPending, photographerBalance: balance - equipmentPending };
+            return { balance: balance, equipmentRental: equipmentRental, equipmentPending: equipmentPending, photographerBalance: balance, totalBalance: balance + equipmentPending };
         };
 
         window.getPhotogEquipmentTotal = function(name, ignoreMonth = false) {
@@ -878,9 +892,9 @@
             let h = '', totalPending = 0;
             (state.photographers || []).forEach(p => {
                 const fin = window.getPhotogFinances(p.name, true);
-                if (fin.balance > 0) {
-                    totalPending += fin.balance;
-                    h += `<div class="bg-black/30 p-2.5 rounded-xl border border-white/5 flex flex-col items-center text-center transition hover:bg-white/5 hover:border-indigo-500/30 shadow-sm relative group"><div class="bg-blue-500/10 border border-blue-500/20 p-2 rounded-full mb-1.5 group-hover:scale-110 transition"><i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i></div><p class="text-xs font-bold text-white mb-0.5 w-full truncate">${p.name}</p><p class="text-[8px] text-zinc-400 mb-1"> الرصيدالمستحق </p><span class="font-bold text-emerald-400 text-xs mb-2.5">${fin.balance} ج.م</span><button onclick="window.settlePhotog('${p.name}', ${fin.balance})" class="w-full mt-auto bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 py-1.5 rounded-lg text-[9px] font-bold transition flex items-center justify-center gap-1"><i data-lucide="hand-coins" class="w-3 h-3"></i> تصفية</button></div>`;
+                if (fin.totalBalance > 0) {
+                    totalPending += fin.totalBalance;
+                    h += `<div class="bg-black/30 p-2.5 rounded-xl border border-white/5 flex flex-col items-center text-center transition hover:bg-white/5 hover:border-indigo-500/30 shadow-sm relative group"><div class="bg-blue-500/10 border border-blue-500/20 p-2 rounded-full mb-1.5 group-hover:scale-110 transition"><i data-lucide="user" class="w-3.5 h-3.5 text-blue-400"></i></div><p class="text-xs font-bold text-white mb-0.5 w-full truncate">${p.name}</p><span class="text-[8px] text-emerald-400">أجور التصوير: ${fin.balance} ج.م</span><span class="text-[8px] text-indigo-300 mb-2.5">إيجار المعدات: ${fin.equipmentPending} ج.م</span><button onclick="window.settlePhotog('${p.name}', ${fin.totalBalance})" class="w-full mt-auto bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white border border-emerald-500/30 py-1.5 rounded-lg text-[9px] font-bold transition flex items-center justify-center gap-1"><i data-lucide="hand-coins" class="w-3 h-3"></i> تصفية الإجمالي (${fin.totalBalance})</button></div>`;
                 }
             });
             if(h === '') h = `<div class="col-span-full text-center p-6 bg-white/5 rounded-xl border border-white/10"><i data-lucide="check-circle" class="w-10 h-10 text-emerald-500 mx-auto mb-3"></i><p class="text-sm font-bold text-zinc-300">جميع حسابات المصورين مُصفاة!</p><p class="text-xs text-zinc-500 mt-1">لا توجد مستحقات معلقة حالياً.</p></div>`;
@@ -912,7 +926,7 @@
 
         window.settleAllPhotogs = function() {
             let total = 0, pending = [];
-            (state.photographers || []).forEach(p => { const fin = window.getPhotogFinances(p.name, true); if (fin.balance > 0) { total += fin.balance; pending.push({ name: p.name, amount: fin.balance }); } });
+            (state.photographers || []).forEach(p => { const fin = window.getPhotogFinances(p.name, true); if (fin.totalBalance > 0) { total += fin.totalBalance; pending.push({ name: p.name, amount: fin.totalBalance }); } });
             if (pending.length === 0) return window.showToast("لا توجد حسابات معلقة للتصفية", "error");
             window.showConfirm(`تأكيد تصفية حسابات جميع المصورين بقيمة إجمالية ${total} ج.م؟`, () => {
                 const d = new Date().toISOString().split('T')[0], t = new Date().toLocaleTimeString('ar-EG');
@@ -1029,7 +1043,7 @@
                 if (d.type === 'withdrawal' || d.type === 'bonus') pw += (d.totalExpenses || 0);
                 else if (d.type === 'expense') e += (d.totalExpenses || 0);
                 else if (d.type === 'entry') {
-                    if (d.gear && d.gear.assignedTo === 'external') e += (d.gear.amount || 0);
+                    if (d.gear) e += (d.gear.amount || 0);
                     if (d.photographers) {
                         e += d.photographers.filter(p => p.isPaidImmediately).reduce((sum, p) => sum + (p.totalFee || 0), 0);
                     }
@@ -1395,17 +1409,23 @@
         };
 
         window.getPhotogWhatsAppMessage = function(p) {
-            const fin = window.getPhotogFinances(p.name, true);
+            const monthKey = state.activeMonth && state.activeMonth !== 'all' ? state.activeMonth : new Date().toISOString().slice(0, 7);
+            const inMonth = date => String(date || '').startsWith(monthKey);
+            const fin = window.getPhotogFinances(p.name, false);
             const equipmentRental = fin.equipmentRental || 0;
             const withdrawals = (state.dailyEntries || [])
-                .filter(d => d.type === 'withdrawal' && d.photographers?.some(x => x.name === p.name))
+                .filter(d => inMonth(d.date || new Date(d.id).toISOString().split('T')[0]) && d.type === 'withdrawal' && d.photographers?.some(x => x.name === p.name))
                 .map(d => ({ date: d.date || new Date(d.id).toISOString().split('T')[0], amount: Math.abs(d.photographers.find(x => x.name === p.name)?.totalFee || 0) }))
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
             const totalWithdrawals = withdrawals.reduce((sum, item) => sum + item.amount, 0);
+            const workDays = new Set();
+            (state.bookings || []).forEach(b => { if (inMonth(b.date) && b.status === 'completed' && b.photographers?.some(x => x.name === p.name)) workDays.add(b.date); });
+            (state.dailyEntries || []).forEach(d => { const date = d.date || new Date(d.id).toISOString().split('T')[0]; if (inMonth(date) && d.type === 'entry' && d.photographers?.some(x => x.name === p.name)) workDays.add(date); });
+            const monthEquipment = (state.dailyEntries || []).filter(d => inMonth(d.date || new Date(d.id).toISOString().split('T')[0]) && d.type === 'entry' && d.gear?.assignedTo === p.name).reduce((sum, d) => sum + (d.gear.amount || 0), 0);
             const withdrawalLines = withdrawals.length
                 ? withdrawals.slice(0, 10).map(item => `- ${item.date}: ${item.amount} ج.م`).join('\n')
                 : '- لا توجد سحوبات مسجلة';
-            return `أهلاً ${p.name} 🎬\n\nتفاصيل حسابك الحالي:\n💰 الرصيد المتاح/المستحق من التصوير: ${fin.photographerBalance} ج.م\n🎥 إجمالي إيجار المعدات: ${equipmentRental} ج.م\n💸 إجمالي السحوبات: ${totalWithdrawals} ج.م\n\nتفاصيل آخر السحوبات:\n${withdrawalLines}\n\nيمكنك متابعة حسابك ومواعيدك وسحوباتك من خلال لوحة المصور الخاصة بك:\n${window.getPhotogLink(p)}\n\nيرجى الاحتفاظ بهذا الرابط وعدم مشاركته مع الآخرين.`;
+            return `أهلاً ${p.name} 🎬\n\nكشف حساب شهر ${monthKey}:\n📅 عدد أيام العمل: ${workDays.size} يوم\n💰 رصيد التصوير للشهر: ${fin.photographerBalance} ج.م\n🎥 إيجار المعدات للشهر: ${monthEquipment} ج.م\n💸 إجمالي السحوبات للشهر: ${totalWithdrawals} ج.م\n\nتفاصيل السحوبات:\n${withdrawalLines}\n\nرابط لوحة المصور:\n${window.getPhotogLink(p)}\n\nيرجى الاحتفاظ بهذا الرابط وعدم مشاركته مع الآخرين.`;
         };
 
         window.sendPhotogWhatsApp = function(name) {
@@ -1431,6 +1451,50 @@
                 });
                 window.showToast(`تم تجهيز رسائل واتساب لـ ${list.length} مصور`);
             });
+        };
+
+        window.buildWorkGroupMessage = function() {
+            const date = el('workGroupDate')?.value;
+            const selected = Array.from(document.querySelectorAll('.work-group-photog:checked')).map(x => x.dataset.name);
+            if (!date || !selected.length) return '';
+            const lines = [];
+            selected.forEach((name, index) => {
+                const jobs = [];
+                (state.bookings || []).forEach(b => { if (b.date === date && b.photographers?.some(x => x.name === name)) jobs.push(`حجز: ${b.name}${b.details ? ` - ${b.details}` : ''}`); });
+                (state.dailyEntries || []).forEach(d => { if ((d.date || new Date(d.id).toISOString().split('T')[0]) === date && d.type === 'entry' && d.photographers?.some(x => x.name === name)) jobs.push(`يومية: ${d.note}${d.hall ? ` - ${d.hall}` : ''}`); });
+                lines.push(`${index + 1}. المصور: ${name}\n   ${jobs.length ? jobs.join('\n   ') : 'العمل المحدد في هذا اليوم'}`);
+            });
+            const formattedDate = new Date(`${date}T12:00:00`).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            return `🎬 جدول عمل المصورين\n━━━━━━━━━━━━━━\n📅 التاريخ: ${formattedDate}\n\n${lines.join('\n\n')}\n\nيرجى تأكيد الحضور والالتزام بموعد العمل.\nمع تمنياتنا بيوم عمل موفق — Cinema Studio Pro`;
+        };
+
+        window.refreshWorkGroupMessagePreview = function() {
+            const preview = el('workGroupMessagePreview');
+            if (preview) preview.value = window.buildWorkGroupMessage() || 'اختر التاريخ ومصوراً واحداً على الأقل لعرض معاينة الرسالة.';
+        };
+
+        window.openWorkGroupWhatsApp = function() {
+            const dateEl = el('workGroupDate');
+            if (dateEl && !dateEl.value) dateEl.value = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+            const list = el('workGroupPhotographers');
+            if (list) list.innerHTML = (state.photographers || []).map((p, i) => `<label class="flex items-center gap-2 p-2.5 bg-white/5 border border-white/10 rounded-lg cursor-pointer hover:bg-green-500/10"><input type="checkbox" class="work-group-photog accent-green-500" data-name="${p.name.replace(/"/g, '&quot;')}" onchange="window.refreshWorkGroupMessagePreview()"><span class="text-xs font-bold text-white">${p.name}</span></label>`).join('');
+            el('workGroupWhatsAppModal').classList.remove('hidden');
+            window.refreshWorkGroupMessagePreview();
+            if (window.lucide) lucide.createIcons();
+        };
+
+        window.toggleAllWorkGroupPhotogs = function() {
+            const boxes = Array.from(document.querySelectorAll('.work-group-photog'));
+            const shouldCheck = boxes.some(x => !x.checked);
+            boxes.forEach(x => x.checked = shouldCheck);
+            window.refreshWorkGroupMessagePreview();
+        };
+
+        window.sendWorkGroupWhatsApp = function() {
+            const message = window.buildWorkGroupMessage();
+            if (!message) return window.showToast('اختر التاريخ ومصوراً واحداً على الأقل', 'error');
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+            el('workGroupWhatsAppModal').classList.add('hidden');
         };
 
         window.notifyPhotogWithdrawal = function(name, amount) {
@@ -1474,9 +1538,6 @@
                     if (d.type === 'withdrawal') tW += Math.abs(dP.totalFee || 0);
                     else if (d.type === 'bonus') tE += (dP.totalFee || 0);
                     else if (d.type === 'entry' && !dP.isSettled && !dP.isPaidImmediately) tE += (dP.totalFee || 0);
-                }
-                if (d.type === 'entry' && d.gear && d.gear.assignedTo === pName && !d.gear.isSettled) {
-                    tE += (d.gear.amount || 0);
                 }
             });
             
@@ -1574,7 +1635,7 @@
                 }
                 
                 let hallName = e.hall || e.note || 'عام (بدون قاعة)';
-                if(!hS[hallName]) hS[hallName] = { jobs: 0, income: 0, expenses: 0 };
+                if(!hS[hallName]) hS[hallName] = { jobs: 0, income: 0, expenses: 0, wages: 0, gear: 0 };
 
                 if (e.type === 'expense') {
                     totalExpenses += (e.totalExpenses || 0);
@@ -1594,6 +1655,8 @@
 
                 totalExpenses += cashEx;
                 totalWages += entryWages;
+                hS[hallName].gear += cashEx;
+                hS[hallName].wages += entryWages;
                 hS[hallName].expenses += (cashEx + entryWages);
             });
 
@@ -1601,7 +1664,7 @@
                 if(!window.isCurrentMonth(bk.date)) return;
                 if(bk.status === 'completed') {
                     const l = 'حجوزات الاستوديو';
-                    if(!hS[l]) hS[l] = { jobs: 0, income: 0, expenses: 0 };
+                    if(!hS[l]) hS[l] = { jobs: 0, income: 0, expenses: 0, wages: 0, gear: 0 };
                     hS[l].jobs++; 
                     hS[l].income += (bk.total || 0);
                     totalIncome += (bk.total || 0);
@@ -1610,6 +1673,7 @@
                     if (bk.photographers) bookingWages = bk.photographers.reduce((sum, p) => sum + (p.fee || 0), 0);
                     
                     totalWages += bookingWages;
+                    hS[l].wages += bookingWages;
                     hS[l].expenses += bookingWages;
                 }
             });
@@ -1621,7 +1685,7 @@
             if(hR) {
                 hR.innerHTML = Object.keys(hS).map(n => {
                     const net = hS[n].income - hS[n].expenses;
-                    return `<div onclick="window.showHallDetails('${n}')" class="glass p-4 rounded-xl border-r-4 border-emerald-500 hover:bg-white/5 transition cursor-pointer mb-3"><div class="flex justify-between items-start mb-3"><div class="flex items-center gap-2"><div class="bg-emerald-500/20 p-2 rounded-full"><i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i></div><h5 class="font-bold text-white text-sm">${n}</h5></div><div class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-500/30">${hS[n].jobs} سجلات</div></div><div class="flex justify-between items-center pt-2 border-t border-white/5"><div class="flex flex-col"><span class="text-[10px] text-zinc-400">إيراد: <span class="text-emerald-400">${hS[n].income}</span></span><span class="text-[10px] text-zinc-400">مصروف: <span class="text-red-400">${hS[n].expenses}</span></span></div><div class="text-left"><span class="text-xs text-zinc-300 block">صاف الربح:</span><span class="font-bold text-sm ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span></div></div></div>`;
+                    return `<div onclick="window.showHallDetails('${n}')" class="glass p-4 rounded-xl border-r-4 border-emerald-500 hover:bg-white/5 transition cursor-pointer mb-3"><div class="flex justify-between items-start mb-3"><div class="flex items-center gap-2"><div class="bg-emerald-500/20 p-2 rounded-full"><i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i></div><h5 class="font-bold text-white text-sm">${n}</h5></div><div class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-500/30">${hS[n].jobs} سجلات</div></div><div class="flex justify-between items-center pt-2 border-t border-white/5"><div class="flex flex-col"><span class="text-[10px] text-zinc-400">إيراد: <span class="text-emerald-400">${hS[n].income}</span></span><span class="text-[10px] text-blue-300">أجور مصورين: <span>${hS[n].wages}</span></span><span class="text-[10px] text-indigo-300">إيجار معدات: <span>${hS[n].gear}</span></span></div><div class="text-left"><span class="text-xs text-zinc-300 block">صاف الربح:</span><span class="font-bold text-sm ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span></div></div></div>`;
                 }).join('') || '<p class="text-center text-zinc-500 py-4 text-sm">لا توجد بيانات متاحة لعرضها في هذا الشهر.</p>';
             }
             if(window.lucide) lucide.createIcons();
@@ -1847,11 +1911,14 @@
         };
 
         window.showHallDetails = function(n) { 
-            let i = [], s = { j: 0, i: 0, e: 0 }; 
+            let i = [], s = { j: 0, i: 0, e: 0, wages: 0, gear: 0 }; 
             if(n === 'حجوزات الاستوديو') { 
                 (state.bookings || []).forEach(b => { 
                     if(b.status === 'completed' && window.isCurrentMonth(b.date)) { 
                         s.j++; s.i += (b.total || 0); 
+                        const bookingWages = (b.photographers || []).reduce((sum, p) => sum + (p.fee || 0), 0);
+                        s.wages += bookingWages;
+                        s.e += bookingWages;
                         i.push({id:b.id, type:'booking', date:b.date, val:(b.total||0), text:b.name}); 
                     } 
                 }); 
@@ -1866,20 +1933,22 @@
                         } else if (d.type === 'entry') {
                             s.j++;
                             s.i += (d.income || 0);
-                            let cashEx = 0;
-                            if (d.gear) cashEx += d.gear.amount;
-                            if (d.photographers) cashEx += d.photographers.reduce((sum, p) => sum + (p.totalFee || 0), 0);
-                            s.e += cashEx;
+                            let gearEx = d.gear ? (d.gear.amount || 0) : 0;
+                            let wageEx = d.photographers ? d.photographers.reduce((sum, p) => sum + (p.totalFee || 0), 0) : 0;
+                            s.gear += gearEx;
+                            s.wages += wageEx;
+                            s.e += gearEx + wageEx;
 
                             if (d.income > 0) i.push({id:d.id, type:'entry', date:d.date||d.id, val:d.income, text:d.note});
-                            if (cashEx > 0) i.push({id:d.id, type:'entry', date:d.date||d.id, val:-cashEx, text:`مصروفات (معدات/أجور) لـ: ${d.note}`});
+                            if (wageEx > 0) i.push({id:d.id, type:'entry', date:d.date||d.id, val:-wageEx, text:`أجور مصورين لـ: ${d.note}`});
+                            if (gearEx > 0) i.push({id:d.id, type:'entry', date:d.date||d.id, val:-gearEx, text:`إيجار معدات لـ: ${d.note}`});
                         }
                     } 
                 }); 
             } 
             i.sort((a,b) => new Date(b.date) - new Date(a.date)); 
             let net = s.i - s.e; 
-            let h = `<div class="glass p-4 rounded-xl mb-6 border border-white/10 shadow-lg"><div class="grid grid-cols-3 gap-3 mb-4 text-center"><div class="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20"><p class="text-[9px] text-blue-300 mb-1">مرات التسجيل</p><p class="font-bold text-blue-400">${s.j}</p></div><div class="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20"><p class="text-[9px] text-emerald-300 mb-1">الإيرادات</p><p class="font-bold text-emerald-400">${s.i}</p></div><div class="bg-red-500/10 p-2 rounded-lg border border-red-500/20"><p class="text-[9px] text-red-300 mb-1">المصروفات الفعلية</p><p class="font-bold text-red-400">${s.e}</p></div></div><div class="bg-white/5 p-3 rounded-lg border border-white/10 flex justify-between items-center"><span class="text-xs text-zinc-300">صافي الربح (بالخزنة):</span><span class="text-lg font-bold ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span></div></div><h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>`; 
+            let h = `<div class="glass p-4 rounded-xl mb-6 border border-white/10 shadow-lg"><div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4 text-center"><div class="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20"><p class="text-[9px] text-blue-300 mb-1">مرات التسجيل</p><p class="font-bold text-blue-400">${s.j}</p></div><div class="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20"><p class="text-[9px] text-emerald-300 mb-1">الإيرادات</p><p class="font-bold text-emerald-400">${s.i}</p></div><div class="bg-blue-500/10 p-2 rounded-lg border border-blue-500/20"><p class="text-[9px] text-blue-300 mb-1">أجور المصورين</p><p class="font-bold text-blue-400">${s.wages}</p></div><div class="bg-indigo-500/10 p-2 rounded-lg border border-indigo-500/20"><p class="text-[9px] text-indigo-300 mb-1">إيجار المعدات</p><p class="font-bold text-indigo-400">${s.gear}</p></div><div class="bg-red-500/10 p-2 rounded-lg border border-red-500/20"><p class="text-[9px] text-red-300 mb-1">إجمالي المصروف</p><p class="font-bold text-red-400">${s.e}</p></div></div><div class="bg-white/5 p-3 rounded-lg border border-white/10 flex justify-between items-center"><span class="text-xs text-zinc-300">صافي الربح (بالخزنة):</span><span class="text-lg font-bold ${net>=0?'text-emerald-400':'text-red-400'}">${net} ج.م</span></div></div><h4 class="font-bold text-white text-sm mb-3 border-b border-white/10 pb-2">سجل الحركات:</h4>`; 
             const hH = i.map(x => `<div onclick="window.closeStatsModal(); ${x.type==='booking' ? `window.showBookingDetails(${x.id})` : `window.showEntryDetails(${x.id})`}" class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer mb-2 transition hover:bg-white/10"><div><p class="text-white text-[11px] font-bold">${x.text}</p><p class="text-[9px] text-zinc-500">${new Date(x.date).toLocaleDateString('ar-EG')}</p></div><span class="text-xs font-bold ${x.val >= 0 ? 'text-emerald-400' : 'text-red-400'}">${x.val > 0 ? '+' : ''}${x.val} ج.م</span></div>`).join('') || '<p class="text-zinc-500 text-center py-4">لا يوجد</p>'; 
             window.showStatsModal(`قاعة: ${n}`, h + hH); 
         };
